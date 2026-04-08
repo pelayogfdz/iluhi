@@ -1,0 +1,42 @@
+{
+  "node": {
+    "40f2d9a50f19160f0a223b25f1e19e30b6bff804c1": {
+      "workers": {
+        "app/clientes/nuevo/page": {
+          "moduleId": 38487,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/clientes/nuevo/page.js"
+        }
+      },
+      "filename": "app/clientes/nuevo/page.js",
+      "exportedName": "$$RSC_SERVER_ACTION_0"
+    },
+    "40b76b9ae1b25aed587f309e80c0bdb4bffa88b160": {
+      "workers": {
+        "app/empresas/nuevo/page": {
+          "moduleId": 36280,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/empresas/nuevo/page.js"
+        }
+      },
+      "filename": "app/empresas/nuevo/page.js",
+      "exportedName": "$$RSC_SERVER_ACTION_0"
+    },
+    "40aba0e35700d2417dc5624d3cccedd03b4421842c": {
+      "workers": {
+        "app/productos/nuevo/page": {
+          "moduleId": 63030,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/productos/nuevo/page.js"
+        }
+      },
+      "filename": "app/productos/nuevo/page.js",
+      "exportedName": "$$RSC_SERVER_ACTION_0"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "pKK3rymhUi90xHGDvFEaaTE3aF2fMSmHpj7AG39cM0E="
+}

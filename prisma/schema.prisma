@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Empresa {
+  id           String     @id @default(uuid())
+  rfc          String     @unique
+  razonSocial  String
+  regimen      String
+  codigoPostal String
+  
+  // Confidencial (CSD)
+  cerPath      String?
+  keyPath      String?
+  passwordCsd  String?
+  
+  // Relaciones
+  clientes     Cliente[]
+  productos    Producto[]
+  facturas     Factura[]
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Cliente {
+  id           String     @id @default(uuid())
+  rfc          String
+  razonSocial  String
+  regimen      String
+  codigoPostal String
+  usoCfdi      String
+  
+  // Relacion - cada cliente pertenece a una empresa emisora configurada
+  empresaId    String
+  empresa      Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  facturas     Factura[]
+  
+  createdAt    DateTime   @default(now())
+  @@unique([empresaId, rfc]) // Un cliente con el mismo RFC por empresa
+}
+
+model Producto {
+  id             String   @id @default(uuid())
+  noIdentificacion String
+  descripcion    String
+  claveProdServ  String
+  claveUnidad    String
+  precio         Float
+  impuesto       String?
+  
+  empresaId      String
+  empresa        Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime @default(now())
+}
+
+model Factura {
+  id             String   @id @default(uuid())
+  uuid           String?  @unique // Timbre Fiscal
+  serie          String?
+  folio          Int?
+  fechaEmision   DateTime @default(now())
+  total          Float
+  estatus        String   @default("Borrador") // Borrador, Timbrada, Cancelada
+  
+  xmlUrl         String?
+  pdfUrl         String?
+
+  empresaId      String
+  empresa        Empresa  @relation(fields: [empresaId], references: [id])
+  
+  clienteId      String
+  cliente        Cliente  @relation(fields: [clienteId], references: [id])
+
+  createdAt      DateTime @default(now())
+}
