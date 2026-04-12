@@ -1,20 +1,39 @@
 import { PrismaClient } from '@prisma/client'
 import Link from 'next/link'
+import ClientTableActions from './ClientTableActions'
+import SearchBar from '../components/SearchBar'
+
+export const dynamic = 'force-dynamic'
 
 const prisma = new PrismaClient()
 
-export default async function ClientesPage() {
-  const clientes = await prisma.cliente.findMany({ include: { empresa: true } })
+export default async function ClientesPage({ searchParams }) {
+  const resolvedParams = await searchParams
+  const q = resolvedParams?.q || ""
+
+  const clientes = await prisma.cliente.findMany({ 
+    include: { empresa: true },
+    where: q ? {
+      OR: [
+        { razonSocial: { contains: q, mode: 'insensitive' } },
+        { rfc: { contains: q, mode: 'insensitive' } },
+        { codigoPostal: { contains: q } }
+      ]
+    } : {},
+    orderBy: { createdAt: 'desc' }
+  })
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
          <h1>Directorio de Clientes</h1>
          <Link href="/clientes/nuevo"><button className="btn">Nuevo Cliente</button></Link>
       </div>
+
+      <SearchBar placeholder="Buscar por Razón Social, RFC o C.P..." />
       
-      <div className="glass-panel" style={{ marginTop: '2rem' }}>
-        <table className="table-glass">
+      <div className="table-container">
+        <table className="table">
           <thead>
             <tr>
               <th>Empresa Origen</th>
@@ -39,7 +58,9 @@ export default async function ClientesPage() {
                 <td>{c.razonSocial}</td>
                 <td>{c.codigoPostal}</td>
                 <td>{c.regimen}</td>
-                <td><button className="btn" style={{padding: '0.4rem 1rem'}}>Editar</button></td>
+                <td>
+                  <ClientTableActions clienteId={c.id} />
+                </td>
               </tr>
             ))}
           </tbody>

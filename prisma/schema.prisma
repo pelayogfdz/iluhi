@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -18,10 +19,25 @@ model Empresa {
   regimen      String
   codigoPostal String
   
+  calle        String?
+  numExterior  String?
+  numInterior  String?
+  colonia      String?
+  municipio    String?
+  ciudad       String?
+  estado       String?
+  correo       String?
+  
   // Confidencial (CSD)
-  cerPath      String?
-  keyPath      String?
-  passwordCsd  String?
+  cerPath            String?
+  keyPath            String?
+  passwordCsd        String?
+
+  // SMTP Mail Server
+  smtpHost           String?
+  smtpPort           Int?
+  smtpUser           String?
+  smtpPass           String?
   
   // Relaciones
   clientes     Cliente[]
@@ -34,11 +50,23 @@ model Empresa {
 
 model Cliente {
   id           String     @id @default(uuid())
-  rfc          String
-  razonSocial  String
-  regimen      String
-  codigoPostal String
-  usoCfdi      String
+  rfc               String
+  razonSocial       String
+  regimen           String
+  codigoPostal      String
+  usoCfdi           String
+  
+  // Direccion y Contacto (CRM Completo)
+  calle             String?
+  numExterior       String?
+  numInterior       String?
+  colonia           String?
+  municipio         String?
+  ciudad            String?
+  estado            String?
+  
+  // Para envío de factura
+  correoDestino     String?
   
   // Relacion - cada cliente pertenece a una empresa emisora configurada
   empresaId    String
@@ -50,14 +78,19 @@ model Cliente {
   @@unique([empresaId, rfc]) // Un cliente con el mismo RFC por empresa
 }
 
-model Producto {
-  id             String   @id @default(uuid())
-  noIdentificacion String
-  descripcion    String
-  claveProdServ  String
-  claveUnidad    String
-  precio         Float
-  impuesto       String?
+model Producto { // Renombrado lógicamente como "Productos y Servicios" en UI
+  id                 String   @id @default(uuid())
+  noIdentificacion   String
+  descripcion        String
+  claveProdServ      String // Validado contra tabla SAT
+  claveUnidad        String // Validado contra tabla SAT
+  precio             Float
+  
+  // Impuestos CFDI 4.0
+  objetoImp          String   @default("02") // 01 No objeto, 02 Sí objeto, 03 Sí objeto y exento
+  tipoFactor         String   @default("Tasa") // Tasa, Cuota, Exento
+  tasaOCuota         Float    @default(0.160000)
+  impuesto           String?  // 002 (IVA), 003 (IEPS), 001 (ISR)
   
   empresaId      String
   empresa        Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
@@ -66,16 +99,32 @@ model Producto {
 }
 
 model Factura {
-  id             String   @id @default(uuid())
-  uuid           String?  @unique // Timbre Fiscal
-  serie          String?
-  folio          Int?
-  fechaEmision   DateTime @default(now())
-  total          Float
-  estatus        String   @default("Borrador") // Borrador, Timbrada, Cancelada
+  id                        String   @id @default(uuid())
+  uuid                      String?  @unique // Timbre Fiscal
+  serie                     String?
+  folio                     Int?
+  fechaEmision              DateTime @default(now())
   
-  xmlUrl         String?
-  pdfUrl         String?
+  // CFDI 4.0 Nodos Comprobante
+  moneda                    String   @default("MXN")
+  tipoCambio                Float?
+  tipoComprobante           String   @default("I") // I, E, T, P, N
+  exportacion               String   @default("01") // 01 No aplica
+  formaPago                 String?  // Ej. 03 Transferencia
+  metodoPago                String?  // Ej. PUE o PPD
+  condicionesDePago         String?  // Texto libre
+  
+  // Desgloses Totales
+  subTotal                  Float
+  descuento                 Float    @default(0)
+  totalImpuestosTrasladados Float    @default(0)
+  totalImpuestosRetenidos   Float    @default(0)
+  total                     Float
+  
+  estatus                   String   @default("Borrador") // Borrador, Timbrada, Cancelada
+  
+  xmlUrl                    String?
+  pdfUrl                    String?
 
   empresaId      String
   empresa        Empresa  @relation(fields: [empresaId], references: [id])
@@ -84,4 +133,20 @@ model Factura {
   cliente        Cliente  @relation(fields: [clienteId], references: [id])
 
   createdAt      DateTime @default(now())
+}
+
+// ============================================
+// Catálogos Oficiales SAT (Búsqueda Predictiva)
+// ============================================
+
+model SatCatalogoProducto {
+  clave       String   @id
+  descripcion String
+  
+  @@index([descripcion]) // Acelera las búsquedas de texto predictivo
+}
+
+model SatCatalogoUnidad {
+  clave       String   @id
+  nombre      String
 }

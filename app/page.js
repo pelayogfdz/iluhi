@@ -1,29 +1,59 @@
-export default function Home() {
+import Link from 'next/link'
+
+export default function Dashboard() {
   return (
     <div>
-      <h1>Dashboard Principal</h1>
-      
-      <div className="glass-panel">
-        <h3>Bienvenido al Sistema de Facturación Multi-Empresa</h3>
-        <p style={{marginTop: '1rem', color: 'var(--text-secondary)'}}>
-          Este portal está diseñado bajo la arquitectura Next.js para gestionar múltiples razones sociales, catálogos de CFDI 4.0 y la emisión de facturas electrónicas.
+      <header style={{ marginBottom: '3rem' }}>
+        <h1 style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>Bienvenido al Hub Central</h1>
+        <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>Plataforma SaaS Multi-tenant de Emisión CFDI 4.0</p>
+      </header>
+
+      <h2>Accesos Rápidos</h2>
+      <div className="dashboard-grid">
+        
+        <Link href="/facturas/nuevo" className="glass-panel card">
+          <h3>
+            Emitir Nueva Factura 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Abre el motor de ensamble para crear un CFDI 4.0 al vuelo.</p>
+        </Link>
+        
+        <Link href="/empresas" className="glass-panel card">
+          <h3>
+            Emisores (Tenants) 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Gestiona las empresas que usan tu SaaS para timbrar.</p>
+        </Link>
+        
+        <Link href="/clientes" className="glass-panel card">
+          <h3>
+            Receptores 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Directorio masivo de clientes a los cuales se les cobra.</p>
+        </Link>
+        
+        <Link href="/productos" className="glass-panel card">
+          <h3>
+            Catálogo SAT 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Agrega productos y empareja claves predictivas.</p>
+        </Link>
+
+      </div>
+
+      <div className="glass-panel" style={{ marginTop: '3rem', border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.05)' }}>
+        <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>Estado del Motor de Timbrado (PAC)</h3>
+        <p>
+          La estructura Lógica hacia Facturapi está completada al 100%. El sistema está configurado en 
+          <span style={{ color: 'yellow', marginLeft: '5px', fontWeight: 'bold' }}>MODO PRUEBAS (Sandbox Dummy)</span>.
+          Para empezar a timbrar verdaderamente en el SAT, actualiza tu SDK con tu Secret Text Privado.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div className="glass-panel">
-          <h3>Estadísticas Rápidas</h3>
-          <p style={{marginTop: '1rem'}}>Empresas Registradas: 0</p>
-          <p>Facturas Emitidas Hoy: 0</p>
-        </div>
-        <div className="glass-panel">
-          <h3>Accesos Rápidos</h3>
-          <div style={{marginTop: '1rem', display: 'flex', gap: '1rem' }}>
-             <button className="btn">Alta de Empresa</button>
-             <button className="btn">Nueva Factura</button>
-          </div>
-        </div>
-      </div>
     </div>
-  );
+  )
 }

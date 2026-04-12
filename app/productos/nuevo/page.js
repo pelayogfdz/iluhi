@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import ExcelUploader from '../ExcelUploader'
 
 const prisma = new PrismaClient()
 
@@ -14,6 +15,9 @@ async function createProducto(formData) {
   const claveUnidad = formData.get('claveUnidad')
   const precio = parseFloat(formData.get('precio')) || 0
   const impuesto = formData.get('impuesto')
+  const objetoImp = formData.get('objetoImp')
+  const tipoFactor = formData.get('tipoFactor')
+  const tasaOCuota = parseFloat(formData.get('tasaOCuota')) || 0
   
   await prisma.producto.create({
     data: {
@@ -23,7 +27,10 @@ async function createProducto(formData) {
       claveProdServ,
       claveUnidad,
       precio,
-      impuesto
+      impuesto,
+      objetoImp,
+      tipoFactor,
+      tasaOCuota
     }
   })
   
@@ -36,11 +43,17 @@ export default async function NuevoProductoPage() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-         <h1>Agregar Concepto / Servicio CFDI</h1>
+         <h1>Agregar Productos y Servicios CFDI</h1>
          <Link href="/productos"><button className="btn btn-secondary">Regresar</button></Link>
       </div>
       
-      <div className="glass-panel" style={{ marginTop: '2rem', maxWidth: '600px' }}>
+      {/* Importador Masivo de Excel */}
+      <div style={{ marginTop: '2rem', maxWidth: '800px' }}>
+          <ExcelUploader empresas={empresas} />
+      </div>
+
+      <h3 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>O captura manual individual:</h3>
+      <div className="glass-panel" style={{ maxWidth: '800px' }}>
         <form action={createProducto} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           <div className="form-group">
@@ -84,12 +97,37 @@ export default async function NuevoProductoPage() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="impuesto">Impuesto aplicable</label>
-                <select id="impuesto" name="impuesto" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                  <option value="IVA-16">IVA Traslado Retenido 16%</option>
-                  <option value="IVA-0">IVA 0%</option>
-                  <option value="EXENTO">Exento</option>
+                <label htmlFor="objetoImp">Objeto de Impuesto (SAT)</label>
+                <select id="objetoImp" name="objetoImp" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                  <option value="01">01 - No objeto de impuesto</option>
+                  <option value="02">02 - Sí objeto de impuesto</option>
+                  <option value="03">03 - Sí objeto del impuesto y no obligado al desglose</option>
                 </select>
+              </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label htmlFor="impuesto">Tipo Impuesto</label>
+                <select id="impuesto" name="impuesto" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                  <option value="002">002 - IVA</option>
+                  <option value="003">003 - IEPS</option>
+                  <option value="001">001 - ISR</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="tipoFactor">Tipo Factor</label>
+                <select id="tipoFactor" name="tipoFactor" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                  <option value="Tasa">Tasa</option>
+                  <option value="Cuota">Cuota</option>
+                  <option value="Exento">Exento</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="tasaOCuota">Tasa o Cuota (Ej. 0.16)</label>
+                <input type="number" step="0.000001" id="tasaOCuota" name="tasaOCuota" className="form-control" required defaultValue="0.160000" />
               </div>
           </div>
 

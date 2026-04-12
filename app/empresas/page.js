@@ -1,20 +1,38 @@
 import { PrismaClient } from '@prisma/client'
 import Link from 'next/link'
+import ClientTableActions from './ClientTableActions'
+import SearchBar from '../components/SearchBar'
+
+export const dynamic = 'force-dynamic'
 
 const prisma = new PrismaClient()
 
-export default async function EmpresasPage() {
-  const empresas = await prisma.empresa.findMany()
+export default async function EmpresasPage({ searchParams }) {
+  const resolvedParams = await searchParams
+  const q = resolvedParams?.q || ""
+
+  const empresas = await prisma.empresa.findMany({
+    where: q ? {
+      OR: [
+        { razonSocial: { contains: q, mode: 'insensitive' } },
+        { rfc: { contains: q, mode: 'insensitive' } },
+        { codigoPostal: { contains: q } }
+      ]
+    } : {},
+    orderBy: { createdAt: 'desc' }
+  })
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
          <h1>Configuración de Empresas (Emisores)</h1>
          <Link href="/empresas/nuevo"><button className="btn">Agregar Empresa</button></Link>
       </div>
+
+      <SearchBar placeholder="Buscar por Razón Social, RFC o C.P..." />
       
-      <div className="glass-panel" style={{ marginTop: '2rem' }}>
-        <table className="table-glass">
+      <div className="table-container">
+        <table className="table">
           <thead>
             <tr>
               <th>RFC</th>
@@ -37,7 +55,9 @@ export default async function EmpresasPage() {
                 <td>{emp.razonSocial}</td>
                 <td>{emp.regimen}</td>
                 <td>{emp.cerPath ? '✅' : '❌'}</td>
-                <td><button className="btn" style={{padding: '0.4rem 1rem'}}>Editar</button></td>
+                <td>
+                  <ClientTableActions empresaId={emp.id} />
+                </td>
               </tr>
             ))}
           </tbody>

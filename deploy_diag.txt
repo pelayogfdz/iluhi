@@ -1,0 +1,129 @@
+ »   Warning: --build is now the default and can safely be omitted.
+​
+Netlify Build                                                 
+────────────────────────────────────────────────────────────────
+​
+> Version
+  @netlify/build 35.12.0
+​
+> Flags
+  accountId: 68ee85a2e4654e8d196e42d7
+  deployId: 69dafb9702f8429bba3dcc6c
+​
+> Current directory
+  C:\Users\barca2\.gemini\antigravity\playground\luminescent-ionosphere
+​
+> Config file
+  C:\Users\barca2\.gemini\antigravity\playground\luminescent-ionosphere\netlify.toml
+​
+> Context
+  production
+​
+> Installing extensions
+   - neon
+​
+> Using Next.js Runtime - v5.15.9
+​
+> Loading extensions
+   - neon
+​
+Build command from Netlify app                                
+────────────────────────────────────────────────────────────────
+​
+$ npm run build
+
+> luminescent-ionosphere@0.1.0 build
+> next build
+
+⚠ `eslint` configuration in next.config.mjs is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.mjs options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+▲ Next.js 16.2.2 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.6s
+  Running TypeScript ...
+  Finished TypeScript in 897ms ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/8) ...
+  Generating static pages using 15 workers (2/8) 
+  Generating static pages using 15 workers (4/8) 
+  Generating static pages using 15 workers (6/8) 
+✓ Generating static pages using 15 workers (8/8) in 3.4s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/diag
+├ ƒ /clientes
+├ ƒ /clientes/editar/[id]
+├ ○ /clientes/nuevo
+├ ƒ /empresas
+├ ƒ /empresas/editar/[id]
+├ ○ /empresas/nuevo
+├ ƒ /facturas
+├ ○ /facturas/nuevo
+├ ƒ /productos
+└ ○ /productos/nuevo
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+​
+(build.command completed in 25.2s)
+​
+Plugin "@netlify/plugin-nextjs" internal error                
+────────────────────────────────────────────────────────────────
+​
+  Error message
+  Error: EPERM: operation not permitted, symlink 'C:\Users\barca2\.gemini\antigravity\playground\luminescent-ionosphere\node_modules\@prisma\client' -> 'C:\Users\barca2\.gemini\antigravity\playground\luminescent-ionosphere\.netlify\functions-internal\___netlify-server-handler\.next\node_modules\@prisma\client-2c3a283f134fdcb6'
+​
+  Plugin details
+  Package:        @netlify/plugin-nextjs
+  Version:        5.15.9
+  Repository:     git+https://github.com/opennextjs/opennextjs-netlify.git
+  npm link:       https://www.npmjs.com/package/@netlify/plugin-nextjs
+  Report issues:  https://github.com/opennextjs/opennextjs-netlify/issues
+​
+  Error location
+  In "onBuild" event in "@netlify/plugin-nextjs" from undefined
+      at async symlink (node:internal/fs/promises:1644:10)
+      at async copyDir (node:internal/fs/cp/cp:330:19)
+      at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)
+      at async copyDir (node:internal/fs/cp/cp:330:19)
+      at async mkDirAndCopy (node:internal/fs/cp/cp:319:3)
+      at async file:///C:/Users/barca2/.gemini/antigravity/playground/luminescent-ionosphere/.netlify/plugins/node_modules/@netlify/plugin-nextjs/dist/build/content/server.js:126:7
+      at async copyNextServerCode (file:///C:/Users/barca2/.gemini/antigravity/playground/luminescent-ionosphere/.netlify/plugins/node_modules/@netlify/plugin-nextjs/dist/build/content/server.js:45:3)
+      at async file:///C:/Users/barca2/.gemini/antigravity/playground/luminescent-ionosphere/.netlify/plugins/node_modules/@netlify/plugin-nextjs/dist/build/functions/server.js:126:5
+      at async createServerHandler (file:///C:/Users/barca2/.gemini/antigravity/playground/luminescent-ionosphere/.netlify/plugins/node_modules/@netlify/plugin-nextjs/dist/build/functions/server.js:124:3)
+      at async Promise.all (index 3)
+​
+  Error properties
+  {
+    errno: [33m-4048[39m,
+    code: [32m'EPERM'[39m,
+    syscall: [32m'symlink'[39m,
+    path: [32m'C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\node_modules\\@prisma\\client'[39m,
+    dest: [32m'C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\.netlify\\functions-internal\\___netlify-server-handler\\.next\\node_modules\\@prisma\\client-2c3a283f134fdcb6'[39m
+  }
+​
+  Resolved config
+  build:
+    command: npm run build
+    commandOrigin: ui
+    publish: C:\Users\barca2\.gemini\antigravity\playground\luminescent-ionosphere\.next
+    publishOrigin: ui
+  functions:
+    "*":
+      included_files:
+        - node_modules/.prisma/**/*
+        - node_modules/@prisma/**/*
+  plugins:
+    - inputs: {}
+      origin: default
+      package: "@netlify/plugin-nextjs"
+ »   Error: Error while running build

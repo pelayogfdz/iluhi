@@ -1,6 +1,30 @@
 {
   "node": {
-    "40f2d9a50f19160f0a223b25f1e19e30b6bff804c1": {
+    "406ce4327fcb788d9d7f5483fbc964ee37bceef602": {
+      "workers": {
+        "app/clientes/page": {
+          "moduleId": 35536,
+          "async": false,
+          "exportedName": "eliminarCliente",
+          "filename": "app/clientes/acciones.js"
+        }
+      },
+      "filename": "app/clientes/acciones.js",
+      "exportedName": "eliminarCliente"
+    },
+    "606fca95eb53c2f7b5a667c18d5c9759ee1f1e4c4d": {
+      "workers": {
+        "app/clientes/editar/[id]/page": {
+          "moduleId": 54420,
+          "async": false,
+          "exportedName": "actualizarCliente",
+          "filename": "app/clientes/acciones.js"
+        }
+      },
+      "filename": "app/clientes/acciones.js",
+      "exportedName": "actualizarCliente"
+    },
+    "4026b298319cf8a526048ee70f3101e860a2944ab0": {
       "workers": {
         "app/clientes/nuevo/page": {
           "moduleId": 38487,
@@ -12,7 +36,43 @@
       "filename": "app/clientes/nuevo/page.js",
       "exportedName": "$$RSC_SERVER_ACTION_0"
     },
-    "40b76b9ae1b25aed587f309e80c0bdb4bffa88b160": {
+    "40201cc105876ef104ded03bde51ed7a12dacb9653": {
+      "workers": {
+        "app/empresas/page": {
+          "moduleId": 8278,
+          "async": false,
+          "exportedName": "eliminarEmpresa",
+          "filename": "app/empresas/acciones.js"
+        }
+      },
+      "filename": "app/empresas/acciones.js",
+      "exportedName": "eliminarEmpresa"
+    },
+    "6062ab6cb41e7d0b4de29afa80b0224f083832df54": {
+      "workers": {
+        "app/empresas/editar/[id]/page": {
+          "moduleId": 7549,
+          "async": false,
+          "exportedName": "actualizarEmpresa",
+          "filename": "app/empresas/acciones.js"
+        }
+      },
+      "filename": "app/empresas/acciones.js",
+      "exportedName": "actualizarEmpresa"
+    },
+    "6028eccd7f1a12b1ef01f6ac36c95bab565817e36b": {
+      "workers": {
+        "app/empresas/editar/[id]/page": {
+          "moduleId": 7549,
+          "async": false,
+          "exportedName": "subirCSD",
+          "filename": "app/empresas/acciones.js"
+        }
+      },
+      "filename": "app/empresas/acciones.js",
+      "exportedName": "subirCSD"
+    },
+    "40052c022d6c6ab11ce3c19d9c0a28765b0730837f": {
       "workers": {
         "app/empresas/nuevo/page": {
           "moduleId": 36280,
@@ -24,10 +84,22 @@
       "filename": "app/empresas/nuevo/page.js",
       "exportedName": "$$RSC_SERVER_ACTION_0"
     },
-    "40aba0e35700d2417dc5624d3cccedd03b4421842c": {
+    "4053c0e99a1136658c4c19e16bda67239ee580a97d": {
+      "workers": {
+        "app/facturas/nuevo/page": {
+          "moduleId": 90225,
+          "async": false,
+          "exportedName": "prepararYTimbrarFactura",
+          "filename": "app/facturas/acciones.js"
+        }
+      },
+      "filename": "app/facturas/acciones.js",
+      "exportedName": "prepararYTimbrarFactura"
+    },
+    "40b81d3cce8533b9746fc6833f75596bf65f0f2c1a": {
       "workers": {
         "app/productos/nuevo/page": {
-          "moduleId": 63030,
+          "moduleId": 28011,
           "async": false,
           "exportedName": "$$RSC_SERVER_ACTION_0",
           "filename": "app/productos/nuevo/page.js"
@@ -35,8 +107,20 @@
       },
       "filename": "app/productos/nuevo/page.js",
       "exportedName": "$$RSC_SERVER_ACTION_0"
+    },
+    "606c96d2628beb908413cc35831e62c02c35189f2e": {
+      "workers": {
+        "app/productos/nuevo/page": {
+          "moduleId": 28011,
+          "async": false,
+          "exportedName": "importarProductosMasivos",
+          "filename": "app/productos/acciones.js"
+        }
+      },
+      "filename": "app/productos/acciones.js",
+      "exportedName": "importarProductosMasivos"
     }
   },
   "edge": {},
-  "encryptionKey": "pKK3rymhUi90xHGDvFEaaTE3aF2fMSmHpj7AG39cM0E="
+  "encryptionKey": "J9T72ZAGUJQ1WfJe5DLxpr4i9LJKrIC9QNLARbtl+xM="
 }

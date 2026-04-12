@@ -1,20 +1,38 @@
 import { PrismaClient } from '@prisma/client'
 import Link from 'next/link'
+import SearchBar from '../components/SearchBar'
+
+export const dynamic = 'force-dynamic'
 
 const prisma = new PrismaClient()
 
-export default async function ProductosPage() {
-  const productos = await prisma.producto.findMany({ include: { empresa: true } })
+export default async function ProductosPage({ searchParams }) {
+  const resolvedParams = await searchParams
+  const q = resolvedParams?.q || ""
+
+  const productos = await prisma.producto.findMany({ 
+    include: { empresa: true },
+    where: q ? {
+      OR: [
+        { descripcion: { contains: q, mode: 'insensitive' } },
+        { noIdentificacion: { contains: q, mode: 'insensitive' } },
+        { claveProdServ: { contains: q } }
+      ]
+    } : {},
+    orderBy: { createdAt: 'desc' }
+  })
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
          <h1>Catálogo de Productos y Servicios</h1>
          <Link href="/productos/nuevo"><button className="btn">Nuevo Concepto</button></Link>
       </div>
       
-      <div className="glass-panel" style={{ marginTop: '2rem' }}>
-        <table className="table-glass">
+      <SearchBar placeholder="Buscar por Nombre, No. de Identificación o Clave SAT..." />
+
+      <div className="table-container">
+        <table className="table">
           <thead>
             <tr>
               <th>Empresa</th>

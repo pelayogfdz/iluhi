@@ -1,10 +1,15 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/diag/route": "app/api/diag/route.js",
+  "/clientes/editar/[id]/page": "app/clientes/editar/[id]/page.js",
   "/clientes/nuevo/page": "app/clientes/nuevo/page.js",
   "/clientes/page": "app/clientes/page.js",
+  "/empresas/editar/[id]/page": "app/empresas/editar/[id]/page.js",
   "/empresas/nuevo/page": "app/empresas/nuevo/page.js",
   "/empresas/page": "app/empresas/page.js",
+  "/facturas/nuevo/page": "app/facturas/nuevo/page.js",
+  "/facturas/page": "app/facturas/page.js",
   "/page": "app/page.js",
   "/productos/nuevo/page": "app/productos/nuevo/page.js",
   "/productos/page": "app/productos/page.js"

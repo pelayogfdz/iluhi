@@ -1,10 +1,15 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/diag/route": "/api/diag",
+  "/clientes/editar/[id]/page": "/clientes/editar/[id]",
   "/clientes/nuevo/page": "/clientes/nuevo",
   "/clientes/page": "/clientes",
+  "/empresas/editar/[id]/page": "/empresas/editar/[id]",
   "/empresas/nuevo/page": "/empresas/nuevo",
   "/empresas/page": "/empresas",
+  "/facturas/nuevo/page": "/facturas/nuevo",
+  "/facturas/page": "/facturas",
   "/page": "/",
   "/productos/nuevo/page": "/productos/nuevo",
   "/productos/page": "/productos"

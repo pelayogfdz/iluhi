@@ -74,30 +74,6 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/clientes": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "next-action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/clientes",
-      "dataRoute": "/clientes.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/clientes/nuevo": {
       "experimentalBypassFor": [
         {
@@ -113,30 +89,6 @@
       "initialRevalidateSeconds": false,
       "srcRoute": "/clientes/nuevo",
       "dataRoute": "/clientes/nuevo.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
-    "/empresas": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "next-action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/empresas",
-      "dataRoute": "/empresas.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -170,7 +122,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/productos": {
+    "/facturas/nuevo": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -183,8 +135,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/productos",
-      "dataRoute": "/productos.rsc",
+      "srcRoute": "/facturas/nuevo",
+      "dataRoute": "/facturas/nuevo.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -222,8 +174,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "7a49664311033af1d885c94fa2ee5362",
-    "previewModeSigningKey": "28c3d03b431b4cff95420f00360b39f235f4117e263de72cc910caa775b7c88c",
-    "previewModeEncryptionKey": "4037012b6291b7cbdc8e06e909c544ce37e48b4e21536da21d7a8f461a7828af"
+    "previewModeId": "06abfa6a83e316ebea3e89eb64b18504",
+    "previewModeSigningKey": "50ae1dabf8992ae71ffbdd2ded0c5fd0f47eedee3dae9bba903166db1b72731c",
+    "previewModeEncryptionKey": "57674a31eb9f630d1a7341864f5fa6527494d16b4d58a3fc3ecf3a82e4926170"
   }
 }

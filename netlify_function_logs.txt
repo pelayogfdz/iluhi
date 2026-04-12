@@ -1,0 +1,24 @@
+ERROR ⨯ Error: Failed to load external module @prisma/client-2c3a283f134fdcb6: Error: Cannot find module '@prisma/client-2c3a283f134fdcb6'
+Require stack:
+- /var/task/.next/server/chunks/[externals]__0l8el96._.js
+- /var/task/.next/server/chunks/[turbopack]_runtime.js
+- /var/task/.next/server/app/api/diag/route.js
+- /var/task/node_modules/next/dist/server/require.js
+- /var/task/node_modules/next/dist/server/next-server.js
+- /var/task/node_modules/next/dist/server/next.js
+- /var/task/node_modules/next/dist/server/lib/start-server.js
+- /var/task/.netlify/dist/run/next.cjs
+    at Context.externalRequire [as x] (.next/server/chunks/[turbopack]_runtime.js:624:15)
+    at module evaluation (.next/server/chunks/[externals]__0l8el96._.js:1:45)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:853:9)
+    at getOrInstantiateModuleFromParent (.next/server/chunks/[turbopack]_runtime.js:877:12)
+    at Context.esmImport [as i] (.next/server/chunks/[turbopack]_runtime.js:281:20)
+    at module evaluation (.next/server/chunks/[root-of-the-server]__00n6g1j._.js:11:42629)
+    at instantiateModule (.next/server/chunks/[turbopack]_runtime.js:853:9)
+    at instantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:882:12)
+    at getOrInstantiateRuntimeModule (.next/server/chunks/[turbopack]_runtime.js:895:12)
+    at Object.m (.next/server/chunks/[turbopack]_runtime.js:898:18)
+
+INFO Duration: 21.81 ms	Memory Usage: 174 MB
+
+HTTP BODY: Internal Server Error

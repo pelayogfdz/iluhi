@@ -21,7 +21,24 @@
     "afterFiles": [],
     "fallback": []
   },
-  "dynamicRoutes": [],
+  "dynamicRoutes": [
+    {
+      "page": "/clientes/editar/[id]",
+      "regex": "^/clientes/editar/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/clientes/editar/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/empresas/editar/[id]",
+      "regex": "^/empresas/editar/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/empresas/editar/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
   "staticRoutes": [
     {
       "page": "/",
@@ -40,6 +57,12 @@
       "regex": "^/_not\\-found(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api/diag",
+      "regex": "^/api/diag(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/diag(?:/)?$"
     },
     {
       "page": "/clientes",
@@ -64,6 +87,18 @@
       "regex": "^/empresas/nuevo(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/empresas/nuevo(?:/)?$"
+    },
+    {
+      "page": "/facturas",
+      "regex": "^/facturas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/facturas(?:/)?$"
+    },
+    {
+      "page": "/facturas/nuevo",
+      "regex": "^/facturas/nuevo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/facturas/nuevo(?:/)?$"
     },
     {
       "page": "/productos",
