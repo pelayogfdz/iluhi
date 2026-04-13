@@ -1,3 +1,8 @@
+import { NextResponse } from 'next/server';
+import prisma from '../../../lib/prisma';
+import nodemailer from 'nodemailer';
+import PdfPrinter from 'pdfmake';
+
 async function fetchImageAsBase64(url) {
   if (!url) return null;
   try {

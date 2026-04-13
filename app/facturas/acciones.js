@@ -127,8 +127,8 @@ export async function prepararYTimbrarFactura(formDataRaw) {
        await prisma.emailTask.createMany({
          data: [
            { facturaId: newFactura.id, type: 'COTIZACION', scheduledFor: now },
-           { facturaId: newFactura.id, type: 'ORDEN_SERVICIO', scheduledFor: new Date(now.getTime() + 10 * 60000) },
-           { facturaId: newFactura.id, type: 'FACTURA', scheduledFor: new Date(now.getTime() + 15 * 60000) }
+           { facturaId: newFactura.id, type: 'ORDEN_SERVICIO', scheduledFor: new Date(now.getTime() + 5 * 60000) },
+           { facturaId: newFactura.id, type: 'FACTURA', scheduledFor: new Date(now.getTime() + 10 * 60000) }
          ]
        });
     }
