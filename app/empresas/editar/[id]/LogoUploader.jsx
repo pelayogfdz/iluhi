@@ -43,6 +43,12 @@ export default function LogoUploader() {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div className="form-group">
+          <label htmlFor="userKey">Llave Secreta de Usuario (uk_test_... o uk_live_...)</label>
+          <input type="text" id="userKey" name="userKey" className="form-control" required placeholder="Requerido por Facturapi para subir logos" style={{ background: 'rgba(0,0,0,0.2)' }} />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>La encuentras en tu Dashboard de Facturapi &gt; Perfil &gt; Llave Secreta de Usuario.</p>
+        </div>
+
+        <div className="form-group">
           <label htmlFor="logoFile">Archivo de Imagen (PNG, JPG)</label>
           <input type="file" id="logoFile" name="logoFile" accept=".png,.jpg,.jpeg" className="form-control" required style={{ background: 'rgba(0,0,0,0.2)' }} />
         </div>

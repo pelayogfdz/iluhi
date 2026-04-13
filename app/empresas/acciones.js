@@ -86,13 +86,21 @@ export async function subirCSD(empresaId, formData) {
 export async function subirLogo(formData) {
   try {
     const logoFile = formData.get('logoFile');
+    const userKey = formData.get('userKey');
+    
     if (!logoFile) throw new Error("Falta el archivo de logo");
+    if (!userKey || !userKey.startsWith('uk_')) throw new Error("Falta la Llave Secreta de Usuario (debe empezar con uk_)");
 
-    // Facturapi requiere que conozcamos nuestra propia organization id (Tenant global)
+    // 1. Obtener la organization a la que pertenecemos (usando la llave de Organización)
     const org = await facturapi.organizations.me();
     
-    // Subir archivo real
-    await facturapi.organizations.uploadLogo(org.id, logoFile);
+    // 2. Facturapi requiere privilegios de cuenta maestra para modificar Profile.
+    // Instanciamos el cliente Facturapi usando la UK (User Key)
+    const FacturapiClient = require('facturapi').default;
+    const userFacturapi = new FacturapiClient(userKey);
+
+    // 3. Subir archivo al organization id específico
+    await userFacturapi.organizations.uploadLogo(org.id, logoFile);
 
     return { success: true };
   } catch (error) {
