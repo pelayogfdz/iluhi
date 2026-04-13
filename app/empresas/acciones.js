@@ -1,6 +1,7 @@
 'use server'
 
 import { PrismaClient } from '@prisma/client'
+import facturapi from '../../lib/facturapi'
 
 const prisma = new PrismaClient()
 
@@ -79,5 +80,23 @@ export async function subirCSD(empresaId, formData) {
   } catch(error) {
     console.error("Error CSD: ", error)
     return { success: false, error: error.message }
+  }
+}
+
+export async function subirLogo(formData) {
+  try {
+    const logoFile = formData.get('logoFile');
+    if (!logoFile) throw new Error("Falta el archivo de logo");
+
+    // Facturapi requiere que conozcamos nuestra propia organization id (Tenant global)
+    const org = await facturapi.organizations.me();
+    
+    // Subir archivo real
+    await facturapi.organizations.uploadLogo(org.id, logoFile);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error subiendo logo a Facturapi: ", error);
+    return { success: false, error: error.message || 'Error al conectar con Facturapi' };
   }
 }
