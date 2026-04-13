@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import ExcelUploader from '../ExcelUploader'
+import prisma from '../../../lib/prisma';
 
 
 
 async function createProducto(formData) {
   'use server'
-import prisma from '../../../lib/prisma';
+
+
 
   
   const empresaId = formData.get('empresaId')

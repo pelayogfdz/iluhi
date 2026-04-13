@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-
-
+import prisma from '../../../lib/prisma';
 
 async function createEmpresa(formData) {
   'use server'
-import prisma from '../../../lib/prisma';
+
 
   
   const rfc = formData.get('rfc')
