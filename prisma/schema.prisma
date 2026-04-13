@@ -130,6 +130,7 @@ model Factura {
   formaPago                 String?  // Ej. 03 Transferencia
   metodoPago                String?  // Ej. PUE o PPD
   condicionesDePago         String?  // Texto libre
+  notasServicio             String?
   
   // Desgloses Totales
   subTotal                  Float

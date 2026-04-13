@@ -10,7 +10,7 @@ import facturapi from '../../lib/facturapi'
 
 export async function prepararYTimbrarFactura(formDataRaw) {
   try {
-    const { empresaId, clienteId, usoCfdi, formaPago, metodoPago, items } = formDataRaw;
+    const { empresaId, clienteId, usoCfdi, formaPago, metodoPago, items, notasServicio } = formDataRaw;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'Debe agregar al menos un concepto a la factura.' }
@@ -81,6 +81,11 @@ export async function prepararYTimbrarFactura(formDataRaw) {
       payment_method: metodoPago
     };
 
+    if (notasServicio && notasServicio.trim() !== '') {
+      // Usa un HTML basico para respetar saltos de linea usando replace de newlines
+      facturaPayload.pdf_custom_section = `<div><strong>Notas del Servicio:</strong><br/>${notasServicio.replace(/\n/g, '<br/>')}</div>`;
+    }
+
     console.log("PAYLOAD REDIRIGIDO A FACTURAPI: ", JSON.stringify(facturaPayload, null, 2));
 
     let receipt;
@@ -117,6 +122,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         totalImpuestosTrasladados: 0, // Placeholder
         total: sumTotal, // Placeholder
         estatus: fallbackStatus,
+        notasServicio: notasServicio || null,
         uuid: receipt.id || null
       }
     });

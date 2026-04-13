@@ -125,7 +125,13 @@ async function generateCotizacionPdf(factura, empresa, cliente, facturapiClient)
       },
       { text: `Subtotal: $${factura.subTotal.toFixed(2)}`, alignment: 'right', margin: [0, 20, 0, 5], bold: true },
       { text: `Total Impuestos: $${factura.totalImpuestosTrasladados.toFixed(2)}`, alignment: 'right', margin: [0, 0, 0, 5] },
-      { text: `TOTAL: $${factura.total.toFixed(2)} ${factura.moneda || 'MXN'}`, alignment: 'right', bold: true, fontSize: 14, color: '#0054a6' }
+      { text: `TOTAL: $${factura.total.toFixed(2)} ${factura.moneda || 'MXN'}`, alignment: 'right', bold: true, fontSize: 14, color: '#0054a6' },
+      
+      ...(factura.notasServicio ? [
+        { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }], margin: [0, 10, 0, 10] },
+        { text: 'NOTAS / CONSIDERACIONES:', style: 'sectionHeader' },
+        { text: factura.notasServicio, fontSize: 9, italics: true, color: '#333' }
+      ] : [])
     ],
     styles: { 
        th: { bold: true, fillColor: '#f4f4f4', color: '#333' },
@@ -226,7 +232,13 @@ async function generateOrdenServicioPdf(factura, empresa, cliente, facturapiClie
            paddingBottom: function(i, node) { return 6; }
         }
       },
-      { text: 'Gracias por confiar en nuestros servicios.', alignment: 'center', margin: [0, 40, 0, 0], italics: true, color: '#666' }
+      { text: 'Gracias por confiar en nuestros servicios.', alignment: 'center', margin: [0, 40, 0, 0], italics: true, color: '#666' },
+      
+      ...(factura.notasServicio ? [
+        { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }], margin: [0, 10, 0, 10] },
+        { text: 'NOTAS / DETALLES DEL SERVICIO:', style: 'sectionHeader' },
+        { text: factura.notasServicio, fontSize: 9, italics: true, color: '#333' }
+      ] : [])
     ],
     styles: { 
        th: { bold: true, fillColor: '#0054a6', color: '#fff' },

@@ -16,6 +16,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const [usoCfdi, setUsoCfdi] = useState('G03')
   const [formaPago, setFormaPago] = useState('03')
   const [metodoPago, setMetodoPago] = useState('PUE')
+  const [notasServicio, setNotasServicio] = useState('')
 
   // Estado del carrito de conceptos
   const [items, setItems] = useState([])
@@ -69,7 +70,11 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
       usoCfdi,
       formaPago,
       metodoPago,
-      items
+      notasServicio,
+      items: items.map(it => ({
+        ...it,
+        productoId: it.id // Mapeo de Producto DB
+      }))
     };
 
     const serverRes = await prepararYTimbrarFactura(payload)
@@ -143,6 +148,16 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                     <option value="PPD">Pago en Parcialidades / Diferido</option>
                   </select>
                 </div>
+             </div>
+             <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label>Notas del Servicio / Descripción Adicional (Opcional)</label>
+                <textarea 
+                   className="form-control" 
+                   value={notasServicio} 
+                   onChange={e => setNotasServicio(e.target.value)} 
+                   placeholder="Escribe aquí las consideraciones, reportes de servicio, garantías, o notas que quieras que aparezcan en los PDFs (Cotización, Orden y Factura Oficial)..."
+                   style={{ backgroundColor: 'rgba(0,0,0,0.5)', minHeight: '80px', resize: 'vertical' }}
+                />
              </div>
           </div>
 
