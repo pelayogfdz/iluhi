@@ -86,16 +86,16 @@ export async function subirCSD(empresaId, formData) {
 export async function subirLogo(formData) {
   try {
     const logoFile = formData.get('logoFile');
-    const userKey = formData.get('userKey');
+    const userKey = process.env.FACTURAPI_USER_KEY;
     
     if (!logoFile) throw new Error("Falta el archivo de logo");
-    if (!userKey || !userKey.startsWith('uk_')) throw new Error("Falta la Llave Secreta de Usuario (debe empezar con uk_)");
+    if (!userKey) throw new Error("El sistema no tiene configurada la variable oculta FACTURAPI_USER_KEY en Netlify.");
 
-    // 1. Obtener la organization a la que pertenecemos (usando la llave de Organización)
+    // 1. Obtener la organization a la que pertenecemos (usando la llave de Organización estándar)
     const org = await facturapi.organizations.me();
     
     // 2. Facturapi requiere privilegios de cuenta maestra para modificar Profile.
-    // Instanciamos el cliente Facturapi usando la UK (User Key)
+    // Instanciamos el cliente Facturapi oculto usando la UK (User Key)
     const FacturapiClient = require('facturapi').default;
     const userFacturapi = new FacturapiClient(userKey);
 
