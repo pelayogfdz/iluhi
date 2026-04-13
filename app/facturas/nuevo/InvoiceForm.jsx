@@ -21,8 +21,8 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const [tempProductoId, setTempProductoId] = useState('')
   const [tempCantidad, setTempCantidad] = useState(1)
 
-  // Filtrado reactivo de clientes según la empresa emisora elegida
-  const clientesFiltrados = clientes.filter(c => c.empresaId === empresaId)
+  // Clientes globales disponibles independientemente de la empresa emisora
+  const clientesFiltrados = clientes
   
   // Filtrado reactivo de productos de la empresa
   const productosFiltrados = catalogoProductos.filter(p => p.empresaId === empresaId)
@@ -104,10 +104,12 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             </div>
 
             <div className="form-group">
-              <label>Cliente (Receptor)</label>
-              <select className="form-control" value={clienteId} onChange={e => setClienteId(e.target.value)} disabled={!empresaId} required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                <option value="">Selecciona a quién cobrarle...</option>
-                {clientesFiltrados.map(cli => <option key={cli.id} value={cli.id}>{cli.razonSocial}</option>)}
+              <label>Paso 2: Cliente Receptor</label>
+              <select className="form-control" value={clienteId} onChange={e => setClienteId(e.target.value)} required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <option value="">Selecciona al cliente</option>
+                {clientesFiltrados.map(c => (
+                  <option key={c.id} value={c.id}>{c.razonSocial} ({c.rfc})</option>
+                ))}
               </select>
             </div>
           </div>

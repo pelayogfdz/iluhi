@@ -7,7 +7,6 @@ async function createCliente(formData) {
 
 
   
-  const empresaId = formData.get('empresaId')
   const rfc = formData.get('rfc')
   const razonSocial = formData.get('razonSocial')
   const regimen = formData.get('regimen')
@@ -16,7 +15,6 @@ async function createCliente(formData) {
   
   await prisma.cliente.create({
     data: {
-      empresaId,
       rfc,
       razonSocial,
       regimen,
@@ -29,8 +27,6 @@ async function createCliente(formData) {
 }
 
 export default async function NuevoClientePage() {
-  const empresas = await prisma.empresa.findMany()
-
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -40,16 +36,6 @@ export default async function NuevoClientePage() {
       
       <div className="glass-panel" style={{ marginTop: '2rem', maxWidth: '600px' }}>
         <form action={createCliente} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          <div className="form-group">
-            <label htmlFor="empresaId">Pertenece a la Empresa Emisora</label>
-            <select id="empresaId" name="empresaId" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <option value="">Selecciona la Empresa dueña del cliente</option>
-              {empresas.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.razonSocial} ({emp.rfc})</option>
-              ))}
-            </select>
-          </div>
 
           <div className="form-group">
             <label htmlFor="rfc">RFC del Cliente</label>

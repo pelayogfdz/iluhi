@@ -62,7 +62,6 @@ model Empresa {
   plantillaFactura       String?
   
   // Relaciones
-  clientes     Cliente[]
   productos    Producto[]
   facturas     Factura[]
   
@@ -90,14 +89,10 @@ model Cliente {
   // Para envío de factura
   correoDestino     String?
   
-  // Relacion - cada cliente pertenece a una empresa emisora configurada
-  empresaId    String
-  empresa      Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-
   facturas     Factura[]
   
   createdAt    DateTime   @default(now())
-  @@unique([empresaId, rfc]) // Un cliente con el mismo RFC por empresa
+  @@unique([rfc]) // Un cliente con el mismo RFC globalmente
 }
 
 model Producto { // Renombrado lógicamente como "Productos y Servicios" en UI

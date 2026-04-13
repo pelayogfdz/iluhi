@@ -12,7 +12,6 @@ export default async function ClientesPage({ searchParams }) {
   const q = resolvedParams?.q || ""
 
   const clientes = await prisma.cliente.findMany({ 
-    include: { empresa: true },
     where: q ? {
       OR: [
         { razonSocial: { contains: q, mode: 'insensitive' } },
@@ -36,7 +35,6 @@ export default async function ClientesPage({ searchParams }) {
         <table className="table">
           <thead>
             <tr>
-              <th>Empresa Origen</th>
               <th>RFC Cliente</th>
               <th>Razón Social</th>
               <th>C.P.</th>
@@ -47,13 +45,12 @@ export default async function ClientesPage({ searchParams }) {
           <tbody>
             {clientes.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
-                  No hay clientes registrados. (Recuerda que cada cliente pertenece a una Empresa Emisora concreta).
+                <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+                  No hay clientes registrados.
                 </td>
               </tr>
             ) : clientes.map((c) => (
               <tr key={c.id}>
-                <td>{c.empresa.razonSocial}</td>
                 <td>{c.rfc}</td>
                 <td>{c.razonSocial}</td>
                 <td>{c.codigoPostal}</td>
