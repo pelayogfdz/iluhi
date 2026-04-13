@@ -8,6 +8,7 @@ export const metadata = {
 
 import { cookies } from 'next/headers'
 import { decrypt } from '../lib/auth'
+import CronPinger from './components/CronPinger'
 
 export default async function RootLayout({ children }) {
   const cookieStore = await cookies()
@@ -21,6 +22,7 @@ export default async function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
+        <CronPinger />
         {!user ? (
           <main style={{ width: '100%', height: '100%' }}>{children}</main>
         ) : (

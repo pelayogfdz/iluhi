@@ -152,6 +152,8 @@ function processTemplate(template, cliente, factura) {
   return txt;
 }
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   const now = new Date();
   
