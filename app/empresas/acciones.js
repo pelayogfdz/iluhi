@@ -7,24 +7,29 @@ import prisma from '../../lib/prisma';
 import facturapi from '../../lib/facturapi'
 import nodemailer from 'nodemailer'
 
+export async function testSmtp(host, port, user, pass) {
+    if (!host || !user || !pass) return { success: false, error: 'Faltan credenciales SMTP' };
+    try {
+      const transporter = nodemailer.createTransport({
+        host: host,
+        port: port ? parseInt(port) : 587,
+        secure: parseInt(port) === 465,
+        auth: { user, pass }
+      });
+      await transporter.verify();
+      return { success: true };
+    } catch (smtpErr) {
+      return { success: false, error: smtpErr.message };
+    }
+}
+
 export async function actualizarEmpresa(id, data) {
   try {
     // Prueba SMTP Express si viene configuración
     if (data.smtpHost && data.smtpUser && data.smtpPass) {
-      const transporter = nodemailer.createTransport({
-        host: data.smtpHost,
-        port: data.smtpPort ? parseInt(data.smtpPort) : 587,
-        secure: parseInt(data.smtpPort) === 465,
-        auth: {
-          user: data.smtpUser,
-          pass: data.smtpPass
-        }
-      });
-      
-      try {
-        await transporter.verify();
-      } catch (smtpErr) {
-        return { success: false, error: 'Prueba SMTP Express Fallida. Revisa Host, Puerto o Contraseña: ' + smtpErr.message };
+      const test = await testSmtp(data.smtpHost, data.smtpPort, data.smtpUser, data.smtpPass);
+      if(!test.success) {
+        return { success: false, error: 'Prueba SMTP Express Fallida. Revisa Host, Puerto o Contraseña: ' + test.error };
       }
     }
 

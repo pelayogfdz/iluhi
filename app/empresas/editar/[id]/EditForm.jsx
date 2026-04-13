@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { actualizarEmpresa } from '../../acciones'
+import { actualizarEmpresa, testSmtp } from '../../acciones'
 
 export default function EditForm({ empresa }) {
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
   const [msg, setMsg] = useState(null)
   const [showPass, setShowPass] = useState(false)
+  const [probarStatus, setProbarStatus] = useState(null)
   
   const [formData, setFormData] = useState({
     rfc: empresa.rfc || '',
@@ -34,6 +35,16 @@ export default function EditForm({ empresa }) {
   })
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
+
+  const handlePruebaSmtp = async () => {
+    setProbarStatus({ type: 'loading', text: 'Probando conexión...' })
+    const result = await testSmtp(formData.smtpHost, formData.smtpPort, formData.smtpUser, formData.smtpPass)
+    if (result.success) {
+      setProbarStatus({ type: 'success', text: '✅ ¡Conexión exitosa!' })
+    } else {
+      setProbarStatus({ type: 'error', text: '❌ Falló: ' + result.error })
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -146,6 +157,14 @@ export default function EditForm({ empresa }) {
                 {showPass ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
+          </div>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button type="button" onClick={handlePruebaSmtp} className="btn" style={{ background: '#0054a6', border: '1px solid rgba(255,255,255,0.2)' }}>Probar Configuración Express</button>
+            {probarStatus && (
+               <div style={{ fontSize: '0.9rem', padding: '0.5rem', borderRadius: '4px', background: probarStatus.type === 'error' ? 'rgba(255,0,0,0.2)' : probarStatus.type === 'success' ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,255,0.1)' }}>
+                 {probarStatus.text}
+               </div>
+            )}
           </div>
         </div>
 
