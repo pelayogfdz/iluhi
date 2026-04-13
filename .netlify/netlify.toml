@@ -1,22 +1,14 @@
+functionsDirectory = "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\netlify\\functions"
+functionsDirectoryOrigin = "default"
 headers = []
 redirects = []
-
-[functions]
-
-[functions."*"]
-included_files = ["node_modules/.prisma/**/*", "node_modules/@prisma/**/*"]
-
-[[plugins]]
-origin = "default"
-package = "@netlify/plugin-nextjs"
-
-[plugins.inputs]
 
 [build]
 publish = "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\.next"
 publishOrigin = "ui"
 commandOrigin = "ui"
 command = "npm run build"
+functions = "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\netlify\\functions"
 
 [build.environment]
 
@@ -31,3 +23,15 @@ command = "npm run build"
 [build.processing.js]
 
 [build.services]
+
+[functions]
+
+[functions."*"]
+included_files = ["node_modules/.prisma/**/*", "node_modules/@prisma/**/*"]
+
+[[plugins]]
+origin = "default"
+package = "@netlify/plugin-nextjs"
+pinned_version = "5"
+
+[plugins.inputs]

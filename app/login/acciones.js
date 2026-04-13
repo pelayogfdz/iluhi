@@ -28,7 +28,8 @@ export async function loginUser(correo, password) {
 
     const sessionData = await encrypt(parsedUser);
     
-    cookies().set('session', sessionData, {
+    const cookieStore = await cookies();
+    cookieStore.set('session', sessionData, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

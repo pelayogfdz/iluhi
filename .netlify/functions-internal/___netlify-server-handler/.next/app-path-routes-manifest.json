@@ -1,7 +1,9 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/cron-processor/route": "/api/cron-processor",
   "/api/diag/route": "/api/diag",
+  "/api/facturas/[id]/download/route": "/api/facturas/[id]/download",
   "/clientes/editar/[id]/page": "/clientes/editar/[id]",
   "/clientes/nuevo/page": "/clientes/nuevo",
   "/clientes/page": "/clientes",
@@ -10,7 +12,11 @@
   "/empresas/page": "/empresas",
   "/facturas/nuevo/page": "/facturas/nuevo",
   "/facturas/page": "/facturas",
+  "/login/page": "/login",
   "/page": "/",
   "/productos/nuevo/page": "/productos/nuevo",
-  "/productos/page": "/productos"
+  "/productos/page": "/productos",
+  "/reportes/page": "/reportes",
+  "/usuarios/nuevo/page": "/usuarios/nuevo",
+  "/usuarios/page": "/usuarios"
 }

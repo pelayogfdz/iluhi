@@ -23,6 +23,14 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/facturas/[id]/download",
+      "regex": "^/api/facturas/([^/]+?)/download(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/facturas/(?<nxtPid>[^/]+?)/download(?:/)?$"
+    },
+    {
       "page": "/clientes/editar/[id]",
       "regex": "^/clientes/editar/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -57,6 +65,12 @@
       "regex": "^/_not\\-found(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/api/cron-processor",
+      "regex": "^/api/cron\\-processor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/cron\\-processor(?:/)?$"
     },
     {
       "page": "/api/diag",
@@ -101,6 +115,12 @@
       "namedRegex": "^/facturas/nuevo(?:/)?$"
     },
     {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
       "page": "/productos",
       "regex": "^/productos(?:/)?$",
       "routeKeys": {},
@@ -111,6 +131,24 @@
       "regex": "^/productos/nuevo(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/productos/nuevo(?:/)?$"
+    },
+    {
+      "page": "/reportes",
+      "regex": "^/reportes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reportes(?:/)?$"
+    },
+    {
+      "page": "/usuarios",
+      "regex": "^/usuarios(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/usuarios(?:/)?$"
+    },
+    {
+      "page": "/usuarios/nuevo",
+      "regex": "^/usuarios/nuevo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/usuarios/nuevo(?:/)?$"
     }
   ],
   "dataRoutes": [],

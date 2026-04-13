@@ -1,7 +1,9 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/cron-processor/route": "app/api/cron-processor/route.js",
   "/api/diag/route": "app/api/diag/route.js",
+  "/api/facturas/[id]/download/route": "app/api/facturas/[id]/download/route.js",
   "/clientes/editar/[id]/page": "app/clientes/editar/[id]/page.js",
   "/clientes/nuevo/page": "app/clientes/nuevo/page.js",
   "/clientes/page": "app/clientes/page.js",
@@ -10,7 +12,11 @@
   "/empresas/page": "app/empresas/page.js",
   "/facturas/nuevo/page": "app/facturas/nuevo/page.js",
   "/facturas/page": "app/facturas/page.js",
+  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
   "/productos/nuevo/page": "app/productos/nuevo/page.js",
-  "/productos/page": "app/productos/page.js"
+  "/productos/page": "app/productos/page.js",
+  "/reportes/page": "app/reportes/page.js",
+  "/usuarios/nuevo/page": "app/usuarios/nuevo/page.js",
+  "/usuarios/page": "app/usuarios/page.js"
 }

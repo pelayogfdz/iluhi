@@ -1,9 +1,111 @@
 {
   "node": {
+    "0055b6a95010734764c3b2b5fefcfad12335f7429f": {
+      "workers": {
+        "app/_not-found/page": {
+          "moduleId": 39093,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/clientes/editar/[id]/page": {
+          "moduleId": 12030,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/clientes/nuevo/page": {
+          "moduleId": 15932,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/clientes/page": {
+          "moduleId": 52910,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/empresas/editar/[id]/page": {
+          "moduleId": 62820,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/empresas/nuevo/page": {
+          "moduleId": 46907,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/empresas/page": {
+          "moduleId": 4825,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/facturas/nuevo/page": {
+          "moduleId": 44716,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/facturas/page": {
+          "moduleId": 47008,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/login/page": {
+          "moduleId": 59633,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/page": {
+          "moduleId": 84124,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/productos/nuevo/page": {
+          "moduleId": 50561,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/productos/page": {
+          "moduleId": 4571,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/reportes/page": {
+          "moduleId": 20110,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/usuarios/nuevo/page": {
+          "moduleId": 94651,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        },
+        "app/usuarios/page": {
+          "moduleId": 79908,
+          "async": false,
+          "exportedName": "$$RSC_SERVER_ACTION_0",
+          "filename": "app/layout.js"
+        }
+      },
+      "filename": "app/layout.js",
+      "exportedName": "$$RSC_SERVER_ACTION_0"
+    },
     "406ce4327fcb788d9d7f5483fbc964ee37bceef602": {
       "workers": {
         "app/clientes/page": {
-          "moduleId": 35536,
+          "moduleId": 52910,
           "async": false,
           "exportedName": "eliminarCliente",
           "filename": "app/clientes/acciones.js"
@@ -15,7 +117,7 @@
     "606fca95eb53c2f7b5a667c18d5c9759ee1f1e4c4d": {
       "workers": {
         "app/clientes/editar/[id]/page": {
-          "moduleId": 54420,
+          "moduleId": 12030,
           "async": false,
           "exportedName": "actualizarCliente",
           "filename": "app/clientes/acciones.js"
@@ -27,7 +129,7 @@
     "4026b298319cf8a526048ee70f3101e860a2944ab0": {
       "workers": {
         "app/clientes/nuevo/page": {
-          "moduleId": 38487,
+          "moduleId": 15932,
           "async": false,
           "exportedName": "$$RSC_SERVER_ACTION_0",
           "filename": "app/clientes/nuevo/page.js"
@@ -39,7 +141,7 @@
     "40201cc105876ef104ded03bde51ed7a12dacb9653": {
       "workers": {
         "app/empresas/page": {
-          "moduleId": 8278,
+          "moduleId": 4825,
           "async": false,
           "exportedName": "eliminarEmpresa",
           "filename": "app/empresas/acciones.js"
@@ -51,7 +153,7 @@
     "6062ab6cb41e7d0b4de29afa80b0224f083832df54": {
       "workers": {
         "app/empresas/editar/[id]/page": {
-          "moduleId": 7549,
+          "moduleId": 62820,
           "async": false,
           "exportedName": "actualizarEmpresa",
           "filename": "app/empresas/acciones.js"
@@ -60,10 +162,10 @@
       "filename": "app/empresas/acciones.js",
       "exportedName": "actualizarEmpresa"
     },
-    "6028eccd7f1a12b1ef01f6ac36c95bab565817e36b": {
+    "7828eccd7f1a12b1ef01f6ac36c95bab565817e36b": {
       "workers": {
         "app/empresas/editar/[id]/page": {
-          "moduleId": 7549,
+          "moduleId": 62820,
           "async": false,
           "exportedName": "subirCSD",
           "filename": "app/empresas/acciones.js"
@@ -72,10 +174,22 @@
       "filename": "app/empresas/acciones.js",
       "exportedName": "subirCSD"
     },
+    "40b4d740979c29a3012debb7a9eafc4f05780c519c": {
+      "workers": {
+        "app/empresas/editar/[id]/page": {
+          "moduleId": 62820,
+          "async": false,
+          "exportedName": "subirLogo",
+          "filename": "app/empresas/acciones.js"
+        }
+      },
+      "filename": "app/empresas/acciones.js",
+      "exportedName": "subirLogo"
+    },
     "40052c022d6c6ab11ce3c19d9c0a28765b0730837f": {
       "workers": {
         "app/empresas/nuevo/page": {
-          "moduleId": 36280,
+          "moduleId": 46907,
           "async": false,
           "exportedName": "$$RSC_SERVER_ACTION_0",
           "filename": "app/empresas/nuevo/page.js"
@@ -87,7 +201,7 @@
     "4053c0e99a1136658c4c19e16bda67239ee580a97d": {
       "workers": {
         "app/facturas/nuevo/page": {
-          "moduleId": 90225,
+          "moduleId": 44716,
           "async": false,
           "exportedName": "prepararYTimbrarFactura",
           "filename": "app/facturas/acciones.js"
@@ -96,10 +210,22 @@
       "filename": "app/facturas/acciones.js",
       "exportedName": "prepararYTimbrarFactura"
     },
+    "6059c72e03f87c5c649d33fd4a72876e10b2a8b812": {
+      "workers": {
+        "app/login/page": {
+          "moduleId": 59633,
+          "async": false,
+          "exportedName": "loginUser",
+          "filename": "app/login/acciones.js"
+        }
+      },
+      "filename": "app/login/acciones.js",
+      "exportedName": "loginUser"
+    },
     "40b81d3cce8533b9746fc6833f75596bf65f0f2c1a": {
       "workers": {
         "app/productos/nuevo/page": {
-          "moduleId": 28011,
+          "moduleId": 50561,
           "async": false,
           "exportedName": "$$RSC_SERVER_ACTION_0",
           "filename": "app/productos/nuevo/page.js"
@@ -111,7 +237,7 @@
     "606c96d2628beb908413cc35831e62c02c35189f2e": {
       "workers": {
         "app/productos/nuevo/page": {
-          "moduleId": 28011,
+          "moduleId": 50561,
           "async": false,
           "exportedName": "importarProductosMasivos",
           "filename": "app/productos/acciones.js"
@@ -119,6 +245,48 @@
       },
       "filename": "app/productos/acciones.js",
       "exportedName": "importarProductosMasivos"
+    },
+    "006e9a65d57ffc1931cec01afcfe9829757b4bb17c": {
+      "workers": {
+        "app/usuarios/page": {
+          "moduleId": 79908,
+          "async": false,
+          "exportedName": "getUsuarios",
+          "filename": "app/usuarios/acciones.js"
+        }
+      },
+      "filename": "app/usuarios/acciones.js",
+      "exportedName": "getUsuarios"
+    },
+    "40c78bd62cc1e49dca51bd0fe508f610c88a396e07": {
+      "workers": {
+        "app/usuarios/page": {
+          "moduleId": 79908,
+          "async": false,
+          "exportedName": "eliminarUsuario",
+          "filename": "app/usuarios/acciones.js"
+        }
+      },
+      "filename": "app/usuarios/acciones.js",
+      "exportedName": "eliminarUsuario"
+    },
+    "40dd2fc7532f7ad39ab75d0f8cc4903afdf1dc1430": {
+      "workers": {
+        "app/usuarios/nuevo/page": {
+          "moduleId": 94651,
+          "async": false,
+          "exportedName": "crearUsuario",
+          "filename": "app/usuarios/acciones.js"
+        },
+        "app/usuarios/page": {
+          "moduleId": 79908,
+          "async": false,
+          "exportedName": "crearUsuario",
+          "filename": "app/usuarios/acciones.js"
+        }
+      },
+      "filename": "app/usuarios/acciones.js",
+      "exportedName": "crearUsuario"
     }
   },
   "edge": {},

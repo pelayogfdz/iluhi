@@ -10,7 +10,8 @@ import { cookies } from 'next/headers'
 import { decrypt } from '../lib/auth'
 
 export default async function RootLayout({ children }) {
-  const sessionCookie = cookies().get('session')?.value
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('session')?.value
   const user = sessionCookie ? await decrypt(sessionCookie) : null;
 
   return (
@@ -42,7 +43,8 @@ export default async function RootLayout({ children }) {
                 <p style={{ fontWeight: 'bold', color: 'var(--accent)' }}>Hola, {user.nombre.split(' ')[0]}</p>
                 <form action={async () => {
                    'use server';
-                   cookies().delete('session');
+                   const cookieStore = await cookies();
+                   cookieStore.delete('session');
                 }}>
                   <button type="submit" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '100%', padding: '0.5rem', borderRadius: '4px', marginTop: '0.8rem', cursor: 'pointer' }}>Cerrar Sesión</button>
                 </form>
