@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { crearUsuario } from '../acciones'
+import { crearUsuario, getEmpresasResumen } from '../acciones'
 
 export default function NuevoUsuarioPage() {
   const router = useRouter()
@@ -19,8 +19,15 @@ export default function NuevoUsuarioPage() {
     permisoProductos: false,
     permisoFacturas: false,
     permisoReportes: false,
-    permisoUsuarios: false
+    permisoUsuarios: false,
+    empresaIds: []
   })
+
+  const [empresasBase, setEmpresasBase] = useState([])
+
+  useEffect(() => {
+    getEmpresasResumen().then(data => setEmpresasBase(data));
+  }, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -63,6 +70,25 @@ export default function NuevoUsuarioPage() {
             <label>Contraseña</label>
             <input required type="password" name="password" value={formData.password} onChange={handleChange} className="form-control" />
           </div>
+        </div>
+
+        <h3 style={{ color: 'var(--primary)', marginTop: '1rem' }}>Asignación de Empresas (Tenants)</h3>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Selecciona las empresas a las que este usuario tendrá acceso:</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
+          {empresasBase.map((emp) => (
+            <label key={emp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input 
+                 type="checkbox" 
+                 checked={formData.empresaIds.includes(emp.id)}
+                 onChange={(e) => {
+                   if(e.target.checked) setFormData({ ...formData, empresaIds: [...formData.empresaIds, emp.id] });
+                   else setFormData({ ...formData, empresaIds: formData.empresaIds.filter(id => id !== emp.id) });
+                 }}
+              /> 
+              {emp.razonSocial}
+            </label>
+          ))}
+          {empresasBase.length === 0 && <p style={{ gridColumn: '1 / -1', color: '#666' }}>No hay empresas registradas.</p>}
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />

@@ -21,6 +21,7 @@ export default async function UsuariosPage() {
               <th>Nombre</th>
               <th>Correo Electrónico</th>
               <th>Permisos (Módulos)</th>
+              <th>Empresas Asignadas</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -38,6 +39,13 @@ export default async function UsuariosPage() {
                   {u.permisoFacturas && <span className="badge">🧾 Facturas</span>}
                   {u.permisoReportes && <span className="badge">📊 Reportes</span>}
                   {u.permisoUsuarios && <span className="badge">🔑 Usuarios</span>}
+                </td>
+                <td style={{ fontSize: '13px' }}>
+                  {u.empresas?.length > 0 ? (
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                       {u.empresas.map(emp => <span key={emp.id} className="badge" style={{ backgroundColor: '#2f3b52' }}>{emp.razonSocial}</span>)}
+                    </div>
+                  ) : <span style={{ color: '#888' }}>Todas (Sin Restricción)</span>}
                 </td>
                 <td>
                   <DeleteUserBtn id={u.id} />

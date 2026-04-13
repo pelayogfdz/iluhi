@@ -26,6 +26,8 @@ model Usuario {
   permisoReportes   Boolean @default(false)
   permisoUsuarios   Boolean @default(false)
 
+  empresas       Empresa[]
+
   createdAt      DateTime @default(now())
 }
 
@@ -62,6 +64,7 @@ model Empresa {
   plantillaFactura       String?
   
   // Relaciones
+  usuarios     Usuario[]
   productos    Producto[]
   facturas     Factura[]
   
