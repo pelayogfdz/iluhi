@@ -3,9 +3,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import EditProductoForm from './EditProductoForm'
 
+import { getSessionUser } from '../../../../lib/auth'
+
 export default async function EditarProductoPage({ params }) {
   const resolvedParams = await params
   const { id } = resolvedParams
+  const user = await getSessionUser();
   
   const producto = await prisma.producto.findUnique({
     where: { id }
@@ -13,7 +16,8 @@ export default async function EditarProductoPage({ params }) {
   
   if (!producto) return notFound()
   
-  const empresas = await prisma.empresa.findMany()
+  const rpEmpresa = user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {};
+  const empresas = await prisma.empresa.findMany({ where: rpEmpresa })
 
   return (
     <div>

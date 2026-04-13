@@ -6,19 +6,31 @@ export const dynamic = 'force-dynamic'
 
 
 
+import { getSessionUser } from '../../lib/auth';
+
 export default async function ProductosPage({ searchParams }) {
   const resolvedParams = await searchParams
   const q = resolvedParams?.q || ""
+  const user = await getSessionUser()
+
+  const whereClauses = []
+  if (q) {
+      whereClauses.push({
+        OR: [
+          { descripcion: { contains: q, mode: 'insensitive' } },
+          { noIdentificacion: { contains: q, mode: 'insensitive' } },
+          { claveProdServ: { contains: q } }
+        ]
+      })
+  }
+  if (user?.empresasIds?.length > 0) {
+      whereClauses.push({ empresaId: { in: user.empresasIds } })
+  }
+  const finalWhere = whereClauses.length > 0 ? { AND: whereClauses } : {}
 
   const productos = await prisma.producto.findMany({ 
     include: { empresa: true },
-    where: q ? {
-      OR: [
-        { descripcion: { contains: q, mode: 'insensitive' } },
-        { noIdentificacion: { contains: q, mode: 'insensitive' } },
-        { claveProdServ: { contains: q } }
-      ]
-    } : {},
+    where: finalWhere,
     orderBy: { createdAt: 'desc' }
   })
 

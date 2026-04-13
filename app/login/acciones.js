@@ -7,7 +7,14 @@ import { cookies } from 'next/headers'
 
 export async function loginUser(correo, password) {
   try {
-    const user = await prisma.usuario.findUnique({ where: { correo } })
+    const user = await prisma.usuario.findUnique({ 
+      where: { correo },
+      include: {
+        empresas: {
+          select: { id: true }
+        }
+      }
+    })
     if (!user) return { success: false, error: 'Credenciales inválidas' }
 
     const match = bcrypt.compareSync(password, user.passwordHash)
@@ -23,7 +30,8 @@ export async function loginUser(correo, password) {
       permisoProductos: user.permisoProductos,
       permisoFacturas: user.permisoFacturas,
       permisoReportes: user.permisoReportes,
-      permisoUsuarios: user.permisoUsuarios
+      permisoUsuarios: user.permisoUsuarios,
+      empresasIds: user.empresas.map(e => e.id)
     }
 
     const sessionData = await encrypt(parsedUser);

@@ -1,13 +1,17 @@
 import prisma from '../../../lib/prisma';
 import Link from 'next/link'
 import InvoiceForm from './InvoiceForm'
-
+import { getSessionUser } from '../../../lib/auth'
 
 
 export default async function NuevaFacturaPage() {
-  const empresas = await prisma.empresa.findMany()
+  const user = await getSessionUser();
+  const rlsFilter = user?.empresasIds?.length > 0 ? { empresaId: { in: user.empresasIds } } : {};
+  const rpEmpresa = user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {};
+
+  const empresas = await prisma.empresa.findMany({ where: rpEmpresa })
   const clientes = await prisma.cliente.findMany()
-  const productos = await prisma.producto.findMany()
+  const productos = await prisma.producto.findMany({ where: rlsFilter })
 
   return (
     <div>

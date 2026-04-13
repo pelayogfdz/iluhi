@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic'
 
 
 
+import { getSessionUser } from '../../lib/auth';
+
 export default async function FacturaHubPage({ searchParams }) {
   const resolvedParams = await searchParams
   const q = resolvedParams?.q || ""
@@ -14,6 +16,8 @@ export default async function FacturaHubPage({ searchParams }) {
   const fechaInicio = resolvedParams?.fechaInicio || ""
   const fechaFin = resolvedParams?.fechaFin || ""
   const orden = resolvedParams?.orden || "desc"
+
+  const user = await getSessionUser();
 
   // Construir clausulas WHERE
   const andClauses = []
@@ -30,7 +34,15 @@ export default async function FacturaHubPage({ searchParams }) {
   }
 
   if (empresaId) {
-    andClauses.push({ empresaId: empresaId })
+    // Si solicita ver una empresa que no está en sus permitidas (y tiene límite), forzamos vacío
+    if (user?.empresasIds?.length > 0 && !user.empresasIds.includes(empresaId)) {
+      andClauses.push({ empresaId: 'restricted_forbidden' });
+    } else {
+      andClauses.push({ empresaId: empresaId })
+    }
+  } else if (user?.empresasIds?.length > 0) {
+    // Si no filtra pero tiene limite, limitamos
+    andClauses.push({ empresaId: { in: user.empresasIds } });
   }
 
   if (fechaInicio || fechaFin) {
@@ -52,6 +64,7 @@ export default async function FacturaHubPage({ searchParams }) {
       orderBy: { fechaEmision: orden === 'asc' ? 'asc' : 'desc' }
     }),
     prisma.empresa.findMany({
+      where: user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {},
       select: { id: true, razonSocial: true },
       orderBy: { razonSocial: 'asc' }
     })

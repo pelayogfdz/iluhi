@@ -2,10 +2,16 @@ import prisma from '../../lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+import { getSessionUser } from '../../lib/auth';
+
 export default async function ReportesPage() {
-  const facturas = await prisma.factura.findMany({ select: { total: true } });
+  const user = await getSessionUser();
+  const rpFacturas = user?.empresasIds?.length > 0 ? { empresaId: { in: user.empresasIds } } : {};
+  const rpEmpresas = user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {};
+
+  const facturas = await prisma.factura.findMany({ where: rpFacturas, select: { total: true } });
   const clientes = await prisma.cliente.count();
-  const empresas = await prisma.empresa.count();
+  const empresas = await prisma.empresa.count({ where: rpEmpresas });
   const usuarios = await prisma.usuario.count();
 
   const ventasGlobales = facturas.reduce((acc, curr) => acc + curr.total, 0);

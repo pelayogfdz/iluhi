@@ -41,8 +41,12 @@ async function createProducto(formData) {
   redirect('/productos')
 }
 
+import { getSessionUser } from '../../../lib/auth'
+
 export default async function NuevoProductoPage() {
-  const empresas = await prisma.empresa.findMany()
+  const user = await getSessionUser();
+  const rpEmpresa = user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {};
+  const empresas = await prisma.empresa.findMany({ where: rpEmpresa })
 
   return (
     <div>
