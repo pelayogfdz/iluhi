@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../lib/prisma';
 import Link from 'next/link'
 import InvoiceForm from './InvoiceForm'
 
-const prisma = new PrismaClient()
+
 
 export default async function NuevaFacturaPage() {
   const empresas = await prisma.empresa.findMany()

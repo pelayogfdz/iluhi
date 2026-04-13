@@ -1,9 +1,10 @@
 'use server'
+import prisma from '../../lib/prisma';
 
-import { PrismaClient } from '@prisma/client'
+
 import { redirect } from 'next/navigation'
 
-const prisma = new PrismaClient()
+
 
 export async function importarProductosMasivos(productosArray, empresaId) {
   if (!empresaId) throw new Error("Debes seleccionar una empresa emisora primero");

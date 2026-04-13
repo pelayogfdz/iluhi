@@ -1,12 +1,13 @@
-import { PrismaClient } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import ExcelUploader from '../ExcelUploader'
 
-const prisma = new PrismaClient()
+
 
 async function createProducto(formData) {
   'use server'
+import prisma from '../../../lib/prisma';
+
   
   const empresaId = formData.get('empresaId')
   const noIdentificacion = formData.get('noIdentificacion')

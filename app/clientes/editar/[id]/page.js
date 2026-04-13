@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../../lib/prisma';
 import { redirect } from 'next/navigation'
 import EditForm from './EditForm'
 
-const prisma = new PrismaClient()
+
 
 export default async function EditarClientePage({ params }) {
   const { id } = await params

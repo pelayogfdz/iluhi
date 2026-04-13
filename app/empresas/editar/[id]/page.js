@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../../../lib/prisma';
 import { redirect } from 'next/navigation'
 import EditForm from './EditForm'
 import CsdUploader from './CsdUploader'
 import LogoUploader from './LogoUploader'
 
-const prisma = new PrismaClient()
+
 
 export default async function EditarEmpresaPage({ params }) {
   const { id } = await params

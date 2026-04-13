@@ -1,11 +1,12 @@
-import { PrismaClient } from '@prisma/client'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-const prisma = new PrismaClient()
+
 
 async function createCliente(formData) {
   'use server'
+import prisma from '../../../lib/prisma';
+
   
   const empresaId = formData.get('empresaId')
   const rfc = formData.get('rfc')

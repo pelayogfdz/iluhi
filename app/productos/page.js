@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../lib/prisma';
 import Link from 'next/link'
 import SearchBar from '../components/SearchBar'
 
 export const dynamic = 'force-dynamic'
 
-const prisma = new PrismaClient()
+
 
 export default async function ProductosPage({ searchParams }) {
   const resolvedParams = await searchParams

@@ -1,6 +1,5 @@
+import prisma from '../../../lib/prisma';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
 export async function GET() {
   const isP = process.env.DATABASE_URL ? "SET" : "UNSET";
   const pStr = process.env.DATABASE_URL || "null";
@@ -11,7 +10,7 @@ export async function GET() {
   let pErr = null;
   
   try {
-    const prisma = new PrismaClient();
+    
     await prisma.$connect();
     pStatus = "connected_ok";
   } catch (e) {

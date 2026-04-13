@@ -1,9 +1,10 @@
 'use server'
+import prisma from '../../lib/prisma';
 
-import { PrismaClient } from '@prisma/client'
+
 import facturapi from '../../lib/facturapi'
 
-const prisma = new PrismaClient()
+
 
 export async function actualizarEmpresa(id, data) {
   try {

@@ -1,11 +1,11 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from '../../lib/prisma';
 import Link from 'next/link'
 import SearchBar from '../components/SearchBar'
 import FacturasClient from './FacturasClient'
 
 export const dynamic = 'force-dynamic'
 
-const prisma = new PrismaClient()
+
 
 export default async function FacturaHubPage({ searchParams }) {
   const resolvedParams = await searchParams
