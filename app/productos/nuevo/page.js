@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import ExcelUploader from '../ExcelUploader'
 import prisma from '../../../lib/prisma';
+import SatAutocomplete from '../../components/SatAutocomplete'
 
 
 
@@ -83,13 +84,13 @@ export default async function NuevoProductoPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
-                <label htmlFor="claveProdServ">Clave Prod/Serv (SAT)</label>
-                <input type="text" id="claveProdServ" name="claveProdServ" className="form-control" required placeholder="Ej. 80101500" />
+                <label htmlFor="claveProdServ">Clave Prod/Serv (Predictivo SAT)</label>
+                <SatAutocomplete type="producto" name="claveProdServ" placeholder="Ej. Computadoras..." />
               </div>
 
               <div className="form-group">
-                <label htmlFor="claveUnidad">Clave Unidad (SAT)</label>
-                <input type="text" id="claveUnidad" name="claveUnidad" className="form-control" required placeholder="Ej. E48 (Unidad de servicio)" />
+                <label htmlFor="claveUnidad">Clave Unidad (Predictivo SAT)</label>
+                <SatAutocomplete type="unidad" name="claveUnidad" placeholder="Ej. Pieza u Hora..." />
               </div>
           </div>
 

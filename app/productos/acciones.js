@@ -48,3 +48,28 @@ export async function importarProductosMasivos(productosArray, empresaId) {
 
   return { success: true, guardados: conteo };
 }
+
+export async function actualizarProducto(id, data) {
+  try {
+    await prisma.producto.update({
+      where: { id },
+      data
+    })
+    return { success: true }
+  } catch (err) {
+    console.error(err)
+    return { success: false, error: err.message }
+  }
+}
+
+export async function eliminarProducto(id) {
+  try {
+    await prisma.producto.delete({
+      where: { id }
+    })
+    return { success: true }
+  } catch (err) {
+    console.error(err)
+    return { success: false, error: err.message }
+  }
+}

@@ -59,7 +59,11 @@ export default async function ProductosPage({ searchParams }) {
                 <td>{p.claveProdServ}</td>
                 <td>{p.claveUnidad}</td>
                 <td>${p.precio.toFixed(2)}</td>
-                <td><button className="btn" style={{padding: '0.4rem 1rem'}}>Editar</button></td>
+                <td>
+                  <Link href={`/productos/editar/${p.id}`}>
+                    <button className="btn" style={{padding: '0.4rem 1rem'}}>Editar</button>
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
