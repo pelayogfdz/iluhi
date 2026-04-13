@@ -21,7 +21,7 @@ export default function Dashboard() {
         
         <Link href="/empresas" className="glass-panel card">
           <h3>
-            Emisores (Tenants) 
+            Empresas 
             <span style={{ fontSize: '1.5rem' }}>↗</span>
           </h3>
           <p style={{ marginTop: '0.5rem' }}>Gestiona las empresas que usan tu SaaS para timbrar.</p>
@@ -29,7 +29,7 @@ export default function Dashboard() {
         
         <Link href="/clientes" className="glass-panel card">
           <h3>
-            Receptores 
+            Clientes 
             <span style={{ fontSize: '1.5rem' }}>↗</span>
           </h3>
           <p style={{ marginTop: '0.5rem' }}>Directorio masivo de clientes a los cuales se les cobra.</p>
@@ -37,10 +37,26 @@ export default function Dashboard() {
         
         <Link href="/productos" className="glass-panel card">
           <h3>
-            Catálogo SAT 
+            Catálogo de Productos 
             <span style={{ fontSize: '1.5rem' }}>↗</span>
           </h3>
           <p style={{ marginTop: '0.5rem' }}>Agrega productos y empareja claves predictivas.</p>
+        </Link>
+
+        <Link href="/usuarios" className="glass-panel card">
+          <h3>
+            Usuarios 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Controla el acceso y los permisos dentro del sistema.</p>
+        </Link>
+
+        <Link href="/reportes" className="glass-panel card">
+          <h3>
+            Reportes 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Métricas de facturación, timbres utilizados y más.</p>
         </Link>
 
       </div>

@@ -6,7 +6,13 @@ export const metadata = {
   description: 'SaaS - Sistema de Facturación Electrónica',
 }
 
-export default function RootLayout({ children }) {
+import { cookies } from 'next/headers'
+import { decrypt } from '../lib/auth'
+
+export default async function RootLayout({ children }) {
+  const sessionCookie = cookies().get('session')?.value
+  const user = sessionCookie ? await decrypt(sessionCookie) : null;
+
   return (
     <html lang="es">
       <head>
@@ -14,30 +20,42 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
-        <div className="layout-wrapper">
-          <aside className="sidebar">
-            <div className="sidebar-logo">
-              <span>⚡</span> CFDI SaaS
-            </div>
-            <nav className="nav-links">
-              <Link href="/" className="nav-link">⊞ Panel Principal</Link>
-              <Link href="/empresas" className="nav-link">🏢 Emisores (Tenants)</Link>
-              <Link href="/clientes" className="nav-link">👥 Directorio Clientes</Link>
-              <Link href="/productos" className="nav-link">📦 Catálogo SAT</Link>
-              <Link href="/facturas" className="nav-link">🧾 Facturación</Link>
-            </nav>
+        {!user ? (
+          <main style={{ width: '100%', height: '100%' }}>{children}</main>
+        ) : (
+          <div className="layout-wrapper">
+            <aside className="sidebar">
+              <div className="sidebar-logo">
+                <span>⚡</span> CFDI SaaS
+              </div>
+              <nav className="nav-links">
+                <Link href="/" className="nav-link">⊞ Panel Principal</Link>
+                {user.permisoEmpresas && <Link href="/empresas" className="nav-link">🏢 Empresas</Link>}
+                {user.permisoClientes && <Link href="/clientes" className="nav-link">👥 Clientes</Link>}
+                {user.permisoProductos && <Link href="/productos" className="nav-link">📦 Catálogo de Productos</Link>}
+                {user.permisoFacturas && <Link href="/facturas" className="nav-link">🧾 Facturas</Link>}
+                {user.permisoUsuarios && <Link href="/usuarios" className="nav-link">🔑 Usuarios</Link>}
+                {user.permisoReportes && <Link href="/reportes" className="nav-link">📊 Reportes</Link>}
+              </nav>
+              
+              <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '13px' }}>
+                <p style={{ fontWeight: 'bold', color: 'var(--accent)' }}>Hola, {user.nombre.split(' ')[0]}</p>
+                <form action={async () => {
+                   'use server';
+                   cookies().delete('session');
+                }}>
+                  <button type="submit" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', width: '100%', padding: '0.5rem', borderRadius: '4px', marginTop: '0.8rem', cursor: 'pointer' }}>Cerrar Sesión</button>
+                </form>
+              </div>
+            </aside>
             
-            <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <p>v2.0 Premium Edition</p>
-              <p>Motor: Facturapi (México)</p>
-            </div>
-          </aside>
-          
-          <main className="main-content">
-            {children}
-          </main>
-        </div>
+            <main className="main-content">
+              {children}
+            </main>
+          </div>
+        )}
       </body>
     </html>
   )
 }
+// Forzar recarga Next.js Cache

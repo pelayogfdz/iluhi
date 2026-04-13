@@ -5,11 +5,29 @@ import prisma from '../../lib/prisma';
 
 
 import facturapi from '../../lib/facturapi'
-
-
+import nodemailer from 'nodemailer'
 
 export async function actualizarEmpresa(id, data) {
   try {
+    // Prueba SMTP Express si viene configuración
+    if (data.smtpHost && data.smtpUser && data.smtpPass) {
+      const transporter = nodemailer.createTransport({
+        host: data.smtpHost,
+        port: data.smtpPort ? parseInt(data.smtpPort) : 587,
+        secure: parseInt(data.smtpPort) === 465,
+        auth: {
+          user: data.smtpUser,
+          pass: data.smtpPass
+        }
+      });
+      
+      try {
+        await transporter.verify();
+      } catch (smtpErr) {
+        return { success: false, error: 'Prueba SMTP Express Fallida. Revisa Host, Puerto o Contraseña: ' + smtpErr.message };
+      }
+    }
+
     await prisma.empresa.update({
       where: { id },
       data: {
@@ -24,7 +42,14 @@ export async function actualizarEmpresa(id, data) {
         municipio: data.municipio,
         ciudad: data.ciudad,
         estado: data.estado,
-        correo: data.correo
+        correo: data.correo,
+        smtpHost: data.smtpHost || null,
+        smtpPort: data.smtpPort ? parseInt(data.smtpPort) : null,
+        smtpUser: data.smtpUser || null,
+        smtpPass: data.smtpPass || null,
+        plantillaCotizacion: data.plantillaCotizacion || null,
+        plantillaOrdenServicio: data.plantillaOrdenServicio || null,
+        plantillaFactura: data.plantillaFactura || null
       }
     });
     return { success: true };

@@ -10,11 +10,16 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@netlify/functions": "^5.2.0",
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "facturapi": "^4.14.2",
     "file-saver": "^2.0.5",
+    "jose": "^6.2.2",
     "jszip": "^3.10.1",
     "next": "16.2.2",
+    "nodemailer": "^8.0.5",
+    "pdfmake": "^0.3.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "xlsx": "^0.18.5"

@@ -1,0 +1,52 @@
+import Link from 'next/link';
+import { getUsuarios } from './acciones';
+import DeleteUserBtn from './DeleteUserBtn';
+
+export const dynamic = 'force-dynamic';
+
+export default async function UsuariosPage() {
+  const usuarios = await getUsuarios();
+  
+  return (
+    <div className="fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h2>🔑 Administración de Usuarios y Accesos</h2>
+        <Link href="/usuarios/nuevo" className="btn">+ Nuevo Usuario</Link>
+      </div>
+
+      <div className="table-container">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Correo Electrónico</th>
+              <th>Permisos (Módulos)</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {usuarios.length === 0 ? (
+              <tr><td colSpan="4" style={{ textAlign: 'center' }}>No hay usuarios creados aún.</td></tr>
+            ) : usuarios.map(u => (
+              <tr key={u.id}>
+                <td style={{ fontWeight: 'bold' }}>{u.nombre}</td>
+                <td>{u.correo}</td>
+                <td style={{ fontSize: '13px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {u.permisoEmpresas && <span className="badge">🏢 Empresas</span>}
+                  {u.permisoClientes && <span className="badge">👥 Clientes</span>}
+                  {u.permisoProductos && <span className="badge">📦 Catálogos</span>}
+                  {u.permisoFacturas && <span className="badge">🧾 Facturas</span>}
+                  {u.permisoReportes && <span className="badge">📊 Reportes</span>}
+                  {u.permisoUsuarios && <span className="badge">🔑 Usuarios</span>}
+                </td>
+                <td>
+                  <DeleteUserBtn id={u.id} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}

@@ -46,6 +46,12 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
     setItems(newArr)
   }
 
+  const handleChangeDescripcion = (index, newVal) => {
+    const newArr = [...items];
+    newArr[index] = { ...newArr[index], descripcion: newVal };
+    setItems(newArr);
+  }
+
   const handleSometerFactura = async (e) => {
     e.preventDefault()
     if (!empresaId || !clienteId || items.length === 0) {
@@ -160,7 +166,13 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                items.map((it, idx) => (
                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0.5rem 0' }}>
                     <div>
-                      <span style={{ fontWeight: 'bold' }}>{it.descripcion}</span>
+                      <input 
+                         type="text" 
+                         value={it.descripcion} 
+                         onChange={(e) => handleChangeDescripcion(idx, e.target.value)}
+                         className="form-control"
+                         style={{ fontWeight: 'bold', padding: '0.3rem', width: '350px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)' }}
+                      />
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Clave SAT: {it.claveProdServ} | Impuesto: {it.impuesto === '002' ? 'IVA '+(it.tasaOCuota*100)+'%' : 'Exento/Otro'}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

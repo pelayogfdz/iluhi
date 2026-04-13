@@ -9,6 +9,7 @@ export default function EditForm({ empresa }) {
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [showPass, setShowPass] = useState(false)
   
   const [formData, setFormData] = useState({
     rfc: empresa.rfc || '',
@@ -26,7 +27,10 @@ export default function EditForm({ empresa }) {
     smtpHost: empresa.smtpHost || '',
     smtpPort: empresa.smtpPort || '',
     smtpUser: empresa.smtpUser || '',
-    smtpPass: empresa.smtpPass || ''
+    smtpPass: empresa.smtpPass || '',
+    plantillaCotizacion: empresa.plantillaCotizacion || '',
+    plantillaOrdenServicio: empresa.plantillaOrdenServicio || '',
+    plantillaFactura: empresa.plantillaFactura || ''
   })
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -136,7 +140,31 @@ export default function EditForm({ empresa }) {
           </div>
           <div className="form-group">
             <label>Contraseña de Aplicación SMTP</label>
-            <input type="password" name="smtpPass" value={formData.smtpPass} onChange={handleChange} className="form-control" placeholder="*************" />
+            <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '4px' }}>
+              <input type={showPass ? 'text' : 'password'} name="smtpPass" value={formData.smtpPass} onChange={handleChange} className="form-control" placeholder="*************" style={{ border: 'none', borderRight: '1px solid rgba(255,255,255,0.2)', width: '100%', borderRadius: '4px 0 0 4px', backgroundColor: 'transparent' }} />
+              <button type="button" onClick={() => setShowPass(!showPass)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem 1rem' }} title="Toggle Password">
+                {showPass ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+        <h3 style={{ color: 'var(--primary)' }}>📝 Plantillas de Correo Electrónico Automático</h3>
+        <p style={{ color: 'var(--text-secondary)' }}>Usa <strong>{`{{cliente}}`}</strong>, <strong>{`{{total}}`}</strong> para insertar datos reales. El PDF se adjuntará automáticamente.</p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="form-group">
+            <label>Correo 1: Cotización (T+0 min)</label>
+            <textarea name="plantillaCotizacion" value={formData.plantillaCotizacion} onChange={handleChange} className="form-control" rows="4" placeholder="Ej. Hola {{cliente}}, adjunto enviamos la cotización solicitada..." />
+          </div>
+          <div className="form-group">
+            <label>Correo 2: Orden de Servicio (T+10 min)</label>
+            <textarea name="plantillaOrdenServicio" value={formData.plantillaOrdenServicio} onChange={handleChange} className="form-control" rows="4" placeholder="Ej. Hemos comenzado la orden de servicio..." />
+          </div>
+          <div className="form-group">
+            <label>Correo 3: Factura (T+15 min)</label>
+            <textarea name="plantillaFactura" value={formData.plantillaFactura} onChange={handleChange} className="form-control" rows="4" placeholder="Ej. Adjuntamos el XML y PDF de la factura vigente..." />
           </div>
         </div>
 

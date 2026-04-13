@@ -23,6 +23,32 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     if (!empresa) return { success: false, error: 'Empresa emisora no encontrada.' }
     if (!cliente) return { success: false, error: 'Cliente receptor no encontrado.' }
 
+    // 1.5 Auto-Guardado de Productos Al Vuelo
+    // Si la descripción del concepto fue alterada en el formulario y no existe en el catálogo, lo creamos.
+    for (const i of items) {
+      if (i.id) { // Solo los que se heredaron del catálogo
+        const existe = await prisma.producto.findFirst({
+           where: { empresaId: empresaId, descripcion: i.descripcion }
+        });
+        
+        if (!existe) {
+          console.log("Detectado nuevo producto al facturar, guardando:", i.descripcion);
+          await prisma.producto.create({
+            data: {
+              empresaId: empresaId,
+              noIdentificacion: 'GEN-' + Math.floor(Math.random() * 90000 + 10000),
+              descripcion: i.descripcion,
+              claveProdServ: i.claveProdServ,
+              claveUnidad: i.claveUnidad || 'H87', //Fallback
+              precio: parseFloat(i.precio),
+              impuesto: i.impuesto,
+              tasaOCuota: i.tasaOCuota
+            }
+          });
+        }
+      }
+    }
+
     // 2. Transmutación al Motor JSON de Facturapi
     const facturaPayload = {
       customer: {
@@ -94,6 +120,18 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         uuid: receipt.id || null
       }
     });
+
+    // 5. Encolar tareas de envío de correo en la Base de Datos
+    if (cliente.correoDestino) {
+       const now = new Date();
+       await prisma.emailTask.createMany({
+         data: [
+           { facturaId: newFactura.id, type: 'COTIZACION', scheduledFor: now },
+           { facturaId: newFactura.id, type: 'ORDEN_SERVICIO', scheduledFor: new Date(now.getTime() + 10 * 60000) },
+           { facturaId: newFactura.id, type: 'FACTURA', scheduledFor: new Date(now.getTime() + 15 * 60000) }
+         ]
+       });
+    }
 
     return { success: true, facturaId: newFactura.id, status: fallbackStatus };
   } catch (error) {

@@ -12,6 +12,23 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Usuario {
+  id             String   @id @default(uuid())
+  nombre         String
+  correo         String   @unique
+  passwordHash   String
+
+  // Permisos de Acceso a Módulos (Palomitas)
+  permisoEmpresas   Boolean @default(false)
+  permisoClientes   Boolean @default(false)
+  permisoProductos  Boolean @default(false)
+  permisoFacturas   Boolean @default(false)
+  permisoReportes   Boolean @default(false)
+  permisoUsuarios   Boolean @default(false)
+
+  createdAt      DateTime @default(now())
+}
+
 model Empresa {
   id           String     @id @default(uuid())
   rfc          String     @unique
@@ -38,6 +55,11 @@ model Empresa {
   smtpPort           Int?
   smtpUser           String?
   smtpPass           String?
+  
+  // Plantillas de Correo
+  plantillaCotizacion    String?
+  plantillaOrdenServicio String?
+  plantillaFactura       String?
   
   // Relaciones
   clientes     Cliente[]
@@ -132,12 +154,25 @@ model Factura {
   clienteId      String
   cliente        Cliente  @relation(fields: [clienteId], references: [id])
 
+  emailTasks     EmailTask[]
+
   createdAt      DateTime @default(now())
 }
 
 // ============================================
 // Catálogos Oficiales SAT (Búsqueda Predictiva)
 // ============================================
+
+model EmailTask {
+  id           String   @id @default(uuid())
+  facturaId    String
+  factura      Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  type         String   // COTIZACION, ORDEN_SERVICIO, FACTURA
+  scheduledFor DateTime
+  status       String   @default("PENDING") // PENDING, SENT, FAILED
+  error        String?
+  createdAt    DateTime @default(now())
+}
 
 model SatCatalogoProducto {
   clave       String   @id
