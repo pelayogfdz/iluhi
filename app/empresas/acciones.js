@@ -44,6 +44,7 @@ export async function eliminarEmpresa(id) {
 
 const fs = require('fs')
 const path = require('path')
+const os = require('os')
 
 export async function subirCSD(empresaId, formData) {
   try {
@@ -53,7 +54,7 @@ export async function subirCSD(empresaId, formData) {
     
     if(!cerFile || !keyFile || !passwordCsd) throw new Error("Faltan archivos o contraseña")
 
-    const csdDir = path.join(process.cwd(), 'escudos_csd')
+    const csdDir = path.join(os.tmpdir(), 'escudos_csd')
     if (!fs.existsSync(csdDir)) fs.mkdirSync(csdDir, { recursive: true })
 
     const cerPathStr = path.join(csdDir, `${empresaId}.cer`)
