@@ -50,13 +50,9 @@ const fs = require('fs')
 const path = require('path')
 const os = require('os')
 
-export async function subirCSD(empresaId, formData) {
+export async function subirCSD(empresaId, cerBase64, keyBase64, passwordCsd) {
   try {
-    const cerFile = formData.get('cerFile')
-    const keyFile = formData.get('keyFile')
-    const passwordCsd = formData.get('passwordCsd')
-    
-    if(!cerFile || !keyFile || !passwordCsd) throw new Error("Faltan archivos o contraseña")
+    if(!cerBase64 || !keyBase64 || !passwordCsd) throw new Error("Faltan archivos o contraseña")
 
     const csdDir = path.join(os.tmpdir(), 'escudos_csd')
     if (!fs.existsSync(csdDir)) fs.mkdirSync(csdDir, { recursive: true })
@@ -64,8 +60,8 @@ export async function subirCSD(empresaId, formData) {
     const cerPathStr = path.join(csdDir, `${empresaId}.cer`)
     const keyPathStr = path.join(csdDir, `${empresaId}.key`)
 
-    const cerBuffer = Buffer.from(await cerFile.arrayBuffer());
-    const keyBuffer = Buffer.from(await keyFile.arrayBuffer());
+    const cerBuffer = Buffer.from(cerBase64, 'base64');
+    const keyBuffer = Buffer.from(keyBase64, 'base64');
 
     fs.writeFileSync(cerPathStr, cerBuffer)
     fs.writeFileSync(keyPathStr, keyBuffer)
