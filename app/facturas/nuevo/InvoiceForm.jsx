@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { prepararYTimbrarFactura } from '../acciones'
+import ProductSelector from '../../components/ProductSelector'
 
 export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const router = useRouter()
@@ -150,10 +151,13 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '1rem' }}>
                 <div className="form-group" style={{ flex: 2 }}>
                   <label>Catálogo de Productos</label>
-                  <select className="form-control" value={tempProductoId} onChange={e => setTempProductoId(e.target.value)} disabled={!empresaId} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <option value="">Añade un producto al carrito...</option>
-                    {productosFiltrados.map(p => <option key={p.id} value={p.id}>[{p.noIdentificacion}] {p.descripcion} - ${p.precio}</option>)}
-                  </select>
+                  <ProductSelector 
+                     options={productosFiltrados} 
+                     value={tempProductoId} 
+                     onChange={setTempProductoId} 
+                     disabled={!empresaId} 
+                     placeholder="Añade un producto al carrito... (Teclea para buscar)"
+                  />
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Cantidad</label>
