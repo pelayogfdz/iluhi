@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../lib/prisma';
 import nodemailer from 'nodemailer';
-import PdfPrinter from 'pdfmake';
+const pdfmake = require('pdfmake');
 
 async function fetchImageAsBase64(url) {
   if (!url) return null;
@@ -31,7 +31,7 @@ async function generateCotizacionPdf(factura, empresa, cliente, facturapiClient)
       bolditalics: 'Helvetica-BoldOblique'
     }
   };
-  const printer = new PdfPrinter(fonts);
+  pdfmake.setFonts(fonts);
   
   const logoBase64 = await fetchImageAsBase64(empresa.logoUrl);
 
@@ -133,16 +133,108 @@ async function generateCotizacionPdf(factura, empresa, cliente, facturapiClient)
     }
   };
 
-  const pdfDoc = printer.createPdfKitDocument(docDefinition);
+  return pdfmake.createPdf(docDefinition).getBuffer();
+}
+
+async function generateOrdenServicioPdf(factura, empresa, cliente, facturapiClient) {
+  if (!factura.uuid || factura.uuid === 'mock_uuid_123') return null;
   
-  // Transform Stream to Buffer
-  return new Promise((resolve, reject) => {
-    let chunks = [];
-    pdfDoc.on('data', chunk => chunks.push(chunk));
-    pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-    pdfDoc.on('error', err => reject(err));
-    pdfDoc.end();
+  const fInvoice = await facturapiClient.invoices.retrieve(factura.uuid);
+
+  const fonts = {
+    Helvetica: {
+      normal: 'Helvetica',
+      bold: 'Helvetica-Bold',
+      italics: 'Helvetica-Oblique',
+      bolditalics: 'Helvetica-BoldOblique'
+    }
+  };
+  pdfmake.setFonts(fonts);
+  
+  const logoBase64 = await fetchImageAsBase64(empresa.logoUrl);
+
+  const itemsTable = [
+    [ { text: 'Cant', style: 'th' }, { text: 'U. Medida', style: 'th'}, { text: 'Concepto', style: 'th' } ]
+  ];
+
+  fInvoice.items.forEach(item => {
+     itemsTable.push([
+       item.quantity.toString(),
+       item.product.unit_name || 'Servicio',
+       item.product.description
+     ]);
   });
+  
+  const headerContent = [];
+  if (logoBase64) {
+    headerContent.push({
+         columns: [
+           { image: logoBase64, width: 120, margin: [0, 0, 20, 0] },
+           { 
+             stack: [
+               { text: empresa.razonSocial, fontSize: 16, bold: true },
+               { text: `R.F.C.: ${empresa.rfc}`, fontSize: 10 }
+             ]
+           }
+         ]
+      });
+  } else {
+    headerContent.push({ 
+        stack: [
+           { text: empresa.razonSocial, fontSize: 16, bold: true },
+           { text: `R.F.C.: ${empresa.rfc}`, fontSize: 10 }
+        ]
+      });
+  }
+
+  const docDefinition = {
+    defaultStyle: { font: 'Helvetica', fontSize: 10 },
+    content: [
+      ...headerContent,
+      { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }], margin: [0, 10, 0, 10] },
+      {
+         columns: [
+           {
+              width: '*',
+              stack: [
+                 { text: 'DATOS DEL CLIENTE', style: 'sectionHeader' },
+                 { text: cliente.razonSocial, bold: true },
+                 { text: `R.F.C.: ${cliente.rfc}` }
+              ]
+           },
+           {
+              width: 'auto',
+              stack: [
+                 { text: 'ORDEN DE SERVICIO', fontSize: 14, bold: true, alignment: 'right', color: '#0054a6' },
+                 { text: `Referencia: ${factura.folioInterno || fInvoice.id}`, fontSize: 10, alignment: 'right' },
+                 { text: `Fecha: ${new Date().toLocaleDateString()}`, alignment: 'right', margin: [0, 5, 0, 0] }
+              ]
+           }
+         ]
+      },
+      { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1 }], margin: [0, 10, 0, 10] },
+      { text: 'DETALLE DE SERVICIOS ACTIVADOS', style: 'sectionHeader', margin: [0, 10, 0, 10] },
+      {
+        table: { headerRows: 1, widths: ['auto', 'auto', '*'], body: itemsTable },
+        layout: {
+           hLineWidth: function (i, node) { return (i === 0 || i === node.table.body.length) ? 2 : 1; },
+           vLineWidth: function (i, node) { return 0; },
+           hLineColor: function (i, node) { return '#aaa'; },
+           paddingLeft: function(i, node) { return 4; },
+           paddingRight: function(i, node) { return 4; },
+           paddingTop: function(i, node) { return 6; },
+           paddingBottom: function(i, node) { return 6; }
+        }
+      },
+      { text: 'Gracias por confiar en nuestros servicios.', alignment: 'center', margin: [0, 40, 0, 0], italics: true, color: '#666' }
+    ],
+    styles: { 
+       th: { bold: true, fillColor: '#0054a6', color: '#fff' },
+       sectionHeader: { bold: true, color: '#0054a6', fontSize: 12, margin: [0, 0, 0, 5] }
+    }
+  };
+
+  return pdfmake.createPdf(docDefinition).getBuffer();
 }
 
 function processTemplate(template, cliente, factura) {
@@ -228,6 +320,19 @@ export async function GET(request) {
       } else if (type === 'ORDEN_SERVICIO') {
         mailOptions.subject = `Orden de Servicio Activa - ${empresa.razonSocial}`;
         mailOptions.text = processTemplate(empresa.plantillaOrdenServicio || 'Tu orden de servicio ha sido puesta en marcha.', cliente, factura);
+
+        try {
+           const pdfBuffer = await generateOrdenServicioPdf(factura, empresa, cliente, facturapiCentral);
+           if (pdfBuffer) {
+              mailOptions.attachments.push({
+                filename: `OrdenServicio_${factura.folio || '00'}.pdf`,
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+              });
+           }
+        } catch(pdfErr) {
+           console.log("Error creando el PDF Orden Servicio: ", pdfErr);
+        }
       } else if (type === 'FACTURA') {
         mailOptions.subject = `Factura Fiscal CFDI 4.0 - ${empresa.razonSocial}`;
         mailOptions.text = processTemplate(empresa.plantillaFactura || 'Adjunto entregamos tu factura y archivo XML XML timbrados de forma oficial.', cliente, factura);
