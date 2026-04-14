@@ -31,6 +31,33 @@ export default async function RootLayout({ children }) {
               <div className="sidebar-logo">
                 <span>⚡</span> CFDI SaaS
               </div>
+              
+              {user.permisoFacturas && (
+                <div style={{ padding: '0 1.2rem 1.2rem 1.2rem' }}>
+                  <Link href="/facturas/nuevo" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.6rem',
+                    background: 'var(--accent)',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 15px rgba(0, 255, 136, 0.2)',
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.95rem'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 255, 136, 0.3)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 255, 136, 0.2)'; }}
+                  >
+                    <span style={{ fontSize: '1.2rem' }}>➕</span>
+                    Emitir Factura
+                  </Link>
+                </div>
+              )}
+
               <nav className="nav-links">
                 <Link href="/" className="nav-link">⊞ Panel Principal</Link>
                 {user.permisoEmpresas && <Link href="/empresas" className="nav-link">🏢 Empresas</Link>}
