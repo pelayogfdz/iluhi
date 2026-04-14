@@ -145,3 +145,62 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     return { success: false, error: 'Excepción del Servidor: ' + error.message };
   }
 }
+
+export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion = '') {
+  try {
+    const fac = await prisma.factura.findUnique({ where: { id: facturaId } });
+    if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
+
+    if (process.env.FACTURAPI_KEY && !process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
+      const payload = { motive: motivo };
+      if (motivo === '01') payload.substitution = uuidSustitucion;
+      
+      await facturapi.invoices.cancel(fac.uuid, payload);
+    } else {
+       console.log(`[SIMULACION] Cancelando factura ${fac.uuid} con motivo ${motivo}`);
+    }
+
+    await prisma.factura.update({
+      where: { id: facturaId },
+      data: { estatus: 'Cancelada' }
+    });
+
+    return { success: true };
+  } catch(error) {
+    console.error("Error al cancelar factura: ", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function emitirComplementoPago(facturaId, montoAbonado, formaPago) {
+  try {
+    const fac = await prisma.factura.findUnique({ where: { id: facturaId } });
+    if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
+    
+    if (fac.metodoPago !== 'PPD') return { success: false, error: 'Solo facturas PPD admiten complementos.' }
+
+    if (process.env.FACTURAPI_KEY && !process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
+      await facturapi.receipts.create({
+        payment_form: formaPago,
+        items: [
+          {
+            invoice: fac.uuid,
+            amount: parseFloat(montoAbonado)
+          }
+        ]
+      });
+    } else {
+       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado}`);
+    }
+
+    await prisma.factura.update({
+      where: { id: facturaId },
+      data: { estatus: 'Timbrada - Complementado Local' } // Optionally we can append something.
+    })
+
+    return { success: true };
+  } catch(error) {
+    console.error("Error al emitir REP: ", error);
+    return { success: false, error: error.message };
+  }
+}

@@ -4,6 +4,9 @@ import { useState } from 'react'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { useRouter, useSearchParams } from 'next/navigation'
+import BotonCancelar from './BotonCancelar'
+import BotonComplemento from './BotonComplemento'
+import { cancelarFactura, emitirComplementoPago } from './acciones'
 
 export default function FacturasClient({ facturasInitial, empresas }) {
   const router = useRouter()
@@ -96,6 +99,20 @@ export default function FacturasClient({ facturasInitial, empresas }) {
     }
   }
 
+  const handleCancelFactura = async (id, motivo, substitution) => {
+     const res = await cancelarFactura(id, motivo, substitution);
+     if(!res.success) throw new Error(res.error);
+     alert("Factura enviada a cancelación exitosamente.");
+     router.refresh();
+  }
+
+  const handleComplement = async (id, monto, formaPago) => {
+     const res = await emitirComplementoPago(id, monto, formaPago);
+     if(!res.success) throw new Error(res.error);
+     alert("Complemento REP timbrado exitosamente.");
+     router.refresh();
+  }
+
   return (
     <div>
       {/* Panel de Filtros Secundarios */}
@@ -153,15 +170,18 @@ export default function FacturasClient({ facturasInitial, empresas }) {
             </th>
             <th>ID Interno / UUID</th>
             <th>Emisor</th>
+            <th>Método</th>
+            <th>Pago REP</th>
             <th>Fecha</th>
             <th>Total</th>
             <th>Estatus</th>
             <th>Descargas</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {facturasInitial.length === 0 ? (
-            <tr><td colSpan="7" style={{ padding: '2rem', textAlign: 'center' }}>No existen facturas timbradas con estos filtros aún.</td></tr>
+            <tr><td colSpan="10" style={{ padding: '2rem', textAlign: 'center' }}>No existen facturas timbradas con estos filtros aún.</td></tr>
           ) : facturasInitial.map(fac => {
              const hasUUID = !!fac.uuid;
              return (
@@ -174,13 +194,21 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                   <div style={{fontFamily: 'monospace', fontWeight: 'bold'}}>{fac.uuid || 'En Proceso...'}</div>
                 </td>
                 <td>{fac.empresa.razonSocial}</td>
+                <td>
+                  <span style={{background: 'rgba(255,255,255,0.1)', padding:'2px 6px', borderRadius:'4px', fontSize:'0.8rem'}}>
+                    {fac.metodoPago || 'PUE'}
+                  </span>
+                </td>
+                <td>
+                  <BotonComplemento factura={fac} onComplement={handleComplement} />
+                </td>
                 <td>{new Date(fac.fechaEmision).toLocaleDateString()}</td>
                 <td>${fac.total.toFixed(2)}</td>
                 <td>
                   <span style={{ 
                      padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
-                     background: fac.estatus.includes('Timbrada') ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,0,0.2)',
-                     color: fac.estatus.includes('Timbrada') ? 'lightgreen' : 'var(--warning-color, yellow)'
+                     background: fac.estatus.includes('Cancelada') ? 'rgba(225,29,72,0.2)' : fac.estatus.includes('Timbrada') ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,0,0.2)',
+                     color: fac.estatus.includes('Cancelada') ? '#f43f5e' : fac.estatus.includes('Timbrada') ? 'lightgreen' : 'var(--warning-color, yellow)'
                   }}>{fac.estatus}</span>
                 </td>
                 <td>
@@ -192,6 +220,9 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                   ) : (
                     <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>No disponible</span>
                   )}
+                </td>
+                <td>
+                  <BotonCancelar factura={fac} onCancel={handleCancelFactura} />
                 </td>
               </tr>
             )
