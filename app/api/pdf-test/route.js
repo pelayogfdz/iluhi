@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import PdfPrinter from 'pdfmake/src/printer';
+import PdfPrinter from 'pdfmake';
 
 export async function GET() {
   try {
