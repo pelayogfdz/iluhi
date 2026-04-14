@@ -49,8 +49,6 @@ export default async function RootLayout({ children }) {
                     transition: 'all 0.2s ease',
                     fontSize: '0.95rem'
                   }}
-                  onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 255, 136, 0.3)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 255, 136, 0.2)'; }}
                   >
                     <span style={{ fontSize: '1.2rem' }}>➕</span>
                     Emitir Factura
