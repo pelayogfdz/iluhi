@@ -6,6 +6,7 @@ export default function BotonComplemento({ factura, onComplement }) {
   const [open, setOpen] = useState(false)
   const [monto, setMonto] = useState(factura.total)
   const [formaPago, setFormaPago] = useState('03') // 03 Transferencia by default
+  const [fechaPago, setFechaPago] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Solo mostrar para PPD y q tenga ID (esta timbrada), si es PUE no lleva complemento.
@@ -21,7 +22,7 @@ export default function BotonComplemento({ factura, onComplement }) {
     }
     setLoading(true)
     try {
-      await onComplement(factura.id, parseFloat(monto), formaPago)
+      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago)
       setOpen(false)
     } catch (err) {
       alert(err.message)
@@ -74,6 +75,17 @@ export default function BotonComplemento({ factura, onComplement }) {
                  onChange={(e) => setMonto(e.target.value)} 
                />
                <small style={{ color: 'var(--text-secondary)' }}>Monto total CFDI: ${factura.total.toFixed(2)}</small>
+             </div>
+
+             <div style={{ marginBottom: '1rem' }}>
+               <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Fecha de Pago (Opcional)</label>
+               <input 
+                 type="datetime-local" 
+                 className="input" 
+                 value={fechaPago} 
+                 onChange={(e) => setFechaPago(e.target.value)} 
+               />
+               <small style={{ color: 'var(--text-secondary)' }}>Dejar vacío para usar la fecha y hora actual.</small>
              </div>
 
              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>

@@ -172,7 +172,7 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
   }
 }
 
-export async function emitirComplementoPago(facturaId, montoAbonado, formaPago) {
+export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago) {
   try {
     const fac = await prisma.factura.findUnique({ where: { id: facturaId } });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
@@ -180,7 +180,7 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago) 
     if (fac.metodoPago !== 'PPD') return { success: false, error: 'Solo facturas PPD admiten complementos.' }
 
     if (process.env.FACTURAPI_KEY && !process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
-      await facturapi.receipts.create({
+      const payload = {
         payment_form: formaPago,
         items: [
           {
@@ -188,9 +188,15 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago) 
             amount: parseFloat(montoAbonado)
           }
         ]
-      });
+      };
+      
+      if (fechaPago) {
+        payload.date = new Date(fechaPago).toISOString();
+      }
+
+      await facturapi.receipts.create(payload);
     } else {
-       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado}`);
+       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'}`);
     }
 
     await prisma.factura.update({
