@@ -75,6 +75,7 @@ model Empresa {
   productos    Producto[]
   facturas     Factura[]
   socios       Socio[]
+  documentosSat DocumentoSat[]
   
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -210,3 +211,17 @@ model SatCatalogoUnidad {
   clave       String   @id
   nombre      String
 }
+
+model DocumentoSat {
+  id               String   @id @default(uuid())
+  tipo             String   // "CONSTANCIA", "OPINION", "BUZON"
+  fechaDocumento   DateTime @default(now())
+  descripcion      String?
+  archivoBase64    String?  
+  
+  empresaId        String
+  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime @default(now())
+}
+

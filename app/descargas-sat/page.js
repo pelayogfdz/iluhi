@@ -12,25 +12,15 @@ export default async function DescargasSatPage() {
       razonSocial: true,
       fielCerBase64: true,
       fielVigencia: true,
-      opinionCumplimiento: true,
-      ultimaValidacionOpinion: true,
-      _count: {
-        select: {
-          facturas: {
-            where: { xmlBase64: { not: null } }
-          }
-        }
-      }
     },
     orderBy: { razonSocial: 'asc' }
   })
 
   const serialized = empresas.map(emp => ({
-    ...emp,
-    fielVigencia: emp.fielVigencia?.toISOString() || null,
-    ultimaValidacionOpinion: emp.ultimaValidacionOpinion?.toISOString() || null,
+    id: emp.id,
+    rfc: emp.rfc,
+    razonSocial: emp.razonSocial,
     hasFiel: !!emp.fielCerBase64,
-    xmlCount: emp._count.facturas
   }))
 
   return (

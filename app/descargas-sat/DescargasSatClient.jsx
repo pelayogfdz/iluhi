@@ -1,11 +1,47 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { fetchDocumentosSATHistory, getEmpresasSelector } from './acciones'
 
 export default function DescargasSatClient({ empresas }) {
+  // === Sync Controls ===
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState(null)
+
+  // === Filtering Controls ===
   const [activeTab, setActiveTab] = useState('facturas')
+  const [filtroEmpresaId, setFiltroEmpresaId] = useState('ALL')
+  const [filtroFechaInicio, setFiltroFechaInicio] = useState('')
+  const [filtroFechaFin, setFiltroFechaFin] = useState('')
+  
+  // === Data Handling ===
+  const [items, setItems] = useState([])
+  const [loadingData, setLoadingData] = useState(false)
+  const [errorData, setErrorData] = useState('')
+
+  // Efecto principal para refrescar la lista
+  const fetchData = async () => {
+    setLoadingData(true)
+    setErrorData('')
+    const payload = {
+      tab: activeTab,
+      empresaId: filtroEmpresaId,
+      fechaInicio: filtroFechaInicio,
+      fechaFin: filtroFechaFin
+    }
+    const res = await fetchDocumentosSATHistory(payload)
+    if (res.success) {
+      setItems(res.data)
+    } else {
+      setErrorData(res.error || 'Ocurrió un error cargando el historial.')
+    }
+    setLoadingData(false)
+  }
+
+  // Refrescar al montar o cuando cambie de pestaña
+  useEffect(() => {
+    fetchData()
+  }, [activeTab])
 
   const handleSync = async () => {
     setSyncing(true)
@@ -14,11 +50,20 @@ export default function DescargasSatClient({ empresas }) {
       const res = await fetch('/api/sat-sync')
       const data = await res.json()
       setSyncResult(data)
+      // Actualizamos listado luego de sincronizar
+      await fetchData()
     } catch (err) {
       setSyncResult({ success: false, error: err.message })
     } finally {
       setSyncing(false)
     }
+  }
+
+  const handleClearFilters = () => {
+    setFiltroEmpresaId('ALL')
+    setFiltroFechaInicio('')
+    setFiltroFechaFin('')
+    // Al limpiar no hace el fetch de inmediato en el DOM, es mejor hacerlo de manual al clickear Filtrar o por useEffect
   }
 
   const tabs = [
@@ -30,8 +75,8 @@ export default function DescargasSatClient({ empresas }) {
 
   return (
     <div>
-      {/* Controles principales */}
-      <div className="glass-panel card" style={{ marginBottom: '2rem' }}>
+      {/* Sincronizador Backend */}
+      <div className="glass-panel card" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '1.2rem' }}>⚡ Sincronizador Maestro</h2>
@@ -39,66 +84,36 @@ export default function DescargasSatClient({ empresas }) {
               Ejecuta los procesos de extracción: XMLs masivos y estado de cumplimiento. Requiere FIEL (e.firma).
             </p>
           </div>
-          <button
-            className="btn"
-            style={{ background: '#7c3aed', fontSize: '1rem', padding: '0.75rem 1.5rem' }}
-            onClick={handleSync}
-            disabled={syncing}
-          >
+          <button className="btn" style={{ background: '#7c3aed', fontSize: '1rem', padding: '0.75rem 1.5rem' }} onClick={handleSync} disabled={syncing}>
             {syncing ? '🔄 Extrayendo datos del SAT...' : '🚀 Ejecutar Extracción Masiva'}
           </button>
         </div>
 
         {syncResult && (
-          <div style={{
-            marginTop: '1rem',
-            padding: '1rem',
-            borderRadius: '8px',
-            background: syncResult.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${syncResult.success ? '#10b981' : '#ef4444'}`,
-            fontSize: '0.9rem'
-          }}>
+          <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '8px', background: syncResult.success ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${syncResult.success ? '#10b981' : '#ef4444'}`, fontSize: '0.9rem' }}>
             {syncResult.success ? (
               <div>
                 <p style={{ margin: '0 0 0.5rem', fontWeight: 'bold', color: '#10b981' }}>✅ Proceso completado exitosamente</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
-                  <div>
-                    <strong>XMLs descargados:</strong> {syncResult.results?.xmlDownloads?.success || 0} / {syncResult.results?.xmlDownloads?.total || 0}
-                  </div>
-                  <div>
-                    <strong>Opiniones 32-D:</strong>{' '}
-                    {syncResult.results?.opinionCumplimiento?.skipped
-                      ? `Omitido — ${syncResult.results.opinionCumplimiento.reason}`
-                      : `${syncResult.results?.opinionCumplimiento?.updated || 0} / ${syncResult.results?.opinionCumplimiento?.total || 0}`}
-                  </div>
+                  <div><strong>XMLs descargados:</strong> {syncResult.results?.xmlDownloads?.success || 0} / {syncResult.results?.xmlDownloads?.total || 0}</div>
+                  <div><strong>Opiniones 32-D:</strong> {syncResult.results?.opinionCumplimiento?.skipped ? `Omitido — ${syncResult.results.opinionCumplimiento.reason}` : `${syncResult.results?.opinionCumplimiento?.updated || 0} / ${syncResult.results?.opinionCumplimiento?.total || 0}`}</div>
                 </div>
               </div>
-            ) : (
-              <p style={{ margin: 0, color: '#ef4444' }}>❌ Error: {syncResult.error}</p>
-            )}
+            ) : (<p style={{ margin: 0, color: '#ef4444' }}>❌ Error: {syncResult.error}</p>)}
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1.5rem', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: '0.75rem 1.5rem',
-              background: activeTab === tab.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-              border: `1px solid ${activeTab === tab.id ? 'var(--primary)' : 'transparent'}`,
-              color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.2s',
+              padding: '0.75rem 1.5rem', background: activeTab === tab.id ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+              borderBottom: `2px solid ${activeTab === tab.id ? 'var(--primary)' : 'transparent'}`, color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
+              cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap', transition: 'all 0.2s', borderTop: 'none', borderLeft: 'none', borderRight: 'none'
             }}
           >
             <span style={{ fontSize: '1.1rem' }}>{tab.icon}</span> {tab.label}
@@ -107,140 +122,159 @@ export default function DescargasSatClient({ empresas }) {
       </div>
 
       <div className="glass-panel card">
-        {activeTab === 'facturas' && (
-          <>
-            <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>Archivos de Facturación</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Los XML generados y recibidos por las empresas se enrutan y archivan aquí cada hora.
-            </p>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>RFC</th>
-                    <th>Razón Social</th>
-                    <th>FIEL (e.firma)</th>
-                    <th style={{ textAlign: 'center' }}>XMLs Resguardados</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {empresas.map((emp) => (
-                    <tr key={emp.id}>
-                      <td><code>{emp.rfc}</code></td>
-                      <td>{emp.razonSocial}</td>
-                      <td>{emp.hasFiel ? <span style={{ color: '#10b981' }}>Cargada</span> : <span style={{ color: '#ef4444' }}>Pendiente</span>}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)' }}>{emp.xmlCount}</td>
-                      <td>
-                        <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} disabled={emp.xmlCount === 0}>
-                          {emp.xmlCount > 0 ? 'Ver Archivos' : 'Vacío'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+        {/* Barra Global de Filtros */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ flex: '1 1 200px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Filtro de Empresa</label>
+            <select className="form-control" value={filtroEmpresaId} onChange={e => setFiltroEmpresaId(e.target.value)}>
+              <option value="ALL">🏢 Todas las Empresas</option>
+              {empresas.map(emp => <option key={emp.id} value={emp.id}>{emp.razonSocial}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: '1 1 150px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Desde</label>
+            <input type="date" className="form-control" value={filtroFechaInicio} onChange={e => setFiltroFechaInicio(e.target.value)} />
+          </div>
+          <div style={{ flex: '1 1 150px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Hasta</label>
+            <input type="date" className="form-control" value={filtroFechaFin} onChange={e => setFiltroFechaFin(e.target.value)} />
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flex: '1 1 200px' }}>
+            <button className="btn" style={{ background: '#3b82f6', flex: 1 }} onClick={fetchData} disabled={loadingData}>
+              🔍 Filtrar
+            </button>
+            <button className="btn btn-secondary" onClick={() => { handleClearFilters(); setTimeout(fetchData, 0) }} disabled={loadingData}>
+              Limpiar
+            </button>
+          </div>
+        </div>
 
-        {activeTab === 'opiniones' && (
-          <>
-            <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>Semaforización Fiscal (32-D)</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Estado del Semáforo fiscal actualizado automáticamente los días 2 y 18 del mes vía SAT.
-            </p>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>RFC</th>
-                    <th>Empresa</th>
-                    <th>Estado de Cumplimiento</th>
-                    <th>Última Validación</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {empresas.map((emp) => {
-                    const lastCheck = emp.ultimaValidacionOpinion ? new Date(emp.ultimaValidacionOpinion) : null
-                    return (
-                      <tr key={emp.id}>
-                        <td><code>{emp.rfc}</code></td>
-                        <td>{emp.razonSocial}</td>
+        {/* Carga y Errores */}
+        {loadingData && <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--primary)' }}>Cargando historial de base de datos... ⚙️</div>}
+        {errorData && <div style={{ color: '#ef4444', padding: '1rem', textAlign: 'center' }}>Error: {errorData}</div>}
+
+        {/* Tablas de Resultados (Sólo Mostrar si no hay carga y no hay error) */}
+        {!loadingData && !errorData && (
+          <div className="table-container">
+            <table className="table">
+              
+              {/* === FACTURAS === */}
+              {activeTab === 'facturas' && (
+                <>
+                  <thead>
+                    <tr>
+                      <th>Fecha Emisión</th>
+                      <th>Folio / UUID</th>
+                      <th>Empresa Emisora</th>
+                      <th>Total</th>
+                      <th>Estatus</th>
+                      <th>Archivos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.length === 0 ? <tr><td colSpan="6" style={{ textAlign: 'center' }}>No existen facturas XML descargadas para los criterios seleccionados.</td></tr> : items.map((f) => (
+                      <tr key={f.id}>
+                        <td>{new Date(f.fechaEmision).toLocaleDateString()}</td>
+                        <td>{f.folio || 'N/A'}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.uuid}</span></td>
+                        <td>{f.empresa?.razonSocial}</td>
+                        <td style={{ fontWeight: 'bold' }}>${f.total?.toFixed(2)}</td>
                         <td>
-                          <div style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '6px',
-                            padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold',
-                            background: emp.opinionCumplimiento === 'POSITIVA' ? 'rgba(16,185,129,0.2)' :
-                                        emp.opinionCumplimiento === 'NEGATIVA' ? 'rgba(239,68,68,0.2)' : 'rgba(107,114,128,0.2)',
-                            color: emp.opinionCumplimiento === 'POSITIVA' ? '#10b981' :
-                                  emp.opinionCumplimiento === 'NEGATIVA' ? '#ef4444' : '#6b7280'
-                          }}>
-                            <div style={{
-                              width: '10px', height: '10px', borderRadius: '50%',
-                              background: emp.opinionCumplimiento === 'POSITIVA' ? '#10b981' :
-                                          emp.opinionCumplimiento === 'NEGATIVA' ? '#ef4444' : '#6b7280'
-                            }}></div>
-                            {emp.opinionCumplimiento || 'Sin Opinión (Pendiente)'}
-                          </div>
+                           <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', background: f.estatus==='Timbrada'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)', color: f.estatus==='Timbrada'?'#10b981':'#ef4444' }}>
+                             {f.estatus}
+                           </span>
                         </td>
-                        <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          {lastCheck ? lastCheck.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Nunca validado'}
+                        <td>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => alert('Próximamente: Abre visor XML embebido')}>Ver XML</button>
                         </td>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+                    ))}
+                  </tbody>
+                </>
+              )}
 
-        {activeTab === 'constancias' && (
-          <>
-            <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.2rem' }}>Constancias de Situación Fiscal (CSF)</h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-              Base de datos PDF de las Constancias de cada empresa. Descarga programada 2 y 18 del mes.
-            </p>
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>RFC</th>
-                    <th>Razón Social</th>
-                    <th>Estado de CSF</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {empresas.map((emp) => (
-                    <tr key={emp.id}>
-                      <td><code>{emp.rfc}</code></td>
-                      <td>{emp.razonSocial}</td>
-                      <td><span style={{ color: '#94a3b8' }}>Pendiente de extracción (Scraper SAT)</span></td>
-                      <td>
-                        <button className="btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} disabled>
-                          Descargar PDF
-                        </button>
-                      </td>
+              {/* === CONSTANCIAS === */}
+              {activeTab === 'constancias' && (
+                <>
+                  <thead>
+                    <tr>
+                      <th>Fecha Descarga</th>
+                      <th>Empresa</th>
+                      <th>Tipo Documento</th>
+                      <th>Archivos</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+                  </thead>
+                  <tbody>
+                    {items.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center' }}>No existen constancias descargadas en este rango.</td></tr> : items.map((c) => (
+                      <tr key={c.id}>
+                        <td>{new Date(c.fechaDocumento).toLocaleString()}</td>
+                        <td>{c.empresa?.razonSocial}</td>
+                        <td>{c.descripcion || 'Constancia de Situación Fiscal (CSF)'}</td>
+                        <td>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!c.archivoBase64}>Ver PDF</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </>
+              )}
 
-        {activeTab === 'buzon' && (
-          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-            <span style={{ fontSize: '3rem' }}>📫</span>
-            <h2 style={{ margin: '1rem 0 0.5rem' }}>Buzón Tributario</h2>
-            <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto' }}>
-              Módulo receptor de notificaciones, mensajes y requerimientos oficiales del SAT. Es necesario inicializar el recolector de web scraping con la FIEL (e.firma) para obtener estos documentos.
-            </p>
-            <button className="btn" style={{ marginTop: '1.5rem', background: '#3b82f6' }} disabled>
-              Integración de Recolección en Progreso...
-            </button>
+              {/* === OPINIONES === */}
+              {activeTab === 'opiniones' && (
+                <>
+                  <thead>
+                    <tr>
+                      <th>Fecha de Validación</th>
+                      <th>Empresa Emisora</th>
+                      <th>Estatus 32-D</th>
+                      <th>Archivos PDF</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center' }}>No existen opiniones de cumplimiento descargadas en este rango.</td></tr> : items.map((o) => (
+                      <tr key={o.id}>
+                        <td>{new Date(o.fechaDocumento).toLocaleString()}</td>
+                        <td>{o.empresa?.razonSocial}</td>
+                        <td>
+                          <span style={{ fontWeight: 'bold', fontSize: '0.8rem', padding: '3px 8px', borderRadius: '12px', background: o.descripcion === 'POSITIVA' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)', color: o.descripcion === 'POSITIVA' ? '#10b981' : '#ef4444' }}>
+                            {o.descripcion}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!o.archivoBase64}>Ver PDF</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </>
+              )}
+
+              {/* === BUZON TRIBUTARIO === */}
+              {activeTab === 'buzon' && (
+                <>
+                  <thead>
+                    <tr>
+                      <th>Fecha de Notificación</th>
+                      <th>Empresa Receptora</th>
+                      <th>Concepto / Asunto</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center' }}>No existen notificaciones extraídas del buzón en este rango.</td></tr> : items.map((b) => (
+                      <tr key={b.id}>
+                        <td>{new Date(b.fechaDocumento).toLocaleString()}</td>
+                        <td>{b.empresa?.razonSocial}</td>
+                        <td>{b.descripcion}</td>
+                        <td>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#3b82f6' }}>Revisar e-documento</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </>
+              )}
+
+            </table>
           </div>
         )}
       </div>
