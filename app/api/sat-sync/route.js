@@ -39,7 +39,7 @@ export async function GET(request) {
         where: {
           uuid: { not: null },
           estatus: { not: { contains: 'Cancelada' } },
-          updatedAt: { gte: oneHourAgo }
+          createdAt: { gte: oneHourAgo }
         },
         include: { empresa: true }
       });
