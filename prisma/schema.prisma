@@ -58,6 +58,13 @@ model Empresa {
   smtpUser           String?
   smtpPass           String?
   
+  // SAT FIEL (e.firma Avanzada) Descargas
+  fielCerBase64           String?
+  fielKeyBase64           String?
+  fielPassword            String?
+  fielVigencia            DateTime?
+  opinionCumplimiento     String? // POSITIVA, NEGATIVA, EN_TRAMITE
+  ultimaValidacionOpinion DateTime?
   // Plantillas de Correo
   plantillaCotizacion    String?
   plantillaOrdenServicio String?
@@ -67,9 +74,27 @@ model Empresa {
   usuarios     Usuario[]
   productos    Producto[]
   facturas     Factura[]
+  socios       Socio[]
   
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model Socio {
+  id             String    @id @default(uuid())
+  nombre         String
+  rfc            String
+  
+  // FIEL Personal del socio
+  fielCerBase64  String?
+  fielKeyBase64  String?
+  fielPassword   String?
+  fielVigencia   DateTime?
+  
+  empresaId      String
+  empresa        Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  createdAt      DateTime  @default(now())
 }
 
 model Cliente {

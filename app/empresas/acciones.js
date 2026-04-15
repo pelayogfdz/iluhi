@@ -135,3 +135,132 @@ export async function subirLogo(formData) {
     return { success: false, error: error.message || 'Error al conectar con Facturapi' };
   }
 }
+
+// ─── FIEL (e.firma Avanzada) ───────────────────────────────
+
+export async function guardarFiel(empresaId, fielCerBase64, fielKeyBase64, fielPassword) {
+  try {
+    if (!fielCerBase64 || !fielKeyBase64 || !fielPassword) {
+      throw new Error("Debes proporcionar el archivo .CER, el archivo .KEY y la contraseña de la FIEL.")
+    }
+
+    // Intentar extraer la fecha de vigencia del certificado (.cer es DER)
+    let fielVigencia = null
+    try {
+      const asn1 = require('asn1js')
+      const pkijs = require('pkijs')
+      const cerBuffer = Buffer.from(fielCerBase64, 'base64')
+      const asn1Data = asn1.fromBER(cerBuffer.buffer.slice(cerBuffer.byteOffset, cerBuffer.byteOffset + cerBuffer.byteLength))
+      const cert = new pkijs.Certificate({ schema: asn1Data.result })
+      const notAfter = cert.notAfter.value
+      fielVigencia = new Date(notAfter)
+    } catch (_) {
+      // No fatal — la fecha simplemente quedará nula si falla el parsing
+    }
+
+    await prisma.empresa.update({
+      where: { id: empresaId },
+      data: {
+        fielCerBase64,
+        fielKeyBase64,
+        fielPassword,
+        fielVigencia
+      }
+    })
+
+    return { success: true, fielVigencia }
+  } catch (error) {
+    console.error("Error guardando FIEL: ", error)
+    return { success: false, error: error.message }
+  }
+}
+
+// ─── SOCIOS ────────────────────────────────────────────────
+
+export async function obtenerSocios(empresaId) {
+  try {
+    const socios = await prisma.socio.findMany({
+      where: { empresaId },
+      orderBy: { createdAt: 'asc' }
+    })
+    return { success: true, socios }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function crearSocio(empresaId, nombre, rfc, fielCerBase64, fielKeyBase64, fielPassword) {
+  try {
+    if (!nombre || !rfc) throw new Error("Nombre y RFC del socio son obligatorios.")
+
+    // Extraer vigencia FIEL del socio si se cargó CER
+    let fielVigencia = null
+    if (fielCerBase64) {
+      try {
+        const asn1 = require('asn1js')
+        const pkijs = require('pkijs')
+        const cerBuffer = Buffer.from(fielCerBase64, 'base64')
+        const asn1Data = asn1.fromBER(cerBuffer.buffer.slice(cerBuffer.byteOffset, cerBuffer.byteOffset + cerBuffer.byteLength))
+        const cert = new pkijs.Certificate({ schema: asn1Data.result })
+        fielVigencia = new Date(cert.notAfter.value)
+      } catch (_) {}
+    }
+
+    const socio = await prisma.socio.create({
+      data: {
+        empresaId,
+        nombre,
+        rfc: rfc.toUpperCase(),
+        fielCerBase64: fielCerBase64 || null,
+        fielKeyBase64: fielKeyBase64 || null,
+        fielPassword: fielPassword || null,
+        fielVigencia
+      }
+    })
+    return { success: true, socio }
+  } catch (error) {
+    console.error("Error creando socio: ", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function actualizarSocio(socioId, data) {
+  try {
+    let fielVigencia = undefined
+    if (data.fielCerBase64) {
+      try {
+        const asn1 = require('asn1js')
+        const pkijs = require('pkijs')
+        const cerBuffer = Buffer.from(data.fielCerBase64, 'base64')
+        const asn1Data = asn1.fromBER(cerBuffer.buffer.slice(cerBuffer.byteOffset, cerBuffer.byteOffset + cerBuffer.byteLength))
+        const cert = new pkijs.Certificate({ schema: asn1Data.result })
+        fielVigencia = new Date(cert.notAfter.value)
+      } catch (_) {}
+    }
+
+    await prisma.socio.update({
+      where: { id: socioId },
+      data: {
+        nombre: data.nombre,
+        rfc: data.rfc?.toUpperCase(),
+        ...(data.fielCerBase64 && { fielCerBase64: data.fielCerBase64 }),
+        ...(data.fielKeyBase64 && { fielKeyBase64: data.fielKeyBase64 }),
+        ...(data.fielPassword && { fielPassword: data.fielPassword }),
+        ...(fielVigencia !== undefined && { fielVigencia })
+      }
+    })
+    return { success: true }
+  } catch (error) {
+    console.error("Error actualizando socio: ", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function eliminarSocio(socioId) {
+  try {
+    await prisma.socio.delete({ where: { id: socioId } })
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}

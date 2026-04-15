@@ -54,13 +54,14 @@ export default async function EmpresasPage({ searchParams }) {
               <th>Régimen</th>
               <th>CSD Cargado</th>
               <th>Mail</th>
+              <th>Estatus SAT</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {empresas.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
+                <td colSpan="7" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '2rem' }}>
                   No hay empresas configuradas. Agrega una para comenzar a facturar.
                 </td>
               </tr>
@@ -71,6 +72,18 @@ export default async function EmpresasPage({ searchParams }) {
                 <td>{emp.regimen}</td>
                 <td>{emp.cerPath ? '✅' : '❌'}</td>
                 <td>{emp.smtpHost && emp.smtpUser && emp.smtpPass ? '✅' : '❌'}</td>
+                <td style={{ textAlign: 'center' }}>
+                  <div style={{
+                    display: 'inline-block',
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: emp.opinionCumplimiento === 'POSITIVA' ? '#10b981' : 
+                                emp.opinionCumplimiento === 'NEGATIVA' ? '#ef4444' : '#6b7280',
+                    boxShadow: emp.opinionCumplimiento === 'POSITIVA' ? '0 0 8px #10b981' : 
+                               emp.opinionCumplimiento === 'NEGATIVA' ? '0 0 8px #ef4444' : 'none'
+                  }} title={emp.opinionCumplimiento || 'Pendiente'}></div>
+                </td>
                 <td>
                   <ClientTableActions empresaId={emp.id} />
                 </td>
