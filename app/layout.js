@@ -64,6 +64,7 @@ export default async function RootLayout({ children }) {
                 {user.permisoFacturas && <Link href="/facturas" className="nav-link">🧾 Facturas</Link>}
                 {user.permisoUsuarios && <Link href="/usuarios" className="nav-link">🔑 Usuarios</Link>}
                 {user.permisoReportes && <Link href="/reportes" className="nav-link">📊 Reportes</Link>}
+                {user.permisoEmpresas && <Link href="/descargas-sat" className="nav-link">📥 Descargas SAT</Link>}
               </nav>
               
               <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '13px' }}>
