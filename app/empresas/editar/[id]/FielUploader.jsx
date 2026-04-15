@@ -25,14 +25,14 @@ export default function FielUploader({ empresa }) {
       const keyB64 = keyFile ? await toBase64(keyFile) : empresa.fielKeyBase64
 
       if (!cerB64 || !keyB64 || !fielPassword) {
-        setMsg({ type: 'error', text: 'Debes cargar ambos archivos (.CER y .KEY) y la contraseña de la FIEL.' })
+        setMsg({ type: 'error', text: 'Debes cargar ambos archivos (.CER y .KEY) y la contraseña de la FIEL (e.firma).' })
         setLoading(false)
         return
       }
 
       const res = await guardarFiel(empresa.id, cerB64, keyB64, fielPassword)
       if (res.success) {
-        setMsg({ type: 'success', text: `FIEL guardada correctamente.${res.fielVigencia ? ' Vigencia: ' + new Date(res.fielVigencia).toLocaleDateString('es-MX') : ''}` })
+        setMsg({ type: 'success', text: `FIEL (e.firma) guardada correctamente.${res.fielVigencia ? ' Vigencia: ' + new Date(res.fielVigencia).toLocaleDateString('es-MX') : ''}` })
       } else {
         setMsg({ type: 'error', text: res.error })
       }
@@ -51,7 +51,7 @@ export default function FielUploader({ empresa }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
         <span style={{ fontSize: '2rem' }}>🔐</span>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.3rem' }}>e.firma (FIEL) del SAT</h2>
+          <h2 style={{ margin: 0, fontSize: '1.3rem' }}>FIEL (e.firma) del SAT</h2>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             Necesaria para descargas masivas de XML, opinión de cumplimiento y buzón tributario.
           </p>
@@ -67,7 +67,7 @@ export default function FielUploader({ empresa }) {
             color: isExpired ? '#ef4444' : '#10b981',
             border: `1px solid ${isExpired ? '#ef4444' : '#10b981'}`
           }}>
-            {isExpired ? '⚠️ FIEL EXPIRADA' : '✅ FIEL CARGADA'}
+            {isExpired ? '⚠️ FIEL (e.firma) EXPIRADA' : '✅ FIEL (e.firma) CARGADA'}
           </div>
         )}
       </div>
@@ -82,34 +82,34 @@ export default function FielUploader({ empresa }) {
           display: 'flex',
           justifyContent: 'space-between'
         }}>
-          <span>📅 Vigencia de la FIEL:</span>
+          <span>📅 Vigencia de la FIEL (e.firma):</span>
           <strong style={{ color: isExpired ? '#ef4444' : '#10b981' }}>
             {vigenciaDate.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
           </strong>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>
-            Archivo .CER de la FIEL {empresa.fielCerBase64 && <span style={{ color: '#10b981' }}>(cargado)</span>}
+            Archivo .CER de la FIEL (e.firma) {empresa.fielCerBase64 && <span style={{ color: '#10b981' }}>(cargado)</span>}
           </label>
           <input
             type="file"
             accept=".cer"
-            className="input"
+            className="form-control"
             onChange={(e) => setCerFile(e.target.files[0])}
             style={{ padding: '8px' }}
           />
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>
-            Archivo .KEY de la FIEL {empresa.fielKeyBase64 && <span style={{ color: '#10b981' }}>(cargado)</span>}
+            Archivo .KEY de la FIEL (e.firma) {empresa.fielKeyBase64 && <span style={{ color: '#10b981' }}>(cargado)</span>}
           </label>
           <input
             type="file"
             accept=".key"
-            className="input"
+            className="form-control"
             onChange={(e) => setKeyFile(e.target.files[0])}
             style={{ padding: '8px' }}
           />
@@ -117,10 +117,10 @@ export default function FielUploader({ empresa }) {
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Contraseña de la FIEL</label>
+        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Contraseña de la FIEL (e.firma)</label>
         <input
           type="password"
-          className="input"
+          className="form-control"
           placeholder="Contraseña de la e.firma..."
           value={fielPassword}
           onChange={(e) => setFielPassword(e.target.value)}
@@ -140,8 +140,8 @@ export default function FielUploader({ empresa }) {
         </div>
       )}
 
-      <button className="btn" onClick={handleSave} disabled={loading} style={{ background: '#7c3aed' }}>
-        {loading ? 'Guardando...' : '🔐 Guardar e.firma (FIEL)'}
+      <button className="btn" onClick={handleSave} disabled={loading} style={{ background: '#7c3aed', width: '100%' }}>
+        {loading ? 'Guardando...' : '🔐 Guardar FIEL (e.firma)'}
       </button>
     </div>
   )

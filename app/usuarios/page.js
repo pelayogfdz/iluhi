@@ -48,7 +48,12 @@ export default async function UsuariosPage() {
                   ) : <span style={{ color: '#888' }}>Todas (Sin Restricción)</span>}
                 </td>
                 <td>
-                  <DeleteUserBtn id={u.id} />
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <Link href={`/usuarios/editar/${u.id}`} className="btn" style={{ background: '#0ea5e9', padding: '0.35rem 0.75rem', fontSize: '0.85rem' }}>
+                      ✏️ Editar
+                    </Link>
+                    <DeleteUserBtn id={u.id} />
+                  </div>
                 </td>
               </tr>
             ))}

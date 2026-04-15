@@ -111,7 +111,7 @@ export default function SociosPanel({ empresaId }) {
           <div>
             <h2 style={{ margin: 0, fontSize: '1.3rem' }}>Estructura Accionaria (Socios)</h2>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              Registra los socios de la empresa con su FIEL personal y vigencia.
+              Registra los socios de la empresa con su FIEL (e.firma) personal y vigencia.
             </p>
           </div>
         </div>
@@ -146,8 +146,8 @@ export default function SociosPanel({ empresaId }) {
               <tr>
                 <th>Nombre</th>
                 <th>RFC</th>
-                <th>FIEL Cargada</th>
-                <th>Vigencia FIEL</th>
+                <th>FIEL (e.firma) Cargada</th>
+                <th>Vigencia FIEL (e.firma)</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -208,7 +208,7 @@ export default function SociosPanel({ empresaId }) {
           background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 9999
         }}>
-          <div className="glass-panel card" style={{ width: '500px', maxHeight: '90vh', overflowY: 'auto', background: '#111' }}>
+          <div className="glass-panel card" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', background: '#111', margin: '1rem' }}>
             <h3 style={{ marginBottom: '1rem', color: '#7c3aed' }}>
               {editingSocio ? '✏️ Editar Socio' : '➕ Nuevo Socio'}
             </h3>
@@ -225,10 +225,10 @@ export default function SociosPanel({ empresaId }) {
 
             <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1.5rem 0' }} />
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              🔐 e.firma (FIEL) personal del socio (opcional)
+              🔐 FIEL (e.firma) personal del socio (opcional)
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>
                   Archivo .CER {editingSocio?.fielCerBase64 && <span style={{ color: '#10b981' }}>(ya cargado)</span>}
@@ -246,7 +246,7 @@ export default function SociosPanel({ empresaId }) {
             </div>
 
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Contraseña FIEL</label>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Contraseña FIEL (e.firma)</label>
               <input type="password" className="input" value={fielPassword}
                 onChange={(e) => setFielPassword(e.target.value)} placeholder="Contraseña de la e.firma del socio..." />
             </div>

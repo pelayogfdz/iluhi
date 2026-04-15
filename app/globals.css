@@ -321,3 +321,74 @@ p {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* ========================================================= */
+/* Responsive WebApp Additions (Mobile First / Adaptability) */
+/* ========================================================= */
+
+.dashboard-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+@media (max-width: 768px) {
+  .layout-wrapper {
+    flex-direction: column;
+  }
+
+  /* Hamburger Menu Layout & Sidebar Toggle */
+  .sidebar {
+    position: fixed;
+    top: 60px; /* Below mobile navbar */
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - 60px);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .main-content {
+    padding: 1rem;
+    margin-top: 60px; /* Offset for dynamic top mobile navbar */
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  .glass-panel {
+    padding: 1.25rem;
+  }
+
+  /* Interactive Tappable Elements */
+  .btn {
+    width: 100%;
+    min-height: 48px;
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .form-control {
+    min-height: 48px;
+    font-size: 16px; /* Prevents auto-zoom in Safari iOS */
+  }
+
+  /* Horizontal scrolling for large tables */
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 2rem;
+  }
+
+  .table td, .table th {
+    padding: 0.75rem;
+    white-space: nowrap;
+  }
+}
