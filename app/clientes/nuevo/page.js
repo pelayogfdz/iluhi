@@ -1,25 +1,46 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '../../../lib/prisma';
-
+import { cookies } from 'next/headers';
+import { decrypt } from '../../../lib/auth';
 async function createCliente(formData) {
   'use server'
 
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('session')?.value;
+  let currentUser = undefined;
+  if (sessionToken) {
+    currentUser = await decrypt(sessionToken);
+  }
 
-  
   const rfc = formData.get('rfc')
   const razonSocial = formData.get('razonSocial')
   const regimen = formData.get('regimen')
   const codigoPostal = formData.get('codigoPostal')
   const usoCfdi = formData.get('usoCfdi')
-  
+
+  // Find users with assignment permissions
+  const admins = await prisma.usuario.findMany({
+    where: { permisoAsignacionClientes: true },
+    select: { id: true }
+  });
+
+  const idsToConnect = admins.map(a => a.id);
+  // Add the current user if not already in the list
+  if (currentUser && currentUser.id && !idsToConnect.includes(currentUser.id)) {
+    idsToConnect.push(currentUser.id);
+  }
+
   await prisma.cliente.create({
     data: {
       rfc,
       razonSocial,
       regimen,
       codigoPostal,
-      usoCfdi
+      usoCfdi,
+      usuariosAsignados: idsToConnect.length > 0 
+        ? { connect: idsToConnect.map(id => ({ id })) } 
+        : undefined
     }
   })
   
@@ -41,6 +62,12 @@ export default async function NuevoClientePage() {
             <label htmlFor="rfc">RFC del Cliente</label>
             <input type="text" id="rfc" name="rfc" className="form-control" required placeholder="Ej. XAXX010101000" />
             <small style={{ color: 'var(--text-secondary)' }}>Debe tener 12 o 13 caracteres.</small>
+          </div>
+
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', borderLeft: '3px solid var(--primary)', marginBottom: '1rem' }}>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <strong>Nota de Privacidad:</strong> Este cliente se asignará automáticamente a tu usuario para que puedas gestionarlo, y también a los administradores con el permiso de Asignación Global.
+            </p>
           </div>
 
           <div className="form-group">

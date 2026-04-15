@@ -20,6 +20,7 @@ export default function NuevoUsuarioPage() {
     permisoFacturas: false,
     permisoReportes: false,
     permisoUsuarios: false,
+    permisoAsignacionClientes: false,
     empresaIds: []
   })
 
@@ -113,6 +114,9 @@ export default function NuevoUsuarioPage() {
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <input type="checkbox" name="permisoUsuarios" checked={formData.permisoUsuarios} onChange={handleChange} /> 🔑 Seguridad y Usuarios
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input type="checkbox" name="permisoAsignacionClientes" checked={formData.permisoAsignacionClientes} onChange={handleChange} /> 🤝 Asignación de Clientes
           </label>
         </div>
 

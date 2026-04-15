@@ -25,8 +25,10 @@ model Usuario {
   permisoFacturas   Boolean @default(false)
   permisoReportes   Boolean @default(false)
   permisoUsuarios   Boolean @default(false)
+  permisoAsignacionClientes Boolean @default(false)
 
   empresas       Empresa[]
+  clientesAsignados Cliente[] @relation("UsuarioClientes")
 
   createdAt      DateTime @default(now())
 }
@@ -119,6 +121,7 @@ model Cliente {
   correoDestino     String?
   
   facturas     Factura[]
+  usuariosAsignados Usuario[] @relation("UsuarioClientes")
   
   createdAt    DateTime   @default(now())
   @@unique([rfc]) // Un cliente con el mismo RFC globalmente

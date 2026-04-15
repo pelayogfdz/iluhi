@@ -22,6 +22,7 @@ export default function EditarUsuarioPage() {
     permisoFacturas: false,
     permisoReportes: false,
     permisoUsuarios: false,
+    permisoAsignacionClientes: false,
     empresaIds: []
   })
 
@@ -46,6 +47,7 @@ export default function EditarUsuarioPage() {
             permisoFacturas: !!u.permisoFacturas,
             permisoReportes: !!u.permisoReportes,
             permisoUsuarios: !!u.permisoUsuarios,
+            permisoAsignacionClientes: !!u.permisoAsignacionClientes,
             empresaIds: u.empresas ? u.empresas.map(e => e.id) : []
           })
         }
@@ -151,6 +153,9 @@ export default function EditarUsuarioPage() {
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <input type="checkbox" name="permisoUsuarios" checked={formData.permisoUsuarios} onChange={handleChange} /> 🔑 Seguridad y Usuarios
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input type="checkbox" name="permisoAsignacionClientes" checked={formData.permisoAsignacionClientes} onChange={handleChange} /> 🤝 Asignación de Clientes
           </label>
         </div>
 

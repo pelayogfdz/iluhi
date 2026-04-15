@@ -2,6 +2,8 @@ import prisma from '../../lib/prisma';
 import Link from 'next/link'
 import ClientTableActions from './ClientTableActions'
 import SearchBar from '../components/SearchBar'
+import { cookies } from 'next/headers';
+import { decrypt } from '../../lib/auth';
 
 export const dynamic = 'force-dynamic'
 
@@ -11,14 +13,28 @@ export default async function ClientesPage({ searchParams }) {
   const resolvedParams = await searchParams
   const q = resolvedParams?.q || ""
 
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('session')?.value;
+  let currentUser = undefined;
+  if (sessionToken) {
+    currentUser = await decrypt(sessionToken);
+  }
+
+  // Si tiene el permiso global, ve todos; si no, solo los que tiene asignados (o fue creador)
+  const accessFilter = {};
+  if (currentUser && !currentUser.permisoAsignacionClientes) {
+    accessFilter.usuariosAsignados = { some: { id: currentUser.id } };
+  }
+
   const clientes = await prisma.cliente.findMany({ 
     where: q ? {
+      ...accessFilter,
       OR: [
         { razonSocial: { contains: q, mode: 'insensitive' } },
         { rfc: { contains: q, mode: 'insensitive' } },
         { codigoPostal: { contains: q } }
       ]
-    } : {},
+    } : { ...accessFilter },
     orderBy: { createdAt: 'desc' }
   })
 

@@ -40,6 +40,7 @@ export async function crearUsuario(data) {
         permisoFacturas: !!data.permisoFacturas,
         permisoReportes: !!data.permisoReportes,
         permisoUsuarios: !!data.permisoUsuarios,
+        permisoAsignacionClientes: !!data.permisoAsignacionClientes,
         empresas: data.empresaIds && data.empresaIds.length > 0 
           ? { connect: data.empresaIds.map(id => ({ id })) } 
           : undefined
@@ -72,6 +73,7 @@ export async function actualizarUsuario(id, data) {
       permisoFacturas: !!data.permisoFacturas,
       permisoReportes: !!data.permisoReportes,
       permisoUsuarios: !!data.permisoUsuarios,
+      permisoAsignacionClientes: !!data.permisoAsignacionClientes,
     };
 
     if (data.password && data.password.trim() !== '') {

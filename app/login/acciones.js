@@ -31,6 +31,7 @@ export async function loginUser(correo, password) {
       permisoFacturas: user.permisoFacturas,
       permisoReportes: user.permisoReportes,
       permisoUsuarios: user.permisoUsuarios,
+      permisoAsignacionClientes: user.permisoAsignacionClientes,
       empresasIds: user.empresas.map(e => e.id)
     }
 
