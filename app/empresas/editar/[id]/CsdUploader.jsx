@@ -52,12 +52,31 @@ export default function CsdUploader({ empresa }) {
 
   return (
     <div className="glass-panel" style={{ marginTop: '2rem', border: '1px solid var(--primary)' }}>
-       <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>🛡️ Bóveda de Sellos Digitales (CSD)</h3>
-       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-         {empresa.cerPath 
-           ? "✅ Esta empresa YA tiene un CSD inyectado en el motor. (Sube nuevos archivos si el CSD expiró)." 
-           : "❌ Empresa inactiva para emitir. Necesitas inyectar el certificado del SAT."}
-       </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '2rem' }}>🛡️</span>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', color: 'var(--primary)' }}>Sellos Fiscales (CSD)</h2>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+            {empresa.cerPath 
+              ? "Esta empresa YA tiene un CSD inyectado en el motor. (Sube nuevos archivos si el CSD expiró)." 
+              : "Empresa inactiva para emitir. Necesitas inyectar el certificado del SAT."}
+          </p>
+        </div>
+        {empresa.cerPath && (
+          <div style={{
+            marginLeft: 'auto',
+            padding: '4px 12px',
+            borderRadius: '20px',
+            fontSize: '0.8rem',
+            fontWeight: 'bold',
+            background: 'rgba(16,185,129,0.2)',
+            color: '#10b981',
+            border: '1px solid #10b981'
+          }}>
+            ✅ SELLOS FISCALES CARGADOS
+          </div>
+        )}
+      </div>
        
        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem', alignItems: 'end' }}>
           
