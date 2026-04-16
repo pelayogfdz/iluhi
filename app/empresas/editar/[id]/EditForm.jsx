@@ -98,12 +98,12 @@ export default function EditForm({ empresa }) {
             <label>Calle</label>
             <input type="text" name="calle" value={formData.calle} onChange={handleChange} className="form-control" />
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-             <div className="form-group" style={{ flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+             <div className="form-group" style={{ margin: 0 }}>
                <label>N° Exterior</label>
                <input type="text" name="numExterior" value={formData.numExterior} onChange={handleChange} className="form-control" />
              </div>
-             <div className="form-group" style={{ flex: 1 }}>
+             <div className="form-group" style={{ margin: 0 }}>
                <label>N° Interior</label>
                <input type="text" name="numInterior" value={formData.numInterior} onChange={handleChange} className="form-control" />
              </div>
@@ -125,11 +125,6 @@ export default function EditForm({ empresa }) {
           <div className="form-group">
             <label>Estado</label>
             <input type="text" name="estado" value={formData.estado} onChange={handleChange} className="form-control" />
-          </div>
-          
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Correo Electrónico Matriz</label>
-            <input type="email" name="correo" value={formData.correo} onChange={handleChange} className="form-control" />
           </div>
         </div>
 
