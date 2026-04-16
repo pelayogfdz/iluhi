@@ -53,6 +53,7 @@ export default async function EmpresasPage({ searchParams }) {
               <th>Razón Social</th>
               <th>Régimen</th>
               <th>CSD Cargado</th>
+              <th>FIEL (e.firma)</th>
               <th>Mail</th>
               <th>Estatus SAT</th>
               <th>Acciones</th>
@@ -71,6 +72,7 @@ export default async function EmpresasPage({ searchParams }) {
                 <td>{emp.razonSocial}</td>
                 <td>{emp.regimen}</td>
                 <td>{emp.cerPath ? '✅' : '❌'}</td>
+                <td>{emp.fielCerBase64 ? '✅' : '❌'}</td>
                 <td>{emp.smtpHost && emp.smtpUser && emp.smtpPass ? '✅' : '❌'}</td>
                 <td style={{ textAlign: 'center' }}>
                   <div style={{
