@@ -112,8 +112,30 @@ export default function EditarUsuarioPage() {
           </div>
         </div>
 
-        <h3 style={{ color: 'var(--primary)', marginTop: '1rem' }}>Asignación de Empresas (Tenants)</h3>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Selecciona las empresas a las que este usuario tendrá acceso:</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div>
+            <h3 style={{ color: 'var(--primary)', marginTop: '1rem' }}>Asignación de Empresas (Tenants)</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Selecciona las empresas a las que este usuario tendrá acceso:</p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+               type="button" 
+               className="btn btn-secondary" 
+               style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}
+               onClick={() => setFormData(prev => ({ ...prev, empresaIds: empresasBase.map(e => e.id) }))}
+            >
+               Seleccionar Todas
+            </button>
+            <button 
+               type="button" 
+               className="btn btn-secondary" 
+               style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}
+               onClick={() => setFormData(prev => ({ ...prev, empresaIds: [] }))}
+            >
+               Ninguna
+            </button>
+          </div>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
           {empresasBase.map((emp) => (
             <label key={emp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
