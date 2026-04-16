@@ -67,6 +67,10 @@ model Empresa {
   fielVigencia            DateTime?
   opinionCumplimiento     String? // POSITIVA, NEGATIVA, EN_TRAMITE
   ultimaValidacionOpinion DateTime?
+  // Planeación y Extras
+  objetoSocial           String?
+  actividadEconomica     String?
+  
   // Plantillas de Correo
   plantillaCotizacion    String?
   plantillaOrdenServicio String?
@@ -79,6 +83,7 @@ model Empresa {
   facturasRecibidas FacturaRecibida[]
   socios       Socio[]
   documentosSat DocumentoSat[]
+  archivosEmpresa ArchivoEmpresa[]
   
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -248,3 +253,15 @@ model FacturaRecibida {
   createdAt        DateTime @default(now())
 }
 
+model ArchivoEmpresa {
+  id               String   @id @default(uuid())
+  empresaId        String
+  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  categoria        String   // 'EXPEDIENTE' o 'PLANEACION'
+  tipoDocumento    String   // ACTA_CONSTITUTIVA, ASAMBLEAS, PODERES, IDENTIFICACIONES, CONTRATOS_CLIENTES, ENTREGABLES_CLIENTES, CONTRATOS_PROVEEDORES, ENTREGABLES_PROVEEDORES
+  nombreArchivo    String
+  archivoBase64    String?  
+  
+  fechaSubida      DateTime @default(now())
+}

@@ -28,7 +28,14 @@ export default async function EditarEmpresaPage({ params }) {
 
   return (
     <div>
-      <h1 style={{ marginBottom: '2rem' }}>Modificar Empresa Emisora</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+        <h1>Modificar Empresa Emisora</h1>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <a href={`/empresas/editar/${id}/expediente`} style={{ textDecoration: 'none' }}>
+             <button className="btn" style={{ background: '#10b981' }}>Expediente Corporativo</button>
+          </a>
+        </div>
+      </div>
       <EditForm empresa={empresa} />
       <CsdUploader empresa={empresa} />
       <FielUploader empresa={empresaData} />
