@@ -133,8 +133,26 @@ export default function EditForm({ empresa }) {
           </div>
         </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
-        <h3 style={{ color: 'var(--primary)' }}>✉️ Motor de Envíos de Correo Automático (SMTP)</h3>
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2rem 0' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          <div>
+            <h3 style={{ color: 'var(--primary)', margin: 0 }}>✉️ Motor de Envíos de Correo Automático (SMTP)</h3>
+          </div>
+          {(empresa.smtpHost && empresa.smtpUser && empresa.smtpPass) && (
+            <div style={{
+              marginLeft: 'auto',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              fontSize: '0.8rem',
+              fontWeight: 'bold',
+              background: 'rgba(16,185,129,0.2)',
+              color: '#10b981',
+              border: '1px solid #10b981'
+            }}>
+              ✅ CORREO CONFIGURADO
+            </div>
+          )}
+        </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
           <div className="form-group">
