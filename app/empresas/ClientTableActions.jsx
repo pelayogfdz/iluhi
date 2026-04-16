@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { eliminarEmpresa } from './acciones'
 
-export default function ClientTableActions({ empresaId }) {
+export default function ClientTableActions({ empresaId, canDelete }) {
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
 
@@ -28,14 +28,16 @@ export default function ClientTableActions({ empresaId }) {
       <Link href={`/empresas/editar/${empresaId}`}>
         <button className="btn btn-secondary" style={{ padding: '0.4rem 1rem' }}>Editar</button>
       </Link>
-      <button 
-        className="btn" 
-        onClick={handleDelete} 
-        disabled={cargando}
-        style={{ padding: '0.4rem 1rem', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.5)' }}
-      >
-        {cargando ? '...' : 'Eliminar'}
-      </button>
+      {canDelete && (
+        <button 
+          className="btn" 
+          onClick={handleDelete} 
+          disabled={cargando}
+          style={{ padding: '0.4rem 1rem', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.5)' }}
+        >
+          {cargando ? '...' : 'Eliminar'}
+        </button>
+      )}
     </div>
   )
 }

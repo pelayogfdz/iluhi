@@ -130,6 +130,9 @@ export default function NuevoUsuarioPage() {
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <input type="checkbox" name="permisoAsignacionClientes" checked={formData.permisoAsignacionClientes} onChange={handleChange} /> 🤝 Asignación de Clientes
           </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#ef4444' }}>
+            <input type="checkbox" name="permisoEliminarEmpresas" checked={formData.permisoEliminarEmpresas} onChange={handleChange} /> 🗑️ Eliminar Empresas
+          </label>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>

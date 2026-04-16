@@ -26,6 +26,7 @@ model Usuario {
   permisoReportes   Boolean @default(false)
   permisoUsuarios   Boolean @default(false)
   permisoAsignacionClientes Boolean @default(false)
+  permisoEliminarEmpresas Boolean @default(false)
 
   empresas       Empresa[]
   clientesAsignados Cliente[] @relation("UsuarioClientes")

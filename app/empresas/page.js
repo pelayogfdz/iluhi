@@ -87,7 +87,7 @@ export default async function EmpresasPage({ searchParams }) {
                   }} title={emp.opinionCumplimiento || 'Pendiente'}></div>
                 </td>
                 <td>
-                  <ClientTableActions empresaId={emp.id} />
+                  <ClientTableActions empresaId={emp.id} canDelete={user?.permisoEliminarEmpresas} />
                 </td>
               </tr>
             ))}
