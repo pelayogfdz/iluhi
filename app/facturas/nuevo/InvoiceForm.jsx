@@ -92,7 +92,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const totalSub = items.reduce((acc, current) => acc + (current.precio * current.cantidad), 0)
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '2rem', alignItems: 'start' }}>
+    <div className="responsive-columns">
       
       {/* Columna Izquierda - Constructor */}
       <div className="glass-panel">
@@ -122,7 +122,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
 
           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
              <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>2. Parámetros de Cobro</h3>
-             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+             <div className="responsive-grid-3">
                 <div className="form-group">
                   <label>Uso del CFDI</label>
                   <select className="form-control" value={usoCfdi} onChange={e => setUsoCfdi(e.target.value)} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -163,8 +163,8 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
 
           <div>
             <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>3. Conceptos (El Carrito)</h3>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                <div className="form-group" style={{ flex: 2 }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                <div className="form-group" style={{ flex: '1 1 300px' }}>
                   <label>Catálogo de Productos</label>
                   <ProductSelector 
                      options={productosFiltrados} 
@@ -174,25 +174,25 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                      placeholder="Añade un producto al carrito... (Teclea para buscar)"
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
+                <div className="form-group" style={{ flex: '1 1 100px' }}>
                   <label>Cantidad</label>
                   <input type="number" step="0.01" min="0.01" className="form-control" value={tempCantidad} onChange={e => setTempCantidad(e.target.value)} disabled={!tempProductoId} />
                 </div>
-                <button type="button" className="btn" onClick={handleAgregarConcepto} disabled={!tempProductoId}>+ Anexar</button>
+                <button type="button" className="btn" onClick={handleAgregarConcepto} disabled={!tempProductoId} style={{ flex: '1 1 150px' }}>+ Anexar</button>
             </div>
             
             {/* Tabla del Carrito */}
-            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', minHeight: '100px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', minHeight: '100px', overflowX: 'auto' }}>
                {items.length === 0 ? <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '1rem' }}>El carrito está vacío.</p> : 
                items.map((it, idx) => (
-                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0.5rem 0' }}>
-                    <div>
+                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0.5rem 0', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ flex: '1 1 250px' }}>
                       <input 
                          type="text" 
                          value={it.descripcion} 
                          onChange={(e) => handleChangeDescripcion(idx, e.target.value)}
                          className="form-control"
-                         style={{ fontWeight: 'bold', padding: '0.3rem', width: '350px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)' }}
+                         style={{ fontWeight: 'bold', padding: '0.3rem', width: '100%', minWidth: '150px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)' }}
                       />
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Clave SAT: {it.claveProdServ} | Impuesto: {it.impuesto === '002' ? 'IVA '+(it.tasaOCuota*100)+'%' : 'Exento/Otro'}</div>
                     </div>
@@ -220,7 +220,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
       </div>
 
       {/* Columna Derecha - Resumen Magnético */}
-      <div className="glass-panel" style={{ sticky: 'top', top: '2rem' }}>
+      <div className="glass-panel" style={{ position: 'sticky', top: '2rem' }}>
         <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>Resumen Premiliminar</h3>
         <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between' }}>

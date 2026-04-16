@@ -15,7 +15,7 @@ export default async function NuevaFacturaPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
          <h1>Emitir Comprobante (CFDI 4.0)</h1>
          <Link href="/facturas"><button className="btn btn-secondary">Regresar al Historial</button></Link>
       </div>

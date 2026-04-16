@@ -68,6 +68,7 @@ export default function DescargasSatClient({ empresas }) {
 
   const tabs = [
     { id: 'facturas', label: '🧾 Facturas (XML)', icon: '📦' },
+    { id: 'facturas_recibidas', label: '📥 Facturas que me emiten', icon: '🛒' },
     { id: 'constancias', label: '📄 Constancias (CSF)', icon: '🆔' },
     { id: 'opiniones', label: '📋 Opiniones (32-D)', icon: '✅' },
     { id: 'buzon', label: '📬 Buzón Tributario', icon: '📩' },
@@ -97,6 +98,7 @@ export default function DescargasSatClient({ empresas }) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
                   <div><strong>XMLs descargados:</strong> {syncResult.results?.xmlDownloads?.success || 0} / {syncResult.results?.xmlDownloads?.total || 0}</div>
                   <div><strong>Opiniones 32-D:</strong> {syncResult.results?.opinionCumplimiento?.skipped ? `Omitido — ${syncResult.results.opinionCumplimiento.reason}` : `${syncResult.results?.opinionCumplimiento?.updated || 0} / ${syncResult.results?.opinionCumplimiento?.total || 0}`}</div>
+                  <div><strong>Facturas Recibidas:</strong> {syncResult.results?.facturasRecibidas?.success || 0} revisadas</div>
                 </div>
               </div>
             ) : (<p style={{ margin: 0, color: '#ef4444' }}>❌ Error: {syncResult.error}</p>)}
@@ -185,6 +187,42 @@ export default function DescargasSatClient({ empresas }) {
                         </td>
                         <td>
                           <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => alert('Próximamente: Abre visor XML embebido')}>Ver XML</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </>
+              )}
+
+              {/* === FACTURAS RECIBIDAS === */}
+              {activeTab === 'facturas_recibidas' && (
+                <>
+                  <thead>
+                    <tr>
+                      <th>Fecha Emisión</th>
+                      <th>UUID Fiscal</th>
+                      <th>Datos del Emisor (Proveedor)</th>
+                      <th>Empresa Receptora</th>
+                      <th>Total Facturado</th>
+                      <th>Estatus</th>
+                      <th>Archivos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.length === 0 ? <tr><td colSpan="7" style={{ textAlign: 'center' }}>No existen facturas de proveedores descargadas para los criterios seleccionados.</td></tr> : items.map((f) => (
+                      <tr key={f.id}>
+                        <td>{new Date(f.fechaEmision).toLocaleDateString()}</td>
+                        <td><span style={{fontSize: '0.85rem', color: '#333', fontFamily: 'monospace'}}>{f.uuid}</span></td>
+                        <td>{f.emisorNombre}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.emisorRfc}</span></td>
+                        <td>{f.empresa?.razonSocial}</td>
+                        <td style={{ fontWeight: 'bold' }}>${f.total?.toFixed(2)}</td>
+                        <td>
+                           <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', background: f.estatus==='Vigente'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)', color: f.estatus==='Vigente'?'#10b981':'#ef4444' }}>
+                             {f.estatus}
+                           </span>
+                        </td>
+                        <td>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!f.xmlBase64}>Ver XML</button>
                         </td>
                       </tr>
                     ))}

@@ -76,6 +76,7 @@ model Empresa {
   usuarios     Usuario[]
   productos    Producto[]
   facturas     Factura[]
+  facturasRecibidas FacturaRecibida[]
   socios       Socio[]
   documentosSat DocumentoSat[]
   
@@ -221,6 +222,25 @@ model DocumentoSat {
   fechaDocumento   DateTime @default(now())
   descripcion      String?
   archivoBase64    String?  
+  
+  empresaId        String
+  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime @default(now())
+}
+
+model FacturaRecibida {
+  id               String   @id @default(uuid())
+  uuid             String   @unique
+  emisorRfc        String
+  emisorNombre     String
+  fechaEmision     DateTime
+  total            Float
+  moneda           String   @default("MXN")
+  estatus          String   @default("Vigente")
+  tipoDeComprobante String  @default("I") // I (Ingreso), P (Pago), etc.
+  xmlBase64        String?
+  pdfBase64        String?
   
   empresaId        String
   empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)

@@ -37,6 +37,29 @@ export async function fetchDocumentosSATHistory(filtros) {
     return { success: true, data: facturas }
   }
 
+  if (tab === 'facturas_recibidas') {
+    const whereClauseRecibidas = { ...whereEmpresa }
+    
+    if (fechaInicio || fechaFin) {
+      whereClauseRecibidas.fechaEmision = {}
+      if (fechaInicio) whereClauseRecibidas.fechaEmision.gte = new Date(fechaInicio)
+      if (fechaFin) {
+        let endDate = new Date(fechaFin)
+        endDate.setHours(23, 59, 59, 999)
+        whereClauseRecibidas.fechaEmision.lte = endDate
+      }
+    }
+
+    const facturasRecibidas = await prisma.facturaRecibida.findMany({
+      where: whereClauseRecibidas,
+      include: { empresa: { select: { rfc: true, razonSocial: true } } },
+      orderBy: { fechaEmision: 'desc' },
+      take
+    })
+    
+    return { success: true, data: facturasRecibidas }
+  }
+
   // Para CONSTANCIAS, OPINIONES, BUZON usamos la tabla DocumentoSat
   const tipoMapeo = {
     'constancias': 'CONSTANCIA',

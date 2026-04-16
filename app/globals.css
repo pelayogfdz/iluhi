@@ -262,6 +262,25 @@ p {
   margin-top: 2rem;
 }
 
+.responsive-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.responsive-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .responsive-columns, .responsive-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .card {
   text-decoration: none;
   display: flex;
