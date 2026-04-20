@@ -36,8 +36,8 @@ export default function EditProductoForm({ producto, empresas }) {
       empresaId: formData.empresaId,
       noIdentificacion: formData.noIdentificacion,
       descripcion: formData.descripcion,
-      claveProdServ: data.get('claveProdServ'), // From the SatAutocomplete hidden input
-      claveUnidad: data.get('claveUnidad'),   // From the SatAutocomplete hidden input
+      claveProdServ: (data.get('claveProdServ') || '').split(' - ')[0].trim(), // From the SatAutocomplete hidden input
+      claveUnidad: (data.get('claveUnidad') || '').split(' - ')[0].trim(),   // From the SatAutocomplete hidden input
       precio: parseFloat(formData.precio) || 0,
       impuesto: formData.impuesto,
       objetoImp: formData.objetoImp,

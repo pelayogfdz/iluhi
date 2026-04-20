@@ -15,13 +15,13 @@ export default function SatAutocomplete({ type, name, initialValue = '', initial
   useEffect(() => {
     const handler = setTimeout(() => {
       // If user typed something and it's not strictly matching the selected text
-      if (query.length >= 3 && query !== initialDisplay) {
+      if (query.length >= 2 && query !== initialDisplay) {
         fetchResults(query)
-      } else if (query.length < 3) {
+      } else if (query.length < 2) {
         setResults([])
         setIsOpen(false)
       }
-    }, 500)
+    }, 400)
 
     return () => clearTimeout(handler)
   }, [query])
@@ -55,8 +55,6 @@ export default function SatAutocomplete({ type, name, initialValue = '', initial
   }
 
   const handleSelect = (item) => {
-    // Facturapi returns .key and .description for products/units.
-    // Sometimes it's .key, sometimes .value. According to Facturapi docs, it usually has key and description.
     const itemKey = item.key || item.value || item.clave
     const itemDesc = item.description || item.nombre
 
@@ -67,8 +65,8 @@ export default function SatAutocomplete({ type, name, initialValue = '', initial
 
   const handleChange = (e) => {
     setQuery(e.target.value)
-    // If the user modifies the text manually, we clear the internal ID value until they select formally
-    setValue('')
+    // Synchronize value so if user types explicitly without clicking, it still sends it
+    setValue(e.target.value)
   }
 
   return (

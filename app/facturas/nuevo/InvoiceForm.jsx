@@ -134,10 +134,31 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                 <div className="form-group">
                   <label>Uso del CFDI</label>
                   <select className="form-control" value={usoCfdi} onChange={e => setUsoCfdi(e.target.value)} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <option value="G03">Gastos en general</option>
-                    <option value="G01">Adquisición de mercancias</option>
-                    <option value="I08">Otra maquinaria o Eq.</option>
-                    <option value="P01">Por definir</option>
+              <option value="G01">G01 - Adquisición de mercancías</option>
+              <option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
+              <option value="G03">G03 - Gastos en general</option>
+              <option value="I01">I01 - Construcciones</option>
+              <option value="I02">I02 - Mobiliario y equipo de oficina por inversiones</option>
+              <option value="I03">I03 - Equipo de transporte</option>
+              <option value="I04">I04 - Equipo de computo y accesorios</option>
+              <option value="I05">I05 - Dados, troqueles, moldes, matrices y herramental</option>
+              <option value="I06">I06 - Comunicaciones telefónicas</option>
+              <option value="I07">I07 - Comunicaciones satelitales</option>
+              <option value="I08">I08 - Otra maquinaria y equipo</option>
+              <option value="D01">D01 - Honorarios médicos, dentales y hospitalarios</option>
+              <option value="D02">D02 - Gastos médicos por incapacidad o discapacidad</option>
+              <option value="D03">D03 - Gastos funerales</option>
+              <option value="D04">D04 - Donativos</option>
+              <option value="D05">D05 - Intereses reales efectivamente pagados por créditos hipotecarios</option>
+              <option value="D06">D06 - Aportaciones voluntarias al SAR</option>
+              <option value="D07">D07 - Primas por seguros de gastos médicos</option>
+              <option value="D08">D08 - Gastos de transportación escolar obligatoria</option>
+              <option value="D09">D09 - Depósitos en cuentas para el ahorro, planes de pensiones</option>
+              <option value="D10">D10 - Pagos por servicios educativos (colegiaturas)</option>
+              <option value="P01">P01 - Por definir (Solo comprobante de Pagos y Retenciones)</option>
+              <option value="S01">S01 - Sin efectos fiscales</option>
+              <option value="CP01">CP01 - Pagos</option>
+              <option value="CN01">CN01 - Nómina</option>
                   </select>
                 </div>
                 <div className="form-group">
