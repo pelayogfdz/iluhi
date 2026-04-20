@@ -147,14 +147,12 @@ export async function guardarFiel(empresaId, fielCerBase64, fielKeyBase64, fielP
     // Intentar extraer la fecha de vigencia del certificado (.cer es DER)
     let fielVigencia = null
     try {
-      const asn1 = require('asn1js')
-      const pkijs = require('pkijs')
+      const crypto = require('crypto')
       const cerBuffer = Buffer.from(fielCerBase64, 'base64')
-      const asn1Data = asn1.fromBER(cerBuffer.buffer.slice(cerBuffer.byteOffset, cerBuffer.byteOffset + cerBuffer.byteLength))
-      const cert = new pkijs.Certificate({ schema: asn1Data.result })
-      const notAfter = cert.notAfter.value
-      fielVigencia = new Date(notAfter)
-    } catch (_) {
+      const cert = new crypto.X509Certificate(cerBuffer)
+      fielVigencia = new Date(cert.validTo)
+    } catch (e) {
+      console.error("Error parseando certificado FIEL empresa:", e)
       // No fatal — la fecha simplemente quedará nula si falla el parsing
     }
 
@@ -197,13 +195,13 @@ export async function crearSocio(empresaId, nombre, rfc, fielCerBase64, fielKeyB
     let fielVigencia = null
     if (fielCerBase64) {
       try {
-        const asn1 = require('asn1js')
-        const pkijs = require('pkijs')
+        const crypto = require('crypto')
         const cerBuffer = Buffer.from(fielCerBase64, 'base64')
-        const asn1Data = asn1.fromBER(cerBuffer.buffer.slice(cerBuffer.byteOffset, cerBuffer.byteOffset + cerBuffer.byteLength))
-        const cert = new pkijs.Certificate({ schema: asn1Data.result })
-        fielVigencia = new Date(cert.notAfter.value)
-      } catch (_) {}
+        const cert = new crypto.X509Certificate(cerBuffer)
+        fielVigencia = new Date(cert.validTo)
+      } catch (e) {
+        console.error("Error parseando certificado FIEL socio nuevo:", e)
+      }
     }
 
     const socio = await prisma.socio.create({
@@ -229,13 +227,13 @@ export async function actualizarSocio(socioId, data) {
     let fielVigencia = undefined
     if (data.fielCerBase64) {
       try {
-        const asn1 = require('asn1js')
-        const pkijs = require('pkijs')
+        const crypto = require('crypto')
         const cerBuffer = Buffer.from(data.fielCerBase64, 'base64')
-        const asn1Data = asn1.fromBER(cerBuffer.buffer.slice(cerBuffer.byteOffset, cerBuffer.byteOffset + cerBuffer.byteLength))
-        const cert = new pkijs.Certificate({ schema: asn1Data.result })
-        fielVigencia = new Date(cert.notAfter.value)
-      } catch (_) {}
+        const cert = new crypto.X509Certificate(cerBuffer)
+        fielVigencia = new Date(cert.validTo)
+      } catch (e) {
+        console.error("Error parseando certificado FIEL socio actualizado:", e)
+      }
     }
 
     await prisma.socio.update({

@@ -23,7 +23,11 @@ export async function actualizarCliente(id, data) {
         municipio: data.municipio,
         ciudad: data.ciudad,
         estado: data.estado,
-        correoDestino: data.correoDestino
+        correoDestino: data.correoDestino,
+        contactoPrincipal: data.contactoPrincipal,
+        telefono: data.telefono,
+        condicionesPago: data.condicionesPago,
+        cuentaBancaria: data.cuentaBancaria
       }
     });
     return { success: true };
@@ -41,6 +45,38 @@ export async function eliminarCliente(id) {
     return { success: true };
   } catch (error) {
     console.error("Error al eliminar cliente: ", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function subirEvidenciaCliente(clienteId, nombreArchivo, archivoBase64, categoria) {
+  try {
+    const doc = await prisma.archivoCliente.create({
+      data: {
+        clienteId,
+        nombreArchivo,
+        archivoBase64,
+        categoria
+      }
+    });
+    return { success: true, doc };
+  } catch (error) {
+    console.error("Error al subir archivo de cliente:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function eliminarEvidenciaCliente(archivoId, clienteId) {
+  try {
+    await prisma.archivoCliente.delete({
+      where: {
+        id: archivoId,
+        clienteId: clienteId // safety check
+      }
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error eliminando evidencia cliente:", error);
     return { success: false, error: error.message };
   }
 }

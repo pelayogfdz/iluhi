@@ -70,14 +70,18 @@ export default function ProductSelector({ options = [], value, onChange, disable
         placeholder={placeholder}
         value={query}
         onChange={handleChange}
-        onFocus={() => setIsOpen(true)}
+        onFocus={(e) => { setIsOpen(true); e.target.select(); }}
         disabled={disabled}
         autoComplete="off"
         style={{
           backgroundColor: disabled ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.5)',
-          cursor: disabled ? 'not-allowed' : 'text'
+          cursor: disabled ? 'not-allowed' : 'text',
+          paddingRight: '30px' // Space for chevron
         }}
       />
+      <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-secondary)' }}>
+        ▼
+      </div>
       
       {isOpen && !disabled && (
          <ul style={{

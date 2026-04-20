@@ -41,12 +41,12 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="form-group">
             <label>Correo Electrónico</label>
-            <input required type="email" value={correo} onChange={e => setCorreo(e.target.value)} className="form-control" placeholder="admin@facturas.com" />
+            <input required type="email" value={correo} onChange={e => setCorreo(e.target.value)} className="form-control" placeholder="admin@facturas.com" autoComplete="email" />
           </div>
           
           <div className="form-group">
             <label>Contraseña</label>
-            <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="form-control" placeholder="••••••••" />
+            <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="form-control" placeholder="••••••••" autoComplete="current-password" />
           </div>
 
           <button type="submit" disabled={cargando} className="btn" style={{ padding: '1rem', fontSize: '1.2rem', marginTop: '1rem' }}>

@@ -124,14 +124,33 @@ model Cliente {
   ciudad            String?
   estado            String?
   
+  // Contacto y Condiciones Comerciales
+  contactoPrincipal String?
+  telefono          String?
+  condicionesPago   String?
+  cuentaBancaria    String?
+  
   // Para envío de factura
   correoDestino     String?
   
-  facturas     Factura[]
+  facturas        Factura[]
   usuariosAsignados Usuario[] @relation("UsuarioClientes")
+  archivos        ArchivoCliente[]
   
   createdAt    DateTime   @default(now())
   @@unique([rfc]) // Un cliente con el mismo RFC globalmente
+}
+
+model ArchivoCliente {
+  id               String   @id @default(uuid())
+  clienteId        String
+  cliente          Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  
+  categoria        String   // 'MATERIALIDAD', 'ENTREGABLES', 'CONTRATOS', etc.
+  nombreArchivo    String
+  archivoBase64    String?  
+  
+  fechaSubida      DateTime @default(now())
 }
 
 model Producto { // Renombrado lógicamente como "Productos y Servicios" en UI

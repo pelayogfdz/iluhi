@@ -56,8 +56,16 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
 
   const handleSometerFactura = async (e) => {
     e.preventDefault()
-    if (!empresaId || !clienteId || items.length === 0) {
-      alert("Seleccione Emisor, Cliente y al menos 1 producto.")
+    if (!empresaId) {
+      setResultado({ msg: "❗ Seleccione una Empresa Emisora.", type: "error" })
+      return;
+    }
+    if (!clienteId) {
+      setResultado({ msg: "❗ Seleccione un Cliente Receptor.", type: "error" })
+      return;
+    }
+    if (items.length === 0) {
+      setResultado({ msg: "❗ El carrito está vacío. Agregue al menos 1 producto para disparar el timbrado PAC.", type: "error" })
       return;
     }
 
@@ -206,7 +214,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             </div>
           </div>
 
-          <button type="submit" className="btn" disabled={cargando || items.length === 0} style={{ padding: '1rem', fontSize: '1.2rem', marginTop: '1rem' }}>
+          <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', marginTop: '1rem' }}>
             {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC (FACTURAPI)'}
           </button>
 

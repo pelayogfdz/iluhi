@@ -23,7 +23,11 @@ export default function EditForm({ cliente }) {
     colonia: cliente.colonia || '',
     municipio: cliente.municipio || '',
     ciudad: cliente.ciudad || '',
-    estado: cliente.estado || ''
+    estado: cliente.estado || '',
+    contactoPrincipal: cliente.contactoPrincipal || '',
+    telefono: cliente.telefono || '',
+    condicionesPago: cliente.condicionesPago || '',
+    cuentaBancaria: cliente.cuentaBancaria || ''
   })
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -81,6 +85,41 @@ export default function EditForm({ cliente }) {
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
 
+        <h3 style={{ color: 'var(--primary)' }}>Contacto y Comercial (CRM)</h3>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+          <div className="form-group">
+            <label>Contacto Principal</label>
+            <input type="text" name="contactoPrincipal" value={formData.contactoPrincipal} onChange={handleChange} className="form-control" />
+          </div>
+          <div className="form-group">
+            <label>Teléfono Principal</label>
+            <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} className="form-control" />
+          </div>
+          <div className="form-group">
+            <label>Condiciones de Pago (Días)</label>
+            <select name="condicionesPago" value={formData.condicionesPago} onChange={handleChange} className="form-control" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <option value="">-- Seleccionar --</option>
+              <option value="Contado">Contado</option>
+              <option value="15 Días">15 Días</option>
+              <option value="30 Días">30 Días</option>
+              <option value="45 Días">45 Días</option>
+              <option value="60 Días">60 Días</option>
+              <option value="90 Días">90 Días</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Cuenta Bancaria principal (Opcional)</label>
+            <input type="text" name="cuentaBancaria" value={formData.cuentaBancaria} onChange={handleChange} className="form-control" />
+          </div>
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label>Correo Electrónico principal (CFDI / Documentación)</label>
+            <input type="email" name="correoDestino" value={formData.correoDestino} onChange={handleChange} className="form-control" />
+          </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+
         <h3 style={{ color: 'var(--primary)' }}>Datos Logísticos Adicionales</h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
@@ -112,14 +151,9 @@ export default function EditForm({ cliente }) {
             <label>Ciudad</label>
             <input type="text" name="ciudad" value={formData.ciudad} onChange={handleChange} className="form-control" />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Estado</label>
             <input type="text" name="estado" value={formData.estado} onChange={handleChange} className="form-control" />
-          </div>
-          
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Correo Electrónico para CFDI</label>
-            <input type="email" name="correoDestino" value={formData.correoDestino} onChange={handleChange} className="form-control" />
           </div>
         </div>
 

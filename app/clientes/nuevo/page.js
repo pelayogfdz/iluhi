@@ -3,6 +3,7 @@ import Link from 'next/link'
 import prisma from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { decrypt } from '../../../lib/auth';
+
 async function createCliente(formData) {
   'use server'
 
@@ -31,23 +32,38 @@ async function createCliente(formData) {
     idsToConnect.push(currentUser.id);
   }
 
-  await prisma.cliente.create({
-    data: {
-      rfc,
-      razonSocial,
-      regimen,
-      codigoPostal,
-      usoCfdi,
-      usuariosAsignados: idsToConnect.length > 0 
-        ? { connect: idsToConnect.map(id => ({ id })) } 
-        : undefined
-    }
-  })
+  let success = false;
+  let errorMsg = 'Error_del_servidor';
+  try {
+    await prisma.cliente.create({
+      data: {
+        rfc,
+        razonSocial,
+        regimen,
+        codigoPostal,
+        usoCfdi,
+        usuariosAsignados: idsToConnect.length > 0 
+          ? { connect: idsToConnect.map(id => ({ id })) } 
+          : undefined
+      }
+    });
+    success = true;
+  } catch (error) {
+    console.error("Error creating client:", error);
+    if (error.code === 'P2002') errorMsg = 'RFC_Duplicado';
+  }
   
-  redirect('/clientes')
+  if (success) {
+    redirect('/clientes')
+  } else {
+    redirect(`/clientes/nuevo?error=${errorMsg}`)
+  }
 }
 
-export default async function NuevoClientePage() {
+export default async function NuevoClientePage({ searchParams }) {
+  const resolvedParams = await searchParams || {};
+  const { error } = resolvedParams;
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -55,6 +71,15 @@ export default async function NuevoClientePage() {
          <Link href="/clientes"><button className="btn btn-secondary">Regresar</button></Link>
       </div>
       
+      {error && (
+        <div style={{ background: '#ff4444', color: 'white', padding: '1rem', borderRadius: '8px', marginTop: '1rem' }}>
+          <strong>Error: </strong> 
+          {error === 'RFC_Duplicado' 
+            ? 'Ya existe un cliente registrado con ese RFC.' 
+            : 'Ocurrió un error inesperado al intentar guardar el cliente.'}
+        </div>
+      )}
+
       <div className="glass-panel" style={{ marginTop: '2rem', maxWidth: '600px' }}>
         <form action={createCliente} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
@@ -105,3 +130,4 @@ export default async function NuevoClientePage() {
     </div>
   )
 }
+
