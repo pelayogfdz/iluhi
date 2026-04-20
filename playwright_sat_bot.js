@@ -222,9 +222,31 @@ function getTodayString() {
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53bmFrcXN4dmdsdGticWtucmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2ODAwODYsImV4cCI6MjA5MTI1NjA4Nn0.g_DDpEx0g7KibbEmKkP71yyV-5taK0zecL27ciO4HDM';
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-        const filesBucket = fs.readdirSync(tmpDir).filter(f => f.endsWith('.pdf'));
+        const filesBucket = fs.readdirSync(tmpDir).filter(f => f.endsWith('.pdf') && f !== 'Constancia_Situacion_Fiscal_Popup.pdf');
         for (const file of filesBucket) {
              const buffer = fs.readFileSync(path.join(tmpDir, file));
+             
+             // --- NUEVO: GUARDAR EN BASE DE DATOS LOCAL PRIMERO ---
+             const base64 = buffer.toString('base64');
+             const isOpinion = file.includes('OC') || file.includes('Opinion') || file.includes('OPC');
+             const tipo = isOpinion ? 'OPINION' : 'CONSTANCIA';
+             const desc = isOpinion ? 'POSITIVA' : 'Constancia de Situación Fiscal'; 
+             
+             try {
+                await prisma.documentoSat.create({
+                  data: {
+                    tipo: tipo,
+                    descripcion: desc,
+                    archivoBase64: 'data:application/pdf;base64,' + base64,
+                    empresaId: emp.id
+                  }
+                });
+                console.log(`[PRISMA] ${file} registrado en base de datos local OK.`);
+             } catch(dbErr) {
+                console.log(`[PRISMA_ERROR] No se pudo guardar ${file} en BD:`, dbErr.message);
+             }
+
+             // --- SUBIR A SUPABASE COMO RESPALDO EN NUBE ---
              console.log(`[SUPABASE] Subiendo ${file}...`);
              // path destination inside bucket
              const storagePath = `empresa_${emp.rfc || "UNKNOWN"}/${file}`;
