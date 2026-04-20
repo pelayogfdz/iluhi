@@ -242,6 +242,15 @@ function getTodayString() {
                   }
                 });
                 console.log(`[PRISMA] ${file} registrado en base de datos local OK.`);
+                
+                // --- NUEVO: SI ES OPINION, ACTUALIZAR ESTATUS EN TABLA EMPRESA ---
+                if (isOpinion) {
+                  await prisma.empresa.update({
+                      where: { id: emp.id },
+                      data: { opinionCumplimiento: 'POSITIVA' }
+                  });
+                  console.log(`[PRISMA] Estatus de empresa actualizado a POSITIVA.`);
+                }
              } catch(dbErr) {
                 console.log(`[PRISMA_ERROR] No se pudo guardar ${file} en BD:`, dbErr.message);
              }
