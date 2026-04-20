@@ -66,6 +66,31 @@ export default function DescargasSatClient({ empresas }) {
     // Al limpiar no hace el fetch de inmediato en el DOM, es mejor hacerlo de manual al clickear Filtrar o por useEffect
   }
 
+  const handleViewPDF = (base64String, title) => {
+    if (!base64String) return;
+    
+    // Si viene sin data:, agregarlo (aunque el script ya lo debe traer con data:application/pdf;base64,)
+    const finalSrc = base64String.startsWith('data:application/pdf') ? base64String : `data:application/pdf;base64,${base64String}`;
+    
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.title = title || 'Visor PDF';
+      w.document.body.style.margin = '0';
+      const iframe = w.document.createElement('iframe');
+      iframe.src = finalSrc;
+      iframe.style.width = '100vw';
+      iframe.style.height = '100vh';
+      iframe.style.border = 'none';
+      w.document.body.appendChild(iframe);
+    } else {
+      // Fallback si popup bloqueado: auto-descarga
+      const a = document.createElement('a');
+      a.href = finalSrc;
+      a.download = `${title}.pdf`;
+      a.click();
+    }
+  }
+
   const tabs = [
     { id: 'facturas', label: '🧾 Facturas (XML)', icon: '📦' },
     { id: 'facturas_recibidas', label: '📥 Facturas que me emiten', icon: '🛒' },
@@ -248,7 +273,7 @@ export default function DescargasSatClient({ empresas }) {
                         <td>{c.empresa?.razonSocial}</td>
                         <td>{c.descripcion || 'Constancia de Situación Fiscal (CSF)'}</td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!c.archivoBase64}>Ver PDF</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!c.archivoBase64} onClick={() => handleViewPDF(c.archivoBase64, `CSF_${c.empresa?.razonSocial}`)}>Ver PDF</button>
                         </td>
                       </tr>
                     ))}
@@ -278,7 +303,7 @@ export default function DescargasSatClient({ empresas }) {
                           </span>
                         </td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!o.archivoBase64}>Ver PDF</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!o.archivoBase64} onClick={() => handleViewPDF(o.archivoBase64, `Opinion_Cumplimiento_${o.empresa?.razonSocial}`)}>Ver PDF</button>
                         </td>
                       </tr>
                     ))}
