@@ -2,22 +2,52 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '../../../lib/prisma';
 
+import facturapi from '../../../lib/facturapi';
+
 async function createEmpresa(formData) {
   'use server'
 
-
-  
   const rfc = formData.get('rfc')
   const razonSocial = formData.get('razonSocial')
   const regimen = formData.get('regimen')
   const codigoPostal = formData.get('codigoPostal')
+  
+  // Create organization in Facturapi using the User Key
+  let facturapiId = null;
+  let facturapiLiveKey = null;
+  let facturapiTestKey = null;
+
+  try {
+    const org = await facturapi.organizations.create({ name: razonSocial });
+    facturapiId = org.id;
+    facturapiLiveKey = org.liveApiKey;
+    facturapiTestKey = org.testApiKey;
+    console.log("Organización Creada en Facturapi:", org.id);
+
+    // Completamos la información Legal (Crucial para timbrar al 100%)
+    await facturapi.organizations.updateLegal(org.id, {
+      name: razonSocial,
+      tax_id: rfc,
+      tax_system: regimen.split(' ')[0], // Facturapi espera el número (ej. "601")
+      zip: codigoPostal
+    });
+    console.log("Configuración Legal sincronizada con Facturapi.");
+
+  } catch (error) {
+    console.error("Error al crear Organización en Facturapi:", error);
+    // You could throw an error here to prevent company creation if Facturapi fails
+    // throw new Error("No se pudo registrar la empresa en el facturador.");
+  }
   
   await prisma.empresa.create({
     data: {
       rfc,
       razonSocial,
       regimen,
-      codigoPostal
+      codigoPostal,
+      facturapiId,
+      facturapiLiveKey,
+      facturapiTestKey
     }
   })
   

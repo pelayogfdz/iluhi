@@ -91,11 +91,13 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     let receipt;
     let fallbackStatus = 'Borrador';
 
-    // 3. Ejecutar Disparo al PAC
-    // ENV guard condition
-    if (process.env.FACTURAPI_KEY && !process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
+    // 3. Ejecutar Disparo al PAC (Multi-Tenant Facturapi engine)
+    const activeTenantKey = empresa.facturapiLiveKey || empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+    
+    if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       try {
-        receipt = await facturapi.invoices.create(facturaPayload);
+        const tenantFacturapi = new facturapi.constructor(activeTenantKey); // Use the constructor from the imported instance
+        receipt = await tenantFacturapi.invoices.create(facturaPayload);
         fallbackStatus = 'Timbrada';
       } catch (pacError) {
         console.error("Fallo de API del PAC: ", pacError);
@@ -148,14 +150,20 @@ export async function prepararYTimbrarFactura(formDataRaw) {
 
 export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion = '') {
   try {
-    const fac = await prisma.factura.findUnique({ where: { id: facturaId } });
+    const fac = await prisma.factura.findUnique({ 
+        where: { id: facturaId }, 
+        include: { empresa: true } 
+    });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
 
-    if (process.env.FACTURAPI_KEY && !process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
+    const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+
+    if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       const payload = { motive: motivo };
       if (motivo === '01') payload.substitution = uuidSustitucion;
       
-      await facturapi.invoices.cancel(fac.uuid, payload);
+      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+      await tenantFacturapi.invoices.cancel(fac.uuid, payload);
     } else {
        console.log(`[SIMULACION] Cancelando factura ${fac.uuid} con motivo ${motivo}`);
     }
@@ -174,12 +182,17 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
 
 export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago) {
   try {
-    const fac = await prisma.factura.findUnique({ where: { id: facturaId } });
+    const fac = await prisma.factura.findUnique({ 
+        where: { id: facturaId },
+        include: { empresa: true }
+    });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
     
     if (fac.metodoPago !== 'PPD') return { success: false, error: 'Solo facturas PPD admiten complementos.' }
 
-    if (process.env.FACTURAPI_KEY && !process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
+    const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+
+    if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       const payload = {
         payment_form: formaPago,
         items: [
@@ -194,7 +207,8 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         payload.date = new Date(fechaPago).toISOString();
       }
 
-      await facturapi.receipts.create(payload);
+      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+      await tenantFacturapi.receipts.create(payload);
     } else {
        console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'}`);
     }

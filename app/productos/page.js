@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import Link from 'next/link'
 import SearchBar from '../components/SearchBar'
+import EliminarProductoBtn from './EliminarProductoBtn'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +76,7 @@ export default async function ProductosPage({ searchParams }) {
                   <Link href={`/productos/editar/${p.id}`}>
                     <button className="btn" style={{padding: '0.4rem 1rem'}}>Editar</button>
                   </Link>
+                  <EliminarProductoBtn id={p.id} />
                 </td>
               </tr>
             ))}

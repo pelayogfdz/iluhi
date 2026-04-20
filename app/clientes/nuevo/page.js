@@ -19,6 +19,22 @@ async function createCliente(formData) {
   const regimen = formData.get('regimen')
   const codigoPostal = formData.get('codigoPostal')
   const usoCfdi = formData.get('usoCfdi')
+  const correoDestino = formData.get('correoDestino')
+  const correoDestino2 = formData.get('correoDestino2')
+  const correoDestino3 = formData.get('correoDestino3')
+
+  const contactoPrincipal = formData.get('contactoPrincipal')
+  const telefono = formData.get('telefono')
+  const condicionesPago = formData.get('condicionesPago')
+  const cuentaBancaria = formData.get('cuentaBancaria')
+  
+  const calle = formData.get('calle')
+  const numExterior = formData.get('numExterior')
+  const numInterior = formData.get('numInterior')
+  const colonia = formData.get('colonia')
+  const municipio = formData.get('municipio')
+  const ciudad = formData.get('ciudad')
+  const estado = formData.get('estado')
 
   // Find users with assignment permissions
   const admins = await prisma.usuario.findMany({
@@ -42,6 +58,20 @@ async function createCliente(formData) {
         regimen,
         codigoPostal,
         usoCfdi,
+        correoDestino,
+        correoDestino2,
+        correoDestino3,
+        contactoPrincipal,
+        telefono,
+        condicionesPago,
+        cuentaBancaria,
+        calle,
+        numExterior,
+        numInterior,
+        colonia,
+        municipio,
+        ciudad,
+        estado,
         usuariosAsignados: idsToConnect.length > 0 
           ? { connect: idsToConnect.map(id => ({ id })) } 
           : undefined
@@ -124,10 +154,94 @@ export default async function NuevoClientePage({ searchParams }) {
             </select>
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="correoDestino">Correo Facturación 1</label>
+              <input type="email" id="correoDestino" name="correoDestino" className="form-control" placeholder="admin@empresa.com" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="correoDestino2">Correo Facturación 2</label>
+              <input type="email" id="correoDestino2" name="correoDestino2" className="form-control" placeholder="pagos@empresa.com" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="correoDestino3">Correo Facturación 3</label>
+              <input type="email" id="correoDestino3" name="correoDestino3" className="form-control" placeholder="adicional@empresa.com" />
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+
+          <h3 style={{ color: 'var(--primary)' }}>Contacto y Comercial (CRM)</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+            <div className="form-group">
+              <label>Contacto Principal</label>
+              <input type="text" name="contactoPrincipal" className="form-control" />
+            </div>
+            <div className="form-group">
+              <label>Teléfono Principal</label>
+              <input type="tel" name="telefono" className="form-control" />
+            </div>
+            <div className="form-group">
+              <label>Condiciones de Pago (Días)</label>
+              <select name="condicionesPago" className="form-control" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <option value="">-- Seleccionar --</option>
+                <option value="Contado">Contado</option>
+                <option value="15 Días">15 Días</option>
+                <option value="30 Días">30 Días</option>
+                <option value="45 Días">45 Días</option>
+                <option value="60 Días">60 Días</option>
+                <option value="90 Días">90 Días</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Cuenta Bancaria principal (Opcional)</label>
+              <input type="text" name="cuentaBancaria" className="form-control" />
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+
+          <h3 style={{ color: 'var(--primary)' }}>Datos Logísticos Adicionales</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+            <div className="form-group">
+              <label>Calle</label>
+              <input type="text" name="calle" className="form-control" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+               <div className="form-group">
+                 <label>N° Exterior</label>
+                 <input type="text" name="numExterior" className="form-control" />
+               </div>
+               <div className="form-group">
+                 <label>N° Interior</label>
+                 <input type="text" name="numInterior" className="form-control" />
+               </div>
+            </div>
+            
+            <div className="form-group">
+              <label>Colonia / Asentamiento</label>
+              <input type="text" name="colonia" className="form-control" />
+            </div>
+            <div className="form-group">
+              <label>Municipio / Alcaldía</label>
+              <input type="text" name="municipio" className="form-control" />
+            </div>
+            
+            <div className="form-group">
+              <label>Ciudad</label>
+              <input type="text" name="ciudad" className="form-control" />
+            </div>
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label>Estado</label>
+              <input type="text" name="estado" className="form-control" />
+            </div>
+          </div>
+
           <button type="submit" className="btn">Guardar Cliente</button>
         </form>
       </div>
     </div>
   )
 }
-

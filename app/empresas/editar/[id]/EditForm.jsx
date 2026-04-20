@@ -98,12 +98,12 @@ export default function EditForm({ empresa }) {
             <label>Calle</label>
             <input type="text" name="calle" value={formData.calle} onChange={handleChange} className="form-control" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-             <div className="form-group" style={{ margin: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+             <div className="form-group">
                <label>N° Exterior</label>
                <input type="text" name="numExterior" value={formData.numExterior} onChange={handleChange} className="form-control" />
              </div>
-             <div className="form-group" style={{ margin: 0 }}>
+             <div className="form-group">
                <label>N° Interior</label>
                <input type="text" name="numInterior" value={formData.numInterior} onChange={handleChange} className="form-control" />
              </div>
@@ -130,21 +130,28 @@ export default function EditForm({ empresa }) {
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2rem 0' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          <span style={{ fontSize: '2rem' }}>✉️</span>
           <div>
-            <h3 style={{ color: 'var(--primary)', margin: 0 }}>✉️ Motor de Envíos de Correo Automático (SMTP)</h3>
+            <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '1.3rem' }}>Motor de Envíos Automáticos (SMTP)</h3>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+               Configura el correo desde el que CAANMA enviará las facturas y cotizaciones de esta empresa.
+            </p>
           </div>
           {(empresa.smtpHost && empresa.smtpUser && empresa.smtpPass) && (
             <div style={{
               marginLeft: 'auto',
-              padding: '4px 12px',
+              padding: '6px 16px',
               borderRadius: '20px',
-              fontSize: '0.8rem',
+              fontSize: '0.9rem',
               fontWeight: 'bold',
               background: 'rgba(16,185,129,0.2)',
               color: '#10b981',
-              border: '1px solid #10b981'
+              border: '1px solid #10b981',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}>
-              ✅ CORREO CONFIGURADO
+              ✅ CORREO ELECTRÓNICO CARGADO
             </div>
           )}
         </div>

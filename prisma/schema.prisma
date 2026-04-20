@@ -50,6 +50,10 @@ model Empresa {
   estado       String?
   correo       String?
   
+  facturapiId  String?    @unique
+  facturapiLiveKey String?
+  facturapiTestKey String?
+  
   // Confidencial (CSD)
   cerPath            String?
   keyPath            String?
@@ -132,6 +136,8 @@ model Cliente {
   
   // Para envío de factura
   correoDestino     String?
+  correoDestino2    String?
+  correoDestino3    String?
   
   facturas        Factura[]
   usuariosAsignados Usuario[] @relation("UsuarioClientes")

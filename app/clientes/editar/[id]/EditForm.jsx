@@ -17,6 +17,8 @@ export default function EditForm({ cliente }) {
     codigoPostal: cliente.codigoPostal || '',
     usoCfdi: cliente.usoCfdi || 'G03',
     correoDestino: cliente.correoDestino || '',
+    correoDestino2: cliente.correoDestino2 || '',
+    correoDestino3: cliente.correoDestino3 || '',
     calle: cliente.calle || '',
     numExterior: cliente.numExterior || '',
     numInterior: cliente.numInterior || '',
@@ -113,8 +115,12 @@ export default function EditForm({ cliente }) {
             <input type="text" name="cuentaBancaria" value={formData.cuentaBancaria} onChange={handleChange} className="form-control" />
           </div>
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Correo Electrónico principal (CFDI / Documentación)</label>
-            <input type="email" name="correoDestino" value={formData.correoDestino} onChange={handleChange} className="form-control" />
+            <label>Correos Electrónicos para Facturación y Notificaciones</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+              <input type="email" name="correoDestino" value={formData.correoDestino} onChange={handleChange} className="form-control" placeholder="Correo principal" />
+              <input type="email" name="correoDestino2" value={formData.correoDestino2} onChange={handleChange} className="form-control" placeholder="Segundo correo" />
+              <input type="email" name="correoDestino3" value={formData.correoDestino3} onChange={handleChange} className="form-control" placeholder="Tercer correo" />
+            </div>
           </div>
         </div>
 
@@ -127,12 +133,12 @@ export default function EditForm({ cliente }) {
             <label>Calle</label>
             <input type="text" name="calle" value={formData.calle} onChange={handleChange} className="form-control" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-             <div className="form-group" style={{ margin: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+             <div className="form-group">
                <label>N° Exterior</label>
                <input type="text" name="numExterior" value={formData.numExterior} onChange={handleChange} className="form-control" />
              </div>
-             <div className="form-group" style={{ margin: 0 }}>
+             <div className="form-group">
                <label>N° Interior</label>
                <input type="text" name="numInterior" value={formData.numInterior} onChange={handleChange} className="form-control" />
              </div>

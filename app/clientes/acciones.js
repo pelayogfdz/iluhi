@@ -24,6 +24,8 @@ export async function actualizarCliente(id, data) {
         ciudad: data.ciudad,
         estado: data.estado,
         correoDestino: data.correoDestino,
+        correoDestino2: data.correoDestino2,
+        correoDestino3: data.correoDestino3,
         contactoPrincipal: data.contactoPrincipal,
         telefono: data.telefono,
         condicionesPago: data.condicionesPago,

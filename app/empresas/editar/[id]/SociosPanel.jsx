@@ -67,13 +67,12 @@ export default function SociosPanel({ empresaId }) {
 
       let res
       if (editingSocio) {
-        res = await actualizarSocio(editingSocio.id, {
-          nombre,
-          rfc,
-          fielPassword: fielPassword || undefined,
-          fielCerBase64: cerB64 || undefined,
-          fielKeyBase64: keyB64 || undefined
-        })
+        let updateData = { nombre, rfc }
+        if (fielPassword) updateData.fielPassword = fielPassword
+        if (cerB64) updateData.fielCerBase64 = cerB64
+        if (keyB64) updateData.fielKeyBase64 = keyB64
+        
+        res = await actualizarSocio(editingSocio.id, updateData)
       } else {
         res = await crearSocio(empresaId, nombre, rfc, cerB64, keyB64, fielPassword)
       }

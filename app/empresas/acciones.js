@@ -66,6 +66,13 @@ export async function actualizarEmpresa(id, data) {
 
 export async function eliminarEmpresa(id) {
   try {
+    const { getSessionUser } = require('../../lib/auth');
+    const user = await getSessionUser();
+    
+    if (!user || !user.permisoEliminarEmpresas) {
+       throw new Error("No tienes el perfil administrativo necesario para eliminar empresas.");
+    }
+    
     await prisma.empresa.delete({
       where: { id }
     });
@@ -95,6 +102,21 @@ export async function subirCSD(empresaId, cerBase64, keyBase64, passwordCsd) {
 
     fs.writeFileSync(cerPathStr, cerBuffer)
     fs.writeFileSync(keyPathStr, keyBuffer)
+    
+    const empr = await prisma.empresa.findUnique({ where: { id: empresaId } });
+
+    // Sincronizar CSD con Facturapi
+    if (empr && empr.facturapiId && process.env.FACTURAPI_USER_KEY) {
+        try {
+            const FacturapiClient = require('facturapi').default;
+            const facturapiAdmin = new FacturapiClient(process.env.FACTURAPI_USER_KEY);
+            await facturapiAdmin.organizations.uploadCertificate(empr.facturapiId, cerBuffer, keyBuffer, passwordCsd);
+            console.log("CSD Sincronizado exitosamente con Facturapi Tenant: " + empr.facturapiId);
+        } catch(fErr) {
+            console.error("No se pudo cargar CSD en Facturapi:", fErr.message);
+            // No bloqueamos el flujo, pero queda reporte. Podría lanzarse el error según preferencia de negocio.
+        }
+    }
 
     await prisma.empresa.update({
       where: { id: empresaId },
