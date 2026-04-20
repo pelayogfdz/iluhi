@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import facturapi from '../../../../lib/facturapi';
+import { facturapiLive } from '../../../../lib/facturapi';
 
 export async function GET(request) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request) {
       return NextResponse.json({ results: [] });
     }
 
-    const searchResults = await facturapi.catalogs.searchProducts({ q });
+    const searchResults = await facturapiLive.catalogs.searchProducts({ q });
     return NextResponse.json({ results: searchResults.data || [] });
   } catch (error) {
     console.error("Error fetching SAT products:", error);
