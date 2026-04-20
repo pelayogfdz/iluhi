@@ -67,8 +67,30 @@ export default function EditForm({ cliente }) {
             <input required type="text" name="razonSocial" value={formData.razonSocial} onChange={handleChange} className="form-control" />
           </div>
           <div className="form-group">
-            <label>Régimen Fiscal (3 dígitos)</label>
-            <input required type="text" name="regimen" value={formData.regimen} onChange={handleChange} className="form-control" maxLength="3" />
+            <label>Régimen Fiscal (Clave SAT)</label>
+            <select name="regimen" value={formData.regimen} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                  <option value="">-- Seleccionar Régimen --</option>
+                  <option value="601">601 - General de Ley Personas Morales</option>
+                  <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                  <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                  <option value="606">606 - Arrendamiento</option>
+                  <option value="607">607 - Régimen de Enajenación o Adquisición de Bienes</option>
+                  <option value="608">608 - Demás ingresos</option>
+                  <option value="609">609 - Consolidación</option>
+                  <option value="610">610 - Residentes en el Extranjero sin E.P. en México</option>
+                  <option value="611">611 - Ingresos por Dividendos (socios y accionistas)</option>
+                  <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
+                  <option value="614">614 - Ingresos por intereses</option>
+                  <option value="615">615 - Régimen de los ingresos por obtención de premios</option>
+                  <option value="616">616 - Sin obligaciones fiscales</option>
+                  <option value="620">620 - Sociedades Cooperativas de Producción</option>
+                  <option value="621">621 - Incorporación Fiscal</option>
+                  <option value="622">622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                  <option value="623">623 - Opcional para Grupos de Sociedades</option>
+                  <option value="624">624 - Coordinados</option>
+                  <option value="625">625 - Régimen de las Actividades Emp. Plataformas Tecnológicas</option>
+                  <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+            </select>
           </div>
           <div className="form-group">
             <label>Código Postal Fiscal</label>
