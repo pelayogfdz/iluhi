@@ -191,7 +191,7 @@ export default function DescargasSatClient({ empresas }) {
                   <thead>
                     <tr>
                       <th>Fecha Emisión</th>
-                      <th>Folio / UUID</th>
+                      <th>Datos del Receptor (Cliente)</th>
                       <th>Empresa Emisora</th>
                       <th>Total</th>
                       <th>Estatus</th>
@@ -202,16 +202,17 @@ export default function DescargasSatClient({ empresas }) {
                     {items.length === 0 ? <tr><td colSpan="6" style={{ textAlign: 'center' }}>No existen facturas XML descargadas para los criterios seleccionados.</td></tr> : items.map((f) => (
                       <tr key={f.id}>
                         <td>{new Date(f.fechaEmision).toLocaleDateString()}</td>
-                        <td>{f.folio || 'N/A'}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.uuid}</span></td>
+                        <td><span style={{fontSize: '0.85rem', color: '#333', fontFamily: 'monospace'}}>{f.uuid}</span></td>
+                        <td>{f.receptorNombre || 'N/A'}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.receptorRfc}</span></td>
                         <td>{f.empresa?.razonSocial}</td>
                         <td style={{ fontWeight: 'bold' }}>${f.total?.toFixed(2)}</td>
                         <td>
-                           <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', background: f.estatus==='Timbrada'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)', color: f.estatus==='Timbrada'?'#10b981':'#ef4444' }}>
+                           <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', background: f.estatus==='Vigente'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)', color: f.estatus==='Vigente'?'#10b981':'#ef4444' }}>
                              {f.estatus}
                            </span>
                         </td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => alert('Próximamente: Abre visor XML embebido')}>Ver XML</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!f.xmlBase64}>Ver XML</button>
                         </td>
                       </tr>
                     ))}
@@ -329,7 +330,7 @@ export default function DescargasSatClient({ empresas }) {
                         <td>{b.empresa?.razonSocial}</td>
                         <td>{b.descripcion}</td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#3b82f6' }}>Revisar e-documento</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#3b82f6' }} onClick={() => handleViewPDF(b.archivoBase64)}>Revisar e-documento</button>
                         </td>
                       </tr>
                     ))}

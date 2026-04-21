@@ -76,6 +76,11 @@ model Empresa {
   objetoSocial           String?
   actividadEconomica     String?
   
+  // Modulo Automatizacion de Encuestas de Satisfaccion (Post-Factura)
+  encuestaAsunto         String?  // Asunto del correo enviado a las 24h
+  encuestaMensaje        String?  // Texto del correo (soporta {{nombre}})
+  encuestaEnlace         String?  // URL del forms de satisfaccion
+  
   // Plantillas de Correo
   plantillaCotizacion    String?
   plantillaOrdenServicio String?
@@ -86,6 +91,7 @@ model Empresa {
   productos    Producto[]
   facturas     Factura[]
   facturasRecibidas FacturaRecibida[]
+  facturasEmitidas FacturaEmitida[]
   socios       Socio[]
   documentosSat DocumentoSat[]
   archivosEmpresa ArchivoEmpresa[]
@@ -272,6 +278,27 @@ model FacturaRecibida {
   tipoDeComprobante String  @default("I") // I (Ingreso), P (Pago), etc.
   xmlBase64        String?
   pdfBase64        String?
+  
+  empresaId        String
+  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime @default(now())
+}
+
+model FacturaEmitida {
+  id               String   @id @default(uuid())
+  uuid             String   @unique
+  receptorRfc      String
+  receptorNombre   String
+  fechaEmision     DateTime
+  total            Float
+  moneda           String   @default("MXN")
+  estatus          String   @default("Vigente")
+  tipoDeComprobante String  @default("I")
+  xmlBase64        String?
+  pdfBase64        String?
+  
+  encuestaEnviada  Boolean  @default(false)
   
   empresaId        String
   empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)

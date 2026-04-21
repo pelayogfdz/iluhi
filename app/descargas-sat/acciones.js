@@ -13,8 +13,7 @@ export async function fetchDocumentosSATHistory(filtros) {
   
   if (tab === 'facturas') {
     const whereClause = {
-      ...whereEmpresa,
-      xmlBase64: { not: null }
+      ...whereEmpresa
     }
     
     if (fechaInicio || fechaFin) {
@@ -27,7 +26,7 @@ export async function fetchDocumentosSATHistory(filtros) {
       }
     }
 
-    const facturas = await prisma.factura.findMany({
+    const facturas = await prisma.facturaEmitida.findMany({
       where: whereClause,
       include: { empresa: { select: { rfc: true, razonSocial: true } } },
       orderBy: { fechaEmision: 'desc' },

@@ -14,7 +14,11 @@ function getTodayString() {
 }
 
 (async () => {
-  console.log("Iniciando extracción dual de SAT...");
+  const args = process.argv.slice(2);
+  const buzonOnly = args.includes('--buzon-only');
+  const skipBuzon = args.includes('--skip-buzon');
+  console.log(`Iniciando extracción dual de SAT... (buzonOnly: ${buzonOnly}, skipBuzon: ${skipBuzon})`);
+  
   const emp = await prisma.empresa.findFirst({ where: { NOT: { fielPassword: null } }});
   
   if (!emp || !emp.fielCerBase64 || !emp.fielKeyBase64 || !emp.fielPassword) {
@@ -149,7 +153,8 @@ function getTodayString() {
     // ==========================================
     // TAREA 1: OPINIÓN DE CUMPLIMIENTO (OPC)
     // ==========================================
-    console.log("\n--- COMIENZA EXTRACCION: OPINION DE CUMPLIMIENTO ---");
+    if (!buzonOnly) {
+        console.log("\n--- COMIENZA EXTRACCION: OPINION DE CUMPLIMIENTO ---");
     expectedDownloadPath = path.join(tmpDir, pdfOPCName);
     downloadedSuccess = false;
 
@@ -212,9 +217,56 @@ function getTodayString() {
     } else {
         console.log("¡ERROR! Botón de Generar Constancia no encontrado.");
     }
+    
+    // Cerrar sesion o limpiar pagina
+    await page.context().clearCookies();
+    await delay(2000);
+    } // if (!buzonOnly)
 
     // ==========================================
-    // TAREA 3: SUBIDA A SUPABASE
+    // TAREA 3: BUZON TRIBUTARIO
+    // ==========================================
+    if (!skipBuzon) {
+        console.log("\n--- COMIENZA EXTRACCION: BUZON TRIBUTARIO ---");
+    
+    // Usamos las rutas directas expuestas en los vídeos (iniciar-expediente)
+    const urlNotificaciones = "https://wwwmat.sat.gob.mx/iniciar-expediente/mis-notificaciones/";
+    const urlComunicados = "https://wwwmat.sat.gob.mx/iniciar-expediente/mis-comunicados/";
+    
+    await loginSat(page, "buzon", urlNotificaciones, urlNotificaciones);
+    
+    console.log("Login de Buzon finalizado. Esperando Notificaciones...");
+    try {
+        await page.goto(urlNotificaciones, { waitUntil: 'networkidle', timeout: 30000 });
+        await delay(8000); // La tabla tarda en armarse asíncronamente
+        
+        const fechaDesc = todayStr.replace(/\//g, '');
+        const pdfBznNotif = `Buzon_Notificaciones_${fechaDesc}_${emp.id}.pdf`;
+        const pathNotif = path.join(tmpDir, pdfBznNotif);
+        
+        await page.pdf({ path: pathNotif, format: 'A4', printBackground: true, scale: 0.8 });
+        console.log(`[BUZON] Guardado PDF de Notificaciones en ${pathNotif}`);
+        
+        console.log("Navegando a Comunicados...");
+        await page.goto(urlComunicados, { waitUntil: 'networkidle', timeout: 30000 });
+        await delay(8000); // La tabla tarda en armarse
+        
+        const pdfBznComun = `Buzon_Comunicados_${fechaDesc}_${emp.id}.pdf`;
+        const pathComun = path.join(tmpDir, pdfBznComun);
+        await page.pdf({ path: pathComun, format: 'A4', printBackground: true, scale: 0.8 });
+        console.log(`[BUZON] Guardado PDF de Comunicados en ${pathComun}`);
+        
+    } catch(err) {
+        console.log("Error navegando/extrayendo Buzon Tributario: " + err.message);
+    }
+
+    // Cerrar sesion o limpiar pagina para el sgte tramite
+    await page.context().clearCookies();
+    await delay(2000);
+    } // if (!skipBuzon)
+
+    // ==========================================
+    // TAREA 4: SUBIDA A SUPABASE Y PRISMA
     // ==========================================
     try {
         const { createClient } = require('@supabase/supabase-js');
@@ -228,9 +280,16 @@ function getTodayString() {
              
              // --- NUEVO: GUARDAR EN BASE DE DATOS LOCAL PRIMERO ---
              const base64 = buffer.toString('base64');
-             const isOpinion = file.includes('OC') || file.includes('Opinion') || file.includes('OPC');
-             const tipo = isOpinion ? 'OPINION' : 'CONSTANCIA';
-             const desc = isOpinion ? 'POSITIVA' : 'Constancia de Situación Fiscal'; 
+             let tipo = 'CONSTANCIA';
+             let desc = 'Constancia de Situación Fiscal'; 
+             
+             if (file.includes('OC') || file.includes('Opinion') || file.includes('OPC')) {
+                 tipo = 'OPINION';
+                 desc = 'POSITIVA';
+             } else if (file.toLowerCase().includes('buzon')) {
+                 tipo = 'BUZON';
+                 desc = file.includes('Notificaciones') ? 'Notificaciones (Buzón)' : 'Comunicados (Buzón)';
+             }
              
              try {
                 await prisma.documentoSat.create({
@@ -241,10 +300,10 @@ function getTodayString() {
                     empresaId: emp.id
                   }
                 });
-                console.log(`[PRISMA] ${file} registrado en base de datos local OK.`);
+                console.log(`[PRISMA] ${file} registrado en base de datos local OK con tipo ${tipo}.`);
                 
                 // --- NUEVO: SI ES OPINION, ACTUALIZAR ESTATUS EN TABLA EMPRESA ---
-                if (isOpinion) {
+                if (tipo === 'OPINION') {
                   await prisma.empresa.update({
                       where: { id: emp.id },
                       data: { opinionCumplimiento: 'POSITIVA' }
