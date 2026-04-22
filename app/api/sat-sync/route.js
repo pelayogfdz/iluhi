@@ -21,11 +21,11 @@ export async function GET(request) {
     const empresaId = searchParams.get('empresaId');
     const mode = searchParams.get('mode'); // 'opinion', 'csf', or 'cfdi' (default)
 
-    const { spawn } = require('child_process');
+    const cp = eval("require('child_process')");
     const path = require('path');
     
     // El script vive en la raíz del proyecto
-    const scriptPath = path.join(process.cwd(), 'playwright_sat_maestro.js');
+    const scriptPath = path.join(/*turbopackIgnore: true*/ process.cwd(), 'playwright_sat_maestro.js');
     
     const args = [scriptPath];
     if (mode === 'opinion') {
@@ -41,10 +41,10 @@ export async function GET(request) {
     if (empresaId && empresaId !== 'ALL') args.push(`--empresa-id=${empresaId}`);
 
     const fs = require('fs');
-    const logFile = fs.openSync(path.join(process.cwd(), 'maestro_out.log'), 'a');
+    const logFile = fs.openSync(path.join(/*turbopackIgnore: true*/ process.cwd(), 'maestro_out.log'), 'a');
 
     // Lanzar proceso desacoplado
-    const subprocess = spawn('node', args, {
+    const subprocess = cp.spawn('node', args, {
         detached: true,
         stdio: ['ignore', logFile, logFile]
     });

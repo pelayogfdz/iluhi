@@ -373,5 +373,70 @@ export async function GET(request) {
     }
   }
 
+  // === SAT SYNC AUTOMATION (Goal 5: Fully Automated Background Process) ===
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const { spawn } = require('child_process');
+
+    // Obtener la fecha local actual (YYY-MM-DD) y hora en CDMX
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Mexico_City',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: 'numeric', hour12: false
+    });
+    
+    // El formato devuelto es MM/DD/YYYY, HH
+    // Check if within bounds
+    const nowLocal = new Date();
+    const timeSinceLastGlobal = nowLocal.getTime() - lastGlobalTick.getTime();
+
+    // 2. TAREAS MAESTRAS DEL SAT (Verificadas cada hora o en cada tick real)
+    // Extraer solo la fecha YYYY-MM-DD
+    const todayStr = `${mxDateObj.getFullYear()}-${String(mxDateObj.getMonth() + 1).padStart(2, '0')}-${String(mxDateObj.getDate()).padStart(2, '0')}`;
+    const mxHour = mxDateObj.getHours();
+    const mxDay = mxDateObj.getDate();
+    const dayOfMonth = parseInt(mxDay, 10);
+
+    const getLock = (name) => {
+        try { return fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), name), 'utf8'); } catch(e) { return ''; }
+    };
+    const setLock = (name, val) => {
+        fs.writeFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), name), val);
+    };
+
+    const scriptPath = path.join(/*turbopackIgnore: true*/ process.cwd(), 'playwright_sat_maestro.js');
+
+    // Regla 1: Constancia de Situación Fiscal (CSF) a la 1:00 AM (Días 2, 18, o si es forzado para "esta noche" que cae en 22 de abril 2026)
+    if (mxHour === 1 && (dayOfMonth === 2 || dayOfMonth === 18 || dayOfMonth === 22)) {
+        if (getLock('last_csf_sync.txt') !== todayStr) {
+            setLock('last_csf_sync.txt', todayStr);
+            cp.spawn('node', [scriptPath, '--csf-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
+            console.log("SAT Sync automático (CSF) lanzado para el día:", todayStr);
+        }
+    }
+
+    // Regla 2: Opinión de Cumplimiento a las 3:00 AM (Días 3, 19, o si es forzado)
+    if (mxHour === 3 && (dayOfMonth === 3 || dayOfMonth === 19 || dayOfMonth === 22)) {
+        if (getLock('last_opinion_sync.txt') !== todayStr) {
+            setLock('last_opinion_sync.txt', todayStr);
+            cp.spawn('node', [scriptPath, '--opinion-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
+            console.log("SAT Sync automático (OPINION) lanzado para el día:", todayStr);
+        }
+    }
+
+    // Regla 3: Buzón Tributario a las 5:00 AM (Todos los días)
+    if (mxHour === 5) {
+        if (getLock('last_buzon_sync.txt') !== todayStr) {
+            setLock('last_buzon_sync.txt', todayStr);
+            cp.spawn('node', [scriptPath, '--buzon-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
+            console.log("SAT Sync automático (BUZON) lanzado para el día:", todayStr);
+        }
+    }
+
+  } catch(syncErr) {
+    console.error("Error en auto-trigger SAT:", syncErr);
+  }
+
   return NextResponse.json({ success: true, processed: procesadas });
 }
