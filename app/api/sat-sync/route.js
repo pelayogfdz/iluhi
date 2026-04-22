@@ -13,160 +13,58 @@ export const dynamic = 'force-dynamic'
  * 4. Descarga de Facturas Recibidas de Proveedores (cada hora)
  */
 export async function GET(request) {
-  const now = new Date();
-  const dayOfMonth = now.getDate();
-  const isValidationDay = dayOfMonth === 2 || dayOfMonth === 18;
-  
-  const results = {
-    xmlDownloads: { total: 0, success: 0, errors: [] },
-    opinionCumplimiento: { total: 0, updated: 0, errors: [] },
-    timestamp: now.toISOString()
-  };
-
-  // ═══════════════════════════════════════════════════════════
-  // 1. DESCARGA MASIVA DE XML (cada hora, todas las empresas)
-  // ═══════════════════════════════════════════════════════════
+  // Lanzar el proceso Maestro en background para no bloquear el request de Next.js
   try {
-    const FacturapiClient = require('facturapi').default;
-    const apiKey = process.env.FACTURAPI_KEY;
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const empresaId = searchParams.get('empresaId');
+    const mode = searchParams.get('mode'); // 'opinion', 'csf', or 'cfdi' (default)
+
+    const { spawn } = require('child_process');
+    const path = require('path');
     
-    if (apiKey && !apiKey.includes('PENDING_KEY')) {
-      const facturapi = new FacturapiClient(apiKey);
-
-      // Obtener facturas timbradas de la última hora
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      
-      const facturasRecientes = await prisma.factura.findMany({
-        where: {
-          uuid: { not: null },
-          estatus: { not: { contains: 'Cancelada' } },
-          createdAt: { gte: oneHourAgo }
-        },
-        include: { empresa: true }
-      });
-
-      results.xmlDownloads.total = facturasRecientes.length;
-
-      for (const fac of facturasRecientes) {
-        try {
-          // Descargar XML desde Facturapi
-          const xmlStream = await facturapi.invoices.downloadXml(fac.uuid);
-          
-          // Convertir stream a buffer para almacenar
-          const chunks = [];
-          for await (const chunk of xmlStream) {
-            chunks.push(chunk);
-          }
-          const xmlBuffer = Buffer.concat(chunks);
-          const xmlBase64 = xmlBuffer.toString('base64');
-
-          // Guardar XML en la base de datos de la factura
-          await prisma.factura.update({
-            where: { id: fac.id },
-            data: { xmlBase64: xmlBase64 }
-          });
-
-          results.xmlDownloads.success++;
-        } catch (dlErr) {
-          results.xmlDownloads.errors.push({
-            uuid: fac.uuid,
-            error: dlErr.message
-          });
-        }
-      }
+    // El script vive en la raíz del proyecto
+    const scriptPath = path.join(process.cwd(), 'playwright_sat_maestro.js');
+    
+    const args = [scriptPath];
+    if (mode === 'opinion') {
+        args.push('--opinion-only');
+    } else if (mode === 'csf') {
+        args.push('--csf-only');
     } else {
-      results.xmlDownloads.errors.push({ error: 'FACTURAPI_KEY no configurada' });
+        args.push('--cfdi-only');
     }
-  } catch (globalErr) {
-    results.xmlDownloads.errors.push({ error: globalErr.message });
-  }
 
-  // ═══════════════════════════════════════════════════════════
-  // 2. OPINIÓN DE CUMPLIMIENTO (días 2 y 18 del mes)
-  //    Consulta automática vía Facturapi tools.validateTaxId 
-  //    como proxy de validación fiscal.
-  //    NOTA: La opinión de cumplimiento real (32-D) requiere
-  //    acceso al portal SAT con FIEL. Este bloque valida el
-  //    estatus del RFC y queda preparado para integración 
-  //    completa con el servicio de consulta SAT.
-  // ═══════════════════════════════════════════════════════════
-  if (isValidationDay) {
-    try {
-      const FacturapiClient = require('facturapi').default;
-      const apiKey = process.env.FACTURAPI_KEY;
-      
-      if (apiKey && !apiKey.includes('PENDING_KEY')) {
-        const facturapi = new FacturapiClient(apiKey);
+    if (startDate) args.push(`--start-date=${startDate}`);
+    if (endDate) args.push(`--end-date=${endDate}`);
+    if (empresaId && empresaId !== 'ALL') args.push(`--empresa-id=${empresaId}`);
 
-        const empresas = await prisma.empresa.findMany({
-          where: {
-            fielCerBase64: { not: null } // Solo empresas con FIEL cargada
-          }
-        });
+    const fs = require('fs');
+    const logFile = fs.openSync(path.join(process.cwd(), 'maestro_out.log'), 'a');
 
-        results.opinionCumplimiento.total = empresas.length;
-
-        for (const emp of empresas) {
-          try {
-            // Validar el RFC de la empresa con Facturapi
-            const validation = await facturapi.tools.validateTaxId(emp.rfc);
-            
-            // La validación de Facturapi nos da un boolean de si el RFC es válido
-            // Esto sirve como primera capa; para la opinión 32-D real,
-            // se necesitaría integración SOAP con el SAT usando la FIEL
-            const opinion = validation ? 'POSITIVA' : 'NEGATIVA';
-
-            await prisma.empresa.update({
-              where: { id: emp.id },
-              data: {
-                opinionCumplimiento: opinion,
-                ultimaValidacionOpinion: now
-              }
-            });
-
-            results.opinionCumplimiento.updated++;
-          } catch (valErr) {
-            results.opinionCumplimiento.errors.push({
-              rfc: emp.rfc,
-              error: valErr.message
-            });
-          }
-        }
-      }
-    } catch (opErr) {
-      results.opinionCumplimiento.errors.push({ error: opErr.message });
-    }
-  } else {
-    results.opinionCumplimiento = {
-      skipped: true,
-      reason: `Solo se ejecuta los días 2 y 18 del mes. Hoy es día ${dayOfMonth}.`
-    };
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  // 3. FACTURAS RECIBIDAS (PROVEEDORES / GASTOS)
-  //    (Cada hora) Simula sincronización o usa API externa
-  // ═══════════════════════════════════════════════════════════
-  results.facturasRecibidas = { total: 0, success: 0, errors: [] };
-  try {
-    const empresasFiel = await prisma.empresa.findMany({
-      where: { fielCerBase64: { not: null } }
+    // Lanzar proceso desacoplado
+    const subprocess = spawn('node', args, {
+        detached: true,
+        stdio: ['ignore', logFile, logFile]
     });
     
-    results.facturasRecibidas.total = empresasFiel.length;
-    
-    // Aquí a futuro el scraper descargará y populará prisma.facturaRecibida
-    for (const emp of empresasFiel) {
-       // Mock exitoso
-       results.facturasRecibidas.success++;
-    }
-  } catch (errRecibidas) {
-    results.facturasRecibidas.errors.push({ error: errRecibidas.message });
-  }
+    subprocess.unref();
 
-  return NextResponse.json({
-    success: true,
-    isValidationDay,
-    results
-  });
+    return NextResponse.json({
+      success: true,
+      message: 'Proceso de sincronización SAT (Maestro) enviado a segundo plano. Esto puede tardar varios minutos dependiendo de cuántas empresas tengas dadas de alta.',
+      results: {
+          xmlDownloads: { total: "Pendiente", success: "Pendiente" },
+          opinionCumplimiento: { skipped: true, reason: "Se evaluará asíncronamente en background" },
+          facturasRecibidas: { success: "Proceso lanzado" }
+      }
+    });
+
+  } catch (globalErr) {
+    return NextResponse.json({
+      success: false,
+      error: globalErr.message
+    });
+  }
 }

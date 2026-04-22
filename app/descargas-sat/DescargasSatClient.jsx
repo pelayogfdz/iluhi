@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { fetchDocumentosSATHistory, getEmpresasSelector } from './acciones'
+import { fetchDocumentosSATHistory, getEmpresasSelector, fetchBase64Documento, subirOpinionManual } from './acciones'
 
 export default function DescargasSatClient({ empresas }) {
   // === Sync Controls ===
@@ -43,11 +43,15 @@ export default function DescargasSatClient({ empresas }) {
     fetchData()
   }, [activeTab])
 
-  const handleSync = async () => {
+  const handleSync = async (mode = 'cfdi') => {
+    if (mode === 'cfdi' && (!filtroFechaInicio || !filtroFechaFin)) {
+      alert("⚠️ Debes seleccionar un rango de fechas (Desde y Hasta) para realizar la Extracción Masiva de CFDI.");
+      return;
+    }
     setSyncing(true)
     setSyncResult(null)
     try {
-      const res = await fetch('/api/sat-sync')
+      const res = await fetch(`/api/sat-sync?startDate=${filtroFechaInicio}&endDate=${filtroFechaFin}&empresaId=${filtroEmpresaId}&mode=${mode}`)
       const data = await res.json()
       setSyncResult(data)
       // Actualizamos listado luego de sincronizar
@@ -59,6 +63,8 @@ export default function DescargasSatClient({ empresas }) {
     }
   }
 
+  const [loadingPdf, setLoadingPdf] = useState(false)
+
   const handleClearFilters = () => {
     setFiltroEmpresaId('ALL')
     setFiltroFechaInicio('')
@@ -66,28 +72,84 @@ export default function DescargasSatClient({ empresas }) {
     // Al limpiar no hace el fetch de inmediato en el DOM, es mejor hacerlo de manual al clickear Filtrar o por useEffect
   }
 
-  const handleViewPDF = (base64String, title) => {
-    if (!base64String) return;
-    
-    // Si viene sin data:, agregarlo (aunque el script ya lo debe traer con data:application/pdf;base64,)
-    const finalSrc = base64String.startsWith('data:application/pdf') ? base64String : `data:application/pdf;base64,${base64String}`;
-    
-    const w = window.open('', '_blank');
-    if (w) {
-      w.document.title = title || 'Visor PDF';
-      w.document.body.style.margin = '0';
-      const iframe = w.document.createElement('iframe');
-      iframe.src = finalSrc;
-      iframe.style.width = '100vw';
-      iframe.style.height = '100vh';
-      iframe.style.border = 'none';
-      w.document.body.appendChild(iframe);
-    } else {
-      // Fallback si popup bloqueado: auto-descarga
-      const a = document.createElement('a');
-      a.href = finalSrc;
-      a.download = `${title}.pdf`;
-      a.click();
+  const handleViewPDF = async (id, title) => {
+    setLoadingPdf(true)
+    try {
+      const res = await fetchBase64Documento(id, activeTab)
+      if (!res.success || !res.base64) {
+        alert('No se pudo cargar el archivo o no existe.')
+        return
+      }
+
+      const base64String = res.base64
+      const isPdf = activeTab === 'constancias' || activeTab === 'opiniones' || activeTab === 'buzon'
+      
+      let finalSrc = base64String
+      if (isPdf && !base64String.startsWith('data:application/pdf')) {
+        finalSrc = `data:application/pdf;base64,${base64String}`
+      } else if (!isPdf && !base64String.startsWith('data:text/xml') && !base64String.startsWith('data:application/xml')) {
+        // En caso de XML, se puede descargar o mostrar
+        finalSrc = `data:application/xml;base64,${base64String}`
+      }
+      
+      if (isPdf) {
+        const w = window.open('', '_blank');
+        if (w) {
+          w.document.title = title || 'Visor PDF';
+          w.document.body.style.margin = '0';
+          const iframe = w.document.createElement('iframe');
+          iframe.src = finalSrc;
+          iframe.style.width = '100vw';
+          iframe.style.height = '100vh';
+          iframe.style.border = 'none';
+          w.document.body.appendChild(iframe);
+        } else {
+          const a = document.createElement('a');
+          a.href = finalSrc;
+          a.download = `${title}.pdf`;
+          a.click();
+        }
+      } else {
+         // Descargar XML automáticamente
+         const a = document.createElement('a');
+         a.href = finalSrc;
+         a.download = `${title}.xml`;
+         a.click();
+      }
+    } catch (e) {
+      alert('Error cargando documento.')
+    } finally {
+      setLoadingPdf(false)
+    }
+  }
+
+  const handleManualUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (filtroEmpresaId === 'ALL') {
+      alert('⚠️ Primero debes seleccionar una Empresa específica en el filtro superior para poder asignar este documento.')
+      e.target.value = ''
+      return
+    }
+
+    setLoadingPdf(true)
+    try {
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64Data = reader.result
+        const res = await subirOpinionManual(filtroEmpresaId, base64Data)
+        if (res.success) {
+          alert('✅ Opinión de Cumplimiento subida y asignada correctamente.')
+          await fetchData()
+        } else {
+          alert('❌ Error al subir la opinión: ' + res.error)
+        }
+        setLoadingPdf(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (err) {
+      alert('Error local leyendo archivo.')
+      setLoadingPdf(false)
     }
   }
 
@@ -110,9 +172,17 @@ export default function DescargasSatClient({ empresas }) {
               Ejecuta los procesos de extracción: XMLs masivos y estado de cumplimiento. Requiere FIEL (e.firma).
             </p>
           </div>
-          <button className="btn" style={{ background: '#7c3aed', fontSize: '1rem', padding: '0.75rem 1.5rem' }} onClick={handleSync} disabled={syncing}>
-            {syncing ? '🔄 Extrayendo datos del SAT...' : '🚀 Ejecutar Extracción Masiva'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button className="btn" style={{ background: '#7c3aed', fontSize: '0.95rem', padding: '0.6rem 1rem' }} onClick={() => handleSync('cfdi')} disabled={syncing}>
+              {syncing ? '🔄 Extrayendo...' : '🚀 Extracción Masiva CFDI'}
+            </button>
+            <button className="btn" style={{ background: '#10b981', fontSize: '0.95rem', padding: '0.6rem 1rem' }} onClick={() => handleSync('opinion')} disabled={syncing}>
+              ✅ Extraer Opinión 32-D
+            </button>
+            <button className="btn" style={{ background: '#3b82f6', fontSize: '0.95rem', padding: '0.6rem 1rem' }} onClick={() => handleSync('csf')} disabled={syncing}>
+              📄 Extraer CSF
+            </button>
+          </div>
         </div>
 
         {syncResult && (
@@ -212,7 +282,9 @@ export default function DescargasSatClient({ empresas }) {
                            </span>
                         </td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!f.xmlBase64}>Ver XML</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!f.hasFile || loadingPdf} onClick={() => handleViewPDF(f.id, `XML_Emitida_${f.uuid}`)}>
+                            {loadingPdf ? 'Cargando...' : 'Ver XML'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -248,7 +320,9 @@ export default function DescargasSatClient({ empresas }) {
                            </span>
                         </td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!f.xmlBase64}>Ver XML</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!f.hasFile || loadingPdf} onClick={() => handleViewPDF(f.id, `XML_Recibida_${f.uuid}`)}>
+                            {loadingPdf ? 'Cargando...' : 'Ver XML'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -274,7 +348,9 @@ export default function DescargasSatClient({ empresas }) {
                         <td>{c.empresa?.razonSocial}</td>
                         <td>{c.descripcion || 'Constancia de Situación Fiscal (CSF)'}</td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!c.archivoBase64} onClick={() => handleViewPDF(c.archivoBase64, `CSF_${c.empresa?.razonSocial}`)}>Ver PDF</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!c.hasFile || loadingPdf} onClick={() => handleViewPDF(c.id, `CSF_${c.empresa?.razonSocial}`)}>
+                            {loadingPdf ? 'Cargando...' : 'Ver PDF'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -285,6 +361,17 @@ export default function DescargasSatClient({ empresas }) {
               {/* === OPINIONES === */}
               {activeTab === 'opiniones' && (
                 <>
+                  <div style={{ padding: '1rem', background: 'rgba(59,130,246,0.1)', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                      <span style={{color: '#ef4444', fontWeight: 'bold'}}>Nota:</span> La descarga automática de Opiniones 32-D suele ser bloqueada temporalmente por los firewalls de Cloudflare en el SAT. Si no la ves listada, súbela manualmente.
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <input type="file" id="opinion-upload" accept="application/pdf" style={{ display: 'none' }} onChange={handleManualUpload} disabled={loadingPdf} />
+                      <label htmlFor="opinion-upload" className="btn" style={{ background: 'var(--primary)', cursor: 'pointer', whiteSpace: 'nowrap', margin: 0 }}>
+                        {loadingPdf ? 'Subiendo...' : '📤 Subir Opinión Manual'}
+                      </label>
+                    </div>
+                  </div>
                   <thead>
                     <tr>
                       <th>Fecha de Validación</th>
@@ -304,7 +391,9 @@ export default function DescargasSatClient({ empresas }) {
                           </span>
                         </td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!o.archivoBase64} onClick={() => handleViewPDF(o.archivoBase64, `Opinion_Cumplimiento_${o.empresa?.razonSocial}`)}>Ver PDF</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} disabled={!o.hasFile || loadingPdf} onClick={() => handleViewPDF(o.id, `Opinion_Cumplimiento_${o.empresa?.razonSocial}`)}>
+                            {loadingPdf ? 'Cargando...' : 'Ver PDF'}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -330,7 +419,9 @@ export default function DescargasSatClient({ empresas }) {
                         <td>{b.empresa?.razonSocial}</td>
                         <td>{b.descripcion}</td>
                         <td>
-                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#3b82f6' }} onClick={() => handleViewPDF(b.archivoBase64)}>Revisar e-documento</button>
+                          <button className="btn" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: '#3b82f6' }} disabled={!b.hasFile || loadingPdf} onClick={() => handleViewPDF(b.id, `Buzon_${b.empresa?.razonSocial}`)}>
+                            {loadingPdf ? 'Cargando...' : 'Revisar e-documento'}
+                          </button>
                         </td>
                       </tr>
                     ))}
