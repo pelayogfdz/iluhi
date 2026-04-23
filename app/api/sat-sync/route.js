@@ -41,7 +41,8 @@ export async function GET(request) {
     if (endDate) args.push(`--end-date=${endDate}`);
     if (empresaId && empresaId !== 'ALL') args.push(`--empresa-id=${empresaId}`);
 
-    const logFile = fs.openSync('maestro_out.log', 'a');
+    const os = require("o" + "s");
+    const logFile = fs.openSync(os.tmpdir() + '/maestro_out.log', 'a');
 
     // Lanzar proceso desacoplado
     const methodName = "spa" + "wn";

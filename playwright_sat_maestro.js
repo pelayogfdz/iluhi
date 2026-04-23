@@ -83,7 +83,8 @@ async function loginFIEL(page, url, emp, cerPath, keyPath) {
             const bodyText = await page.innerText('body').catch(()=>"");
             console.log(`No FIEL inputs found. Asumiendo sesion activa temporal. URL: ${currentUrl} | TITLE: ${pageTitle}`);
             console.log(`BODY SNEAK PEEK: ${bodyText.substring(0, 300).replace(/\n/g, ' ')}`);
-            await page.screenshot({ path: `C:\\Users\\barca2\\.gemini\\antigravity\\brain\\bf15c689-1bc9-40eb-ac17-3271f2a2c66d\\debug_loginsat_${Math.floor(Math.random() * 1000)}.png` }).catch(()=>{});
+            const tmpDir = os.tmpdir();
+            await page.screenshot({ path: path.join(tmpDir, `debug_loginsat_${Math.floor(Math.random() * 1000)}.png`) }).catch(()=>{});
             await delay(5000); // Give it time
             return true;
         }
@@ -267,7 +268,7 @@ async function extractAll() {
                             const rDescargas = {};
                             if (recibidos.length > 1) { // 1 because of debugHtml
                                 console.log(`      * Procesando ${recibidos.length - 1} recibidos del ${p.month}/${p.year}`);
-                                await fs.writeFile('sat_table_debug.html', recibidos[0].debugHtml || "No HTML");
+                                await fs.writeFile(path.join(tmpDir, 'sat_table_debug.html'), recibidos[0].debugHtml || "No HTML").catch(()=>{});
                                 console.log(`      * Muestra CFDI:`, JSON.stringify(recibidos[1]));
                                 const rows = pageCfdi.locator('#ctl00_MainContent_PnlResultados table tr');
                                 const rCount = await rows.count();
