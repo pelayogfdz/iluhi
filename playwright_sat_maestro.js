@@ -155,8 +155,8 @@ async function extractAll() {
         console.log(`PROCESANDO EMPRESA (MAESTRO): ${emp.razonSocial} (${emp.rfc})`);
         console.log(`======================================================`);
         
-        const cerPath = path.join(tmpDir, `fiel_maestro_${emp.id}.cer`);
-        const keyPath = path.join(tmpDir, `fiel_maestro_${emp.id}.key`);
+        const cerPath = path.join(tmpDir, `fiel_maestro_${emp.id}_${process.pid}.cer`);
+        const keyPath = path.join(tmpDir, `fiel_maestro_${emp.id}_${process.pid}.key`);
         
         try {
             await fs.writeFile(cerPath, Buffer.from(emp.fielCerBase64.replace(/^data:(.*);base64,/, ''), 'base64'));
@@ -302,7 +302,8 @@ async function extractAll() {
                             for (const cfdi of recibidos) {
                                 if (!cfdi.uuid) continue;
                                 const numTotal = parseFloat(cfdi.total.replace(/[^0-9.-]+/g,"")) || 0;
-                                const dateParsed = cfdi.fechaEmision ? new Date(cfdi.fechaEmision) : new Date();
+                                let dateParsed = cfdi.fechaEmision ? new Date(cfdi.fechaEmision) : new Date();
+                                if (isNaN(dateParsed.getTime())) dateParsed = new Date();
                                 const dataArchivos = rDescargas[cfdi.uuid] || {};
 
                                 await prisma.facturaRecibida.upsert({
@@ -403,7 +404,8 @@ async function extractAll() {
                             for (const cfdi of emitidas) {
                                 if (!cfdi.uuid) continue;
                                 const numTotal = parseFloat(cfdi.total.replace(/[^0-9.-]+/g,"")) || 0;
-                                const dateParsed = cfdi.fechaEmision ? new Date(cfdi.fechaEmision) : new Date();
+                                let dateParsed = cfdi.fechaEmision ? new Date(cfdi.fechaEmision) : new Date();
+                                if (isNaN(dateParsed.getTime())) dateParsed = new Date();
                                 const dataArchivos = eDescargas[cfdi.uuid] || {};
 
                                 await prisma.facturaEmitida.upsert({
