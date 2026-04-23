@@ -17,7 +17,7 @@ console.log("=========================================\n");
 function runBot(arg = null) {
     console.log(`[${new Date().toLocaleString()}] Lanzando secuencia de descarga SAT${arg ? ` con argumento ${arg}` : ''}...`);
     
-    const args = ['playwright_sat_bot.js'];
+    const args = ['playwright_sat_maestro.js'];
     if (arg) args.push(arg);
 
     // Spawn en lugar de exec para poder ver el stream del proceso en tiempo real
@@ -34,7 +34,7 @@ function runBot(arg = null) {
 function runCfdiBot(arg = null) {
     console.log(`[${new Date().toLocaleString()}] Lanzando secuencia de extracción CFDI SAT${arg ? ` con argumento ${arg}` : ''}...`);
     
-    const args = ['playwright_sat_bot_cfdi.js'];
+    const args = ['playwright_sat_maestro.js', '--cfdi-only'];
     if (arg) args.push(arg);
 
     const botProcess = spawn('node', args, {

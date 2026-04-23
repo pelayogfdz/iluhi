@@ -54,7 +54,11 @@ export async function actualizarEmpresa(id, data) {
         smtpPass: data.smtpPass || null,
         plantillaCotizacion: data.plantillaCotizacion || null,
         plantillaOrdenServicio: data.plantillaOrdenServicio || null,
-        plantillaFactura: data.plantillaFactura || null
+        plantillaFactura: data.plantillaFactura || null,
+        encuestaAsunto: data.encuestaAsunto || null,
+        encuestaMensaje: data.encuestaMensaje || null,
+        encuestaEnlace: data.encuestaEnlace || null,
+        googleReviewsUrl: data.googleReviewsUrl || null
       }
     });
     return { success: true };

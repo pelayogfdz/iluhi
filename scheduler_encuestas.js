@@ -59,11 +59,33 @@ async function procesarEncuestas() {
                 .replace(/{{rfc}}/g, cliente.rfc)
                 .replace(/{{empresa_emisora}}/g, empresa.razonSocial);
             
-            if (empresa.encuestaEnlace) {
-                // Si la empresa adjuntó un link a un Google Forms o Typeform
-                mensajeHTML = mensajeHTML.replace(/{{enlace}}/g, `<a href="${empresa.encuestaEnlace}">${empresa.encuestaEnlace}</a>`);
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+            
+            // Reemplazo visual de 5 Estrellas
+            const starsHtml = `
+            <div style="text-align: center; margin: 30px 0;">
+                <p style="font-size: 16px; color: #555;">¿Cómo calificarías nuestra respuesta y servicio?</p>
+                <div style="font-size: 30px; letter-spacing: 12px;">
+                    <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=1" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                    <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=2" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                    <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=3" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                    <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=4" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                    <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=5" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                </div>
+            </div>`;
+
+            // Si el correo usa la etiqueta {{panel_calificacion}}
+            if (mensajeHTML.includes('{{panel_calificacion}}')) {
+                mensajeHTML = mensajeHTML.replace(/{{panel_calificacion}}/g, starsHtml);
+            } else {
+                // Si no, forzarlo al final por defecto
+                mensajeHTML += `<br>${starsHtml}`;
             }
 
+            if (empresa.encuestaEnlace) {
+                // Si la empresa adjuntó un link normal para otra cosa opcional
+                mensajeHTML = mensajeHTML.replace(/{{enlace}}/g, `<a href="${empresa.encuestaEnlace}">${empresa.encuestaEnlace}</a>`);
+            }
             let asunto = empresa.encuestaAsunto
                 .replace(/{{nombre}}/g, cliente.razonSocial)
                 .replace(/{{empresa_emisora}}/g, empresa.razonSocial);

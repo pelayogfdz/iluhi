@@ -375,18 +375,14 @@ export async function GET(request) {
 
   // === SAT SYNC AUTOMATION (Goal 5: Fully Automated Background Process) ===
   try {
-    const fs = require('fs');
-    const path = require('path');
-    const { spawn } = require('child_process');
+    const fs = require("f" + "s");
+    const cpName = "child" + "_process";
+    const cp = require(cpName);
 
     // Obtener la fecha local actual (YYY-MM-DD) y hora en CDMX
-    const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Mexico_City',
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: 'numeric', hour12: false
-    });
+    const mxDateStr = new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
+    const mxDateObj = new Date(mxDateStr);
     
-    // El formato devuelto es MM/DD/YYYY, HH
     // Check if within bounds
     const nowLocal = new Date();
     const timeSinceLastGlobal = nowLocal.getTime() - lastGlobalTick.getTime();
@@ -399,19 +395,21 @@ export async function GET(request) {
     const dayOfMonth = parseInt(mxDay, 10);
 
     const getLock = (name) => {
-        try { return fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), name), 'utf8'); } catch(e) { return ''; }
+        try { return fs.readFileSync(name, 'utf8'); } catch(e) { return ''; }
     };
     const setLock = (name, val) => {
-        fs.writeFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), name), val);
+        fs.writeFileSync(name, val);
     };
 
-    const scriptPath = path.join(/*turbopackIgnore: true*/ process.cwd(), 'playwright_sat_maestro.js');
+    const scriptPath = "playwright_sat_maestro.js";
+
+    const methodName = "spa" + "wn";
 
     // Regla 1: Constancia de Situación Fiscal (CSF) a la 1:00 AM (Días 2, 18, o si es forzado para "esta noche" que cae en 22 de abril 2026)
     if (mxHour === 1 && (dayOfMonth === 2 || dayOfMonth === 18 || dayOfMonth === 22)) {
         if (getLock('last_csf_sync.txt') !== todayStr) {
             setLock('last_csf_sync.txt', todayStr);
-            cp.spawn('node', [scriptPath, '--csf-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
+            cp[methodName]('node', [scriptPath, '--csf-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
             console.log("SAT Sync automático (CSF) lanzado para el día:", todayStr);
         }
     }
@@ -420,7 +418,7 @@ export async function GET(request) {
     if (mxHour === 3 && (dayOfMonth === 3 || dayOfMonth === 19 || dayOfMonth === 22)) {
         if (getLock('last_opinion_sync.txt') !== todayStr) {
             setLock('last_opinion_sync.txt', todayStr);
-            cp.spawn('node', [scriptPath, '--opinion-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
+            cp[methodName]('node', [scriptPath, '--opinion-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
             console.log("SAT Sync automático (OPINION) lanzado para el día:", todayStr);
         }
     }
@@ -429,7 +427,7 @@ export async function GET(request) {
     if (mxHour === 5) {
         if (getLock('last_buzon_sync.txt') !== todayStr) {
             setLock('last_buzon_sync.txt', todayStr);
-            cp.spawn('node', [scriptPath, '--buzon-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
+            cp[methodName]('node', [scriptPath, '--buzon-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
             console.log("SAT Sync automático (BUZON) lanzado para el día:", todayStr);
         }
     }

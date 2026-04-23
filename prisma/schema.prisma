@@ -79,7 +79,8 @@ model Empresa {
   // Modulo Automatizacion de Encuestas de Satisfaccion (Post-Factura)
   encuestaAsunto         String?  // Asunto del correo enviado a las 24h
   encuestaMensaje        String?  // Texto del correo (soporta {{nombre}})
-  encuestaEnlace         String?  // URL del forms de satisfaccion
+  encuestaEnlace         String?  // URL del forms de satisfaccion (Typeform, soporte)
+  googleReviewsUrl       String?  // URL directo de Google Maps Reviews
   
   // Plantillas de Correo
   plantillaCotizacion    String?
@@ -299,6 +300,7 @@ model FacturaEmitida {
   pdfBase64        String?
   
   encuestaEnviada  Boolean  @default(false)
+  calificacionServicio Int?
   
   empresaId        String
   empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)

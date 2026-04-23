@@ -25,16 +25,19 @@
     "pdfmake": "^0.3.7",
     "pkijs": "^3.4.0",
     "playwright": "^1.59.1",
+    "playwright-extra": "^4.3.6",
     "puppeteer": "^24.42.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "tesseract.js": "^7.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "pm2": "^6.0.14",
     "prisma": "^6.19.3"
   }
 }

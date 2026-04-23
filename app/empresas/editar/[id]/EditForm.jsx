@@ -31,7 +31,11 @@ export default function EditForm({ empresa }) {
     smtpPass: empresa.smtpPass || '',
     plantillaCotizacion: empresa.plantillaCotizacion || '',
     plantillaOrdenServicio: empresa.plantillaOrdenServicio || '',
-    plantillaFactura: empresa.plantillaFactura || ''
+    plantillaFactura: empresa.plantillaFactura || '',
+    encuestaAsunto: empresa.encuestaAsunto || '',
+    encuestaMensaje: empresa.encuestaMensaje || '',
+    encuestaEnlace: empresa.encuestaEnlace || '',
+    googleReviewsUrl: empresa.googleReviewsUrl || ''
   })
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -230,6 +234,29 @@ export default function EditForm({ empresa }) {
             <textarea name="plantillaFactura" value={formData.plantillaFactura} onChange={handleChange} className="form-control" rows="4" placeholder="Ej. Adjuntamos el XML y PDF de la factura vigente..." />
           </div>
         </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+        <h3 style={{ color: 'var(--primary)' }}>⭐ Sistema Growth: Encuestas Inteligentes (T+24 Hrs)</h3>
+        <p style={{ color: 'var(--text-secondary)' }}>Configura aquí la encuesta NPS automática a las 24 hrs. Puedes inyectar en el contenido variables como <strong>{`{{cliente}}`}</strong>.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label>Asunto del Correo de Encuesta</label>
+            <input type="text" name="encuestaAsunto" value={formData.encuestaAsunto} onChange={handleChange} className="form-control" placeholder="Ej. ¿Cómo calificarías tu experiencia reciente?" />
+          </div>
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label>Mensaje HTML o Texto (Encuesta)</label>
+            <textarea name="encuestaMensaje" value={formData.encuestaMensaje} onChange={handleChange} className="form-control" rows="4" placeholder="Ej. ¡Hola {{cliente}}! Gracias por tu confianza, por favor déjanos tu retroalimentación..." />
+          </div>
+          <div className="form-group">
+            <label>URL Casos Soporte (Para 1-3 estrellas)</label>
+            <input type="url" name="encuestaEnlace" value={formData.encuestaEnlace} onChange={handleChange} className="form-control" placeholder="Ej. https://form.typeform.com/..." />
+          </div>
+          <div className="form-group">
+            <label>Google Maps Reviews (Para 4-5 estrellas)</label>
+            <input type="url" name="googleReviewsUrl" value={formData.googleReviewsUrl} onChange={handleChange} className="form-control" placeholder="Ej. https://g.page/r/.../review" />
+          </div>
+        </div>
+
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
            <button type="submit" disabled={cargando} className="btn" style={{ flex: 1 }}>
