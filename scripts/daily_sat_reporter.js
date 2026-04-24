@@ -50,11 +50,11 @@ async function generarYEnviarReporte() {
 
     // Avisos de Buzón
     const buzones = await prisma.documentoSat.findMany({
-        where: { tipo: 'BUZON', fecha: { gte: ayer } },
+        where: { tipo: 'BUZON', createdAt: { gte: ayer } },
         include: { empresa: { select: { razonSocial: true, rfc: true } } }
     });
 
-    const buzonesConAviso = buzones.filter(b => b.descripcion.includes('AVISO PENDIENTE'));
+    const buzonesConAviso = buzones.filter(b => b.descripcion?.includes('AVISO PENDIENTE'));
 
     // 4. Construir HTML del correo
     let htmlContent = `
