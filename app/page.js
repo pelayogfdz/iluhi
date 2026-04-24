@@ -65,8 +65,14 @@ export default function Dashboard() {
         <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>Estado del Motor de Timbrado (PAC)</h3>
         <p>
           La estructura Lógica hacia Facturapi está completada al 100%. El sistema está configurado en 
-          <span style={{ color: 'yellow', marginLeft: '5px', fontWeight: 'bold' }}>MODO PRUEBAS (Sandbox Dummy)</span>.
-          Para empezar a timbrar verdaderamente en el SAT, actualiza tu SDK con tu Secret Text Privado.
+          {process.env.FACTURAPI_LIVE_KEY?.startsWith('sk_live_') ? (
+            <span style={{ color: '#10b981', marginLeft: '5px', fontWeight: 'bold' }}>MODO PRODUCCIÓN (Live)</span>
+          ) : (
+            <span style={{ color: 'yellow', marginLeft: '5px', fontWeight: 'bold' }}>MODO PRUEBAS (Sandbox Dummy)</span>
+          )}.
+          {process.env.FACTURAPI_LIVE_KEY?.startsWith('sk_live_') 
+            ? ' Estás emitiendo CFDIs con valor fiscal legal ante el SAT.' 
+            : ' Para empezar a timbrar verdaderamente en el SAT, actualiza tu SDK con tu Secret Text Privado.'}
         </p>
       </div>
 
