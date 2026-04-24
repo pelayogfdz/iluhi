@@ -100,10 +100,11 @@ async function generarYEnviarReporte() {
     `;
 
     // 5. Enviar el correo
-    console.log("Enviando correo a pfernadnez@seit.com.mx...");
+    const emailDestino = 'pfernandez@seit.com.mx';
+    console.log(`Enviando correo a ${emailDestino}...`);
     await transporter.sendMail({
         from: `"Iluhi Bot SAT" <${empresaSmtp.smtpUser}>`,
-        to: 'pfernadnez@seit.com.mx',
+        to: emailDestino,
         subject: `[Iluhi] Reporte Diario Sincronización SAT - ${ahora.toLocaleDateString()}`,
         html: htmlContent
     });
