@@ -141,19 +141,21 @@ export async function subirCSD(empresaId, cerBase64, keyBase64, passwordCsd) {
 export async function subirLogo(formData) {
   try {
     const logoFile = formData.get('logoFile');
+    const empresaId = formData.get('empresaId');
     const userKey = process.env.FACTURAPI_USER_KEY;
     
     if (!logoFile) throw new Error("Falta el archivo de logo");
+    if (!empresaId) throw new Error("No se especificó la empresa");
     if (!userKey) throw new Error("Debes configurar la variable FACTURAPI_USER_KEY (Llave Secreta de Usuario/SaaS) en Netlify / .env local para poder subir logotipos via API. Por mientras, puedes subir el logotipo manualmente desde tu Dashboard en facturapi.io");
 
-    // 1. Obtener la organization a la que pertenecemos
-    const org = await facturapi.organizations.me();
-    
+    const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } });
+    if (!empresa || !empresa.facturapiId) throw new Error("La empresa no está vinculada a Facturapi. Actualiza su RFC primero.");
+
     const FacturapiClient = require('facturapi').default;
     const userFacturapi = new FacturapiClient(userKey);
 
     // 2. Subir archivo al organization id específico (usando facturapi User Key)
-    await userFacturapi.organizations.uploadLogo(org.id, logoFile);
+    await userFacturapi.organizations.uploadLogo(empresa.facturapiId, logoFile);
 
     return { success: true };
   } catch (error) {

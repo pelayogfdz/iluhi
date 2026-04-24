@@ -39,7 +39,7 @@ export default async function EditarEmpresaPage({ params }) {
       <EditForm empresa={empresa} />
       <CsdUploader empresa={empresa} />
       <FielUploader empresa={empresaData} />
-      <LogoUploader />
+      <LogoUploader empresaId={empresa.id} />
       <SociosPanel empresaId={empresa.id} />
     </div>
   )

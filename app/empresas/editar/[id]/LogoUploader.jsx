@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { subirLogo } from '../../acciones'
 import { useRouter } from 'next/navigation'
 
-export default function LogoUploader() {
+export default function LogoUploader({ empresaId }) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
@@ -44,6 +44,7 @@ export default function LogoUploader() {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div className="form-group">
           <label htmlFor="logoFile">Archivo de Imagen (PNG, JPG)</label>
+          <input type="hidden" name="empresaId" value={empresaId} />
           <input type="file" id="logoFile" name="logoFile" accept=".png,.jpg,.jpeg" className="form-control" required style={{ background: 'rgba(0,0,0,0.2)' }} />
         </div>
 
