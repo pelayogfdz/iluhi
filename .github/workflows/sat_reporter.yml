@@ -1,0 +1,30 @@
+name: SAT Daily Reporter
+
+on:
+  schedule:
+    # 8:00 AM CST (Central Standard Time) = 14:00 UTC (2:00 PM UTC)
+    - cron: '0 14 * * *'
+  workflow_dispatch: # Permite correrlo manualmente desde la web
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Run SAT Reporter
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      run: node scripts/daily_sat_reporter.js

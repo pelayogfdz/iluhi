@@ -586,14 +586,22 @@ async function extractAll() {
                 await loginFIEL(pageFiscal, ssoUrlBuzon, emp, cerPath, keyPath);
                 await delay(5000);
                 
+                // Detectar si hay avisos o mensajes pendientes
+                const tieneAvisos = await pageFiscal.evaluate(() => {
+                    const texto = document.body.innerText.toLowerCase();
+                    return texto.includes('no leído') || texto.includes('pendientes') || texto.includes('tienes nuevos mensajes');
+                }).catch(() => false);
+
+                const descripcionBuzon = tieneAvisos ? 'Bandeja Notificaciones (AVISO PENDIENTE)' : 'Bandeja Notificaciones';
+
                 const pdfBuzonName = `Buzon_Notificaciones_${emp.rfc}_${Date.now()}.pdf`;
                 const docBuzonPath = path.join(tmpDir, pdfBuzonName);
                 await pageFiscal.pdf({ path: docBuzonPath, format: 'A4', printBackground: true });
                 
-                console.log("   -> Buzón descargado (PDF web capture)!");
+                console.log(`   -> Buzón descargado (PDF web capture). Avisos detectados: ${tieneAvisos}`);
                 const buffer = await fs.readFile(docBuzonPath);
                 await prisma.documentoSat.create({
-                    data: { tipo: 'BUZON', descripcion: 'Bandeja Notificaciones', archivoBase64: 'data:application/pdf;base64,' + buffer.toString('base64'), empresaId: emp.id }
+                    data: { tipo: 'BUZON', descripcion: descripcionBuzon, archivoBase64: 'data:application/pdf;base64,' + buffer.toString('base64'), empresaId: emp.id }
                 });
                 await supabaseClient.storage.from('documentos_sat').upload(`empresa_${emp.rfc || "UNKNOWN"}/${pdfBuzonName}`, buffer, { upsert: true, contentType: 'application/pdf' });
                 

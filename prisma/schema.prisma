@@ -95,6 +95,7 @@ model Empresa {
   facturasEmitidas FacturaEmitida[]
   socios       Socio[]
   documentosSat DocumentoSat[]
+  satSyncLogs   SatSyncLog[]
   archivosEmpresa ArchivoEmpresa[]
   
   createdAt    DateTime   @default(now())
@@ -264,6 +265,17 @@ model DocumentoSat {
   empresaId        String
   empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   
+  createdAt        DateTime @default(now())
+}
+
+model SatSyncLog {
+  id               String   @id @default(uuid())
+  empresaId        String
+  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo             String   // "CFDI", "OPINION", "CSF", "BUZON"
+  status           String   // "EXITO", "ERROR"
+  errorMsg         String?  @db.Text
+  detalles         String?  @db.Text
   createdAt        DateTime @default(now())
 }
 
