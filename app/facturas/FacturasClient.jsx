@@ -6,7 +6,8 @@ import { saveAs } from 'file-saver'
 import { useRouter, useSearchParams } from 'next/navigation'
 import BotonCancelar from './BotonCancelar'
 import BotonComplemento from './BotonComplemento'
-import { cancelarFactura, emitirComplementoPago } from './acciones'
+import BotonNotaCredito from './BotonNotaCredito'
+import { cancelarFactura, emitirComplementoPago, emitirNotaCredito } from './acciones'
 
 export default function FacturasClient({ facturasInitial, empresas }) {
   const router = useRouter()
@@ -106,10 +107,17 @@ export default function FacturasClient({ facturasInitial, empresas }) {
      router.refresh();
   }
 
-  const handleComplement = async (id, monto, formaPago) => {
-     const res = await emitirComplementoPago(id, monto, formaPago);
+  const handleComplement = async (id, monto, formaPago, fechaPago, moneda, tipoCambio, numOperacion) => {
+     const res = await emitirComplementoPago(id, monto, formaPago, fechaPago, moneda, tipoCambio, numOperacion);
      if(!res.success) throw new Error(res.error);
      alert("Complemento REP timbrado exitosamente.");
+     router.refresh();
+  }
+
+  const handleNotaCredito = async (id, monto, formaPago, usoCfdi, concepto) => {
+     const res = await emitirNotaCredito(id, monto, formaPago, usoCfdi, concepto);
+     if(!res.success) throw new Error(res.error);
+     alert("Nota de Crédito timbrada exitosamente.");
      router.refresh();
   }
 
@@ -201,6 +209,7 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                 </td>
                 <td>
                   <BotonComplemento factura={fac} onComplement={handleComplement} />
+                  <BotonNotaCredito factura={fac} onEmit={handleNotaCredito} />
                 </td>
                 <td>{new Date(fac.fechaEmision).toLocaleDateString()}</td>
                 <td>${fac.total.toFixed(2)}</td>

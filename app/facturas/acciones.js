@@ -24,9 +24,9 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     if (!cliente) return { success: false, error: 'Cliente receptor no encontrado.' }
 
     // 1.5 Auto-Guardado de Productos Al Vuelo
-    // Si la descripción del concepto fue alterada en el formulario y no existe en el catálogo, lo creamos.
+    // Si la descripciÃ³n del concepto fue alterada en el formulario y no existe en el catÃ¡logo, lo creamos.
     for (const i of items) {
-      if (i.id) { // Solo los que se heredaron del catálogo
+      if (i.id) { // Solo los que se heredaron del catÃ¡logo
         const existe = await prisma.producto.findFirst({
            where: { empresaId: empresaId, descripcion: i.descripcion }
         });
@@ -49,7 +49,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
       }
     }
 
-    // 2. Transmutación al Motor JSON de Facturapi
+    // 2. TransmutaciÃ³n al Motor JSON de Facturapi
     const facturaPayload = {
       customer: {
         legal_name: cliente.razonSocial,
@@ -105,7 +105,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
       }
     } else {
       console.log("[SIMULACION PAC] No hay llave válida de Facturapi activa. Omitiendo la red...");
-      receipt = { id: 'mock_uuid_123', status: 'valid', created_at: new Date() };
+      receipt = { id: 'mock_uuid_' + Math.floor(Math.random() * 1000000), status: 'valid', created_at: new Date() };
       fallbackStatus = 'Borrador (Falta LLave)';
     }
 
@@ -129,7 +129,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
       }
     });
 
-    // 5. Encolar tareas de envío de correo en la Base de Datos
+    // 5. Encolar tareas de envÃ­o de correo en la Base de Datos
     if (cliente.correoDestino) {
        const now = new Date();
        await prisma.emailTask.createMany({
@@ -144,7 +144,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     return { success: true, facturaId: newFactura.id, status: fallbackStatus };
   } catch (error) {
     console.error("Error catastrofico elaborando CFDI: ", error);
-    return { success: false, error: 'Excepción del Servidor: ' + error.message };
+    return { success: false, error: 'ExcepciÃ³n del Servidor: ' + error.message };
   }
 }
 
@@ -180,7 +180,7 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
   }
 }
 
-export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago) {
+export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago, moneda = 'MXN', tipoCambio = 1, numOperacion = '') {
   try {
     const fac = await prisma.factura.findUnique({ 
         where: { id: facturaId },
@@ -193,7 +193,26 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
     const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
 
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
+      const pagoData = {
+        payment_form: formaPago,
+        related_documents: [
+          {
+            document: fac.uuid,
+            amount: parseFloat(montoAbonado),
+            installment: 1 // Facturapi can infer installment, or we hardcode 1 for now if we don't track history locally. It's optional for Facturapi v2.
+          }
+        ]
+      };
+
+      if (moneda && moneda !== 'MXN') {
+         pagoData.currency = moneda;
+         pagoData.exchange = parseFloat(tipoCambio);
+      }
+
       const payload = {
+        type: 'P',
+        customer: fac.clienteId || undefined, // Not strictly necessary if using related_documents. Facturapi usually infers it or we might need it. Wait, the old payload used `receipts.create`, which uses `items`.
+        // Let's preserve the `receipts.create` structure exactly as before but with added properties
         payment_form: formaPago,
         items: [
           {
@@ -202,15 +221,27 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
           }
         ]
       };
+
+      if (moneda && moneda !== 'MXN') {
+         payload.currency = moneda;
+         payload.exchange = parseFloat(tipoCambio);
+      }
       
       if (fechaPago) {
+        // Aseguramos formato ISO
         payload.date = new Date(fechaPago).toISOString();
+      }
+
+      // Add operation number (requires custom facturapi payload mapping? wait, Receipts in facturapi might not have num_operacion in the root, it might be `external_id` or we can ignore it if unsupported in receipts.create)
+      // Facturapi receipts.create does support `folio_number`, `branch`, but maybe not num_operacion natively in the simple wrapper. We'll pass `external_id` as the operacion.
+      if (numOperacion) {
+        payload.external_id = numOperacion;
       }
 
       const tenantFacturapi = new facturapi.constructor(activeTenantKey);
       await tenantFacturapi.receipts.create(payload);
     } else {
-       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'}`);
+       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'} Moneda: ${moneda}`);
     }
 
     await prisma.factura.update({
@@ -224,3 +255,72 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
     return { success: false, error: error.message };
   }
 }
+
+export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, concepto) {
+  try {
+    const fac = await prisma.factura.findUnique({ 
+        where: { id: facturaId },
+        include: { empresa: true, cliente: true }
+    });
+    if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
+
+    const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+
+    let receipt;
+    let fallbackStatus = 'Nota de Crédito (Simulada)';
+
+    if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
+      const payload = {
+        type: "E", // Egreso
+        customer: fac.clienteId ? {
+          legal_name: fac.cliente.razonSocial,
+          tax_id: fac.cliente.rfc,
+          tax_system: fac.cliente.regimen,
+          email: fac.cliente.correoDestino || '',
+          address: {
+            zip: fac.cliente.codigoPostal
+          }
+        } : undefined,
+        payment_form: formaPago,
+        payment_method: "PUE", // Notas de crédito suelen ser PUE
+        use: usoCfdi,
+        items: [
+          {
+            product: {
+              description: concepto || "Devolución o descuento",
+              product_key: "84111506", // Servicios de facturación / devoluciones genérico
+              price: parseFloat(monto),
+              unit_key: "ACT" // Actividad
+            },
+            quantity: 1
+          }
+        ],
+        related_documents: [
+          {
+            relationship: "01", // Nota de crédito de los documentos relacionados
+            document: fac.uuid
+          }
+        ]
+      };
+
+      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+      receipt = await tenantFacturapi.invoices.create(payload);
+      fallbackStatus = 'Nota de Crédito Generada';
+    } else {
+       console.log(`[SIMULACION] Emitiendo Nota de Crédito a factura ${fac.uuid} por $${monto}`);
+       receipt = { id: 'mock_egreso_' + Math.floor(Math.random() * 1000) };
+    }
+
+    await prisma.factura.update({
+      where: { id: facturaId },
+      data: { estatus: fallbackStatus } 
+    });
+
+    return { success: true, egresoId: receipt.id };
+  } catch(error) {
+    console.error("Error al emitir Nota de Crédito: ", error);
+    return { success: false, error: error.message };
+  }
+}
+
+

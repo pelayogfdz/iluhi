@@ -7,6 +7,9 @@ export default function BotonComplemento({ factura, onComplement }) {
   const [monto, setMonto] = useState(factura.total)
   const [formaPago, setFormaPago] = useState('03') // 03 Transferencia by default
   const [fechaPago, setFechaPago] = useState('')
+  const [moneda, setMoneda] = useState('MXN')
+  const [tipoCambio, setTipoCambio] = useState(1)
+  const [numOperacion, setNumOperacion] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Solo mostrar para PPD y q tenga ID (esta timbrada), si es PUE no lleva complemento.
@@ -22,7 +25,7 @@ export default function BotonComplemento({ factura, onComplement }) {
     }
     setLoading(true)
     try {
-      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago)
+      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago, moneda, parseFloat(tipoCambio), numOperacion)
       setOpen(false)
     } catch (err) {
       alert(err.message)
@@ -66,7 +69,7 @@ export default function BotonComplemento({ factura, onComplement }) {
              </div>
 
              <div style={{ marginBottom: '1rem' }}>
-               <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Monto a Liquidar (MXN)</label>
+               <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Monto a Liquidar</label>
                <input 
                  type="number" 
                  step="0.01"
@@ -75,6 +78,40 @@ export default function BotonComplemento({ factura, onComplement }) {
                  onChange={(e) => setMonto(e.target.value)} 
                />
                <small style={{ color: 'var(--text-secondary)' }}>Monto total CFDI: ${factura.total.toFixed(2)}</small>
+             </div>
+
+             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+               <div style={{ flex: 1 }}>
+                 <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Moneda</label>
+                 <select className="input" value={moneda} onChange={(e) => setMoneda(e.target.value)}>
+                   <option value="MXN">MXN - Peso Mexicano</option>
+                   <option value="USD">USD - Dólar Estadounidense</option>
+                   <option value="EUR">EUR - Euro</option>
+                 </select>
+               </div>
+               {moneda !== 'MXN' && (
+                 <div style={{ flex: 1 }}>
+                   <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Tipo de Cambio</label>
+                   <input 
+                     type="number" 
+                     step="0.0001"
+                     className="input" 
+                     value={tipoCambio} 
+                     onChange={(e) => setTipoCambio(e.target.value)} 
+                   />
+                 </div>
+               )}
+             </div>
+
+             <div style={{ marginBottom: '1rem' }}>
+               <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Número de Operación (Opcional)</label>
+               <input 
+                 type="text" 
+                 className="input" 
+                 placeholder="Ej. 123456789"
+                 value={numOperacion} 
+                 onChange={(e) => setNumOperacion(e.target.value)} 
+               />
              </div>
 
              <div style={{ marginBottom: '1rem' }}>
