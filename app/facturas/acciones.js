@@ -92,7 +92,10 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     let fallbackStatus = 'Borrador';
 
     // 3. Ejecutar Disparo al PAC (Multi-Tenant Facturapi engine)
-    const activeTenantKey = empresa.facturapiLiveKey || empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+    // Si no hay CSD cargado, Facturapi rechazará el timbrado Live. Hacemos fallback automático a Test Mode.
+    const activeTenantKey = (empresa.cerPath && empresa.facturapiLiveKey) 
+      ? empresa.facturapiLiveKey 
+      : (empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
     
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       try {
@@ -100,8 +103,21 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         receipt = await tenantFacturapi.invoices.create(facturaPayload);
         fallbackStatus = 'Timbrada';
       } catch (pacError) {
-        console.error("Fallo de API del PAC: ", pacError);
-        return { success: false, error: 'Error del SAT/PAC: ' + (pacError.message || JSON.stringify(pacError)) }
+        if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
+          console.log("Facturapi rechazó Live por falta de CSD real. Intentando con Test Key...");
+          const fallbackKey = empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+          const testFacturapi = new facturapi.constructor(fallbackKey);
+          try {
+            receipt = await testFacturapi.invoices.create(facturaPayload);
+            fallbackStatus = 'Timbrada (Test Fallback)';
+          } catch(fallbackErr) {
+             console.error("Fallo de API del PAC (Fallback Test): ", fallbackErr);
+             return { success: false, error: 'Error del SAT/PAC: ' + (fallbackErr.message || JSON.stringify(fallbackErr)) }
+          }
+        } else {
+          console.error("Fallo de API del PAC: ", pacError);
+          return { success: false, error: 'Error del SAT/PAC: ' + (pacError.message || JSON.stringify(pacError)) }
+        }
       }
     } else {
       console.log("[SIMULACION PAC] No hay llave válida de Facturapi activa. Omitiendo la red...");
@@ -156,17 +172,27 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
     });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
 
-    const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+      ? fac.empresa.facturapiLiveKey 
+      : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       const payload = { motive: motivo };
       if (motivo === '01') payload.substitution = uuidSustitucion;
       
-      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
-      await tenantFacturapi.invoices.cancel(fac.uuid, payload);
-    } else {
-       console.log(`[SIMULACION] Cancelando factura ${fac.uuid} con motivo ${motivo}`);
-    }
+      try {
+        const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+        await tenantFacturapi.invoices.cancel(fac.uuid, payload);
+      } catch (pacError) {
+        if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
+          console.log("Facturapi rechazó Live por falta de CSD real. Cancelando con Test Key...");
+          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+          const testFacturapi = new facturapi.constructor(fallbackKey);
+          await testFacturapi.invoices.cancel(fac.uuid, payload);
+        } else {
+          throw pacError;
+        }
+      }
 
     await prisma.factura.update({
       where: { id: facturaId },
@@ -190,59 +216,58 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
     
     if (fac.metodoPago !== 'PPD') return { success: false, error: 'Solo facturas PPD admiten complementos.' }
 
-    const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+      ? fac.empresa.facturapiLiveKey 
+      : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
-      const pagoData = {
-        payment_form: formaPago,
-        related_documents: [
-          {
-            document: fac.uuid,
-            amount: parseFloat(montoAbonado),
-            installment: 1 // Facturapi can infer installment, or we hardcode 1 for now if we don't track history locally. It's optional for Facturapi v2.
-          }
-        ]
-      };
-
-      if (moneda && moneda !== 'MXN') {
-         pagoData.currency = moneda;
-         pagoData.exchange = parseFloat(tipoCambio);
-      }
-
       const payload = {
         type: 'P',
-        customer: fac.clienteId || undefined, // Not strictly necessary if using related_documents. Facturapi usually infers it or we might need it. Wait, the old payload used `receipts.create`, which uses `items`.
-        // Let's preserve the `receipts.create` structure exactly as before but with added properties
-        payment_form: formaPago,
-        items: [
+        customer: fac.clienteId ? {
+          legal_name: fac.cliente?.razonSocial || 'Público General',
+          tax_id: fac.cliente?.rfc || 'XAXX010101000',
+          tax_system: fac.cliente?.regimen || '616',
+          email: fac.cliente?.correoDestino || '',
+          address: {
+            zip: fac.cliente?.codigoPostal || '00000'
+          }
+        } : undefined,
+        complements: [
           {
-            invoice: fac.uuid,
-            amount: parseFloat(montoAbonado)
+            type: 'pago',
+            data: [
+              {
+                payment_form: formaPago,
+                date: fechaPago ? new Date(fechaPago).toISOString() : new Date().toISOString(),
+                currency: moneda || 'MXN',
+                exchange: parseFloat(tipoCambio) || 1,
+                numOperacion: numOperacion || undefined,
+                related_documents: [
+                  {
+                    document: fac.uuid,
+                    amount: parseFloat(montoAbonado),
+                    installment: 1
+                  }
+                ]
+              }
+            ]
           }
         ]
       };
 
-      if (moneda && moneda !== 'MXN') {
-         payload.currency = moneda;
-         payload.exchange = parseFloat(tipoCambio);
+      try {
+        const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+        await tenantFacturapi.invoices.create(payload);
+      } catch (pacError) {
+        if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
+          console.log("Facturapi rechazó Live por falta de CSD real. Emitiendo Complemento con Test Key...");
+          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+          const testFacturapi = new facturapi.constructor(fallbackKey);
+          await testFacturapi.invoices.create(payload);
+        } else {
+          throw pacError;
+        }
       }
-      
-      if (fechaPago) {
-        // Aseguramos formato ISO
-        payload.date = new Date(fechaPago).toISOString();
-      }
-
-      // Add operation number (requires custom facturapi payload mapping? wait, Receipts in facturapi might not have num_operacion in the root, it might be `external_id` or we can ignore it if unsupported in receipts.create)
-      // Facturapi receipts.create does support `folio_number`, `branch`, but maybe not num_operacion natively in the simple wrapper. We'll pass `external_id` as the operacion.
-      if (numOperacion) {
-        payload.external_id = numOperacion;
-      }
-
-      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
-      await tenantFacturapi.receipts.create(payload);
-    } else {
-       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'} Moneda: ${moneda}`);
-    }
 
     await prisma.factura.update({
       where: { id: facturaId },
@@ -264,7 +289,9 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
     });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
 
-    const activeTenantKey = fac.empresa.facturapiLiveKey || fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+      ? fac.empresa.facturapiLiveKey 
+      : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
     let receipt;
     let fallbackStatus = 'Nota de Crédito (Simulada)';
@@ -298,7 +325,7 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
         related_documents: [
           {
             relationship: "01", // Nota de crédito de los documentos relacionados
-            document: fac.uuid
+            documents: [fac.uuid]
           }
         ]
       };

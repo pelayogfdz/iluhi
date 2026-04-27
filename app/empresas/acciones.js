@@ -109,17 +109,19 @@ export async function subirCSD(empresaId, cerBase64, keyBase64, passwordCsd) {
     
     const empr = await prisma.empresa.findUnique({ where: { id: empresaId } });
 
-    // Sincronizar CSD con Facturapi
+    // Sincronizar CSD con Facturapi obligatoriamente
     if (empr && empr.facturapiId && process.env.FACTURAPI_USER_KEY) {
+        const FacturapiClient = require('facturapi').default;
+        const facturapiAdmin = new FacturapiClient(process.env.FACTURAPI_USER_KEY);
         try {
-            const FacturapiClient = require('facturapi').default;
-            const facturapiAdmin = new FacturapiClient(process.env.FACTURAPI_USER_KEY);
             await facturapiAdmin.organizations.uploadCertificate(empr.facturapiId, cerBuffer, keyBuffer, passwordCsd);
             console.log("CSD Sincronizado exitosamente con Facturapi Tenant: " + empr.facturapiId);
         } catch(fErr) {
-            console.error("No se pudo cargar CSD en Facturapi:", fErr.message);
-            // No bloqueamos el flujo, pero queda reporte. Podría lanzarse el error según preferencia de negocio.
+            console.error("Error devuelto por Facturapi al cargar CSD:", fErr);
+            throw new Error("Facturapi rechazó el Certificado: " + (fErr.message || JSON.stringify(fErr)));
         }
+    } else {
+        throw new Error("No se pudo sincronizar con Facturapi: Falta ID de la organización o User Key.");
     }
 
     await prisma.empresa.update({

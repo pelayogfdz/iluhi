@@ -20,9 +20,19 @@ async function createEmpresa(formData) {
   try {
     const org = await facturapi.organizations.create({ name: razonSocial });
     facturapiId = org.id;
-    facturapiLiveKey = org.liveApiKey;
-    facturapiTestKey = org.testApiKey;
     console.log("Organización Creada en Facturapi:", org.id);
+
+    // En Facturapi API v2, las llaves no se devuelven en la creación de la organización por seguridad.
+    // Debemos renovarlas explícitamente para obtener el secreto inicial y guardarlo.
+    try {
+      const liveKeyStr = await facturapi.organizations.renewLiveApiKey(org.id);
+      const testKeyStr = await facturapi.organizations.renewTestApiKey(org.id);
+      facturapiLiveKey = liveKeyStr;
+      facturapiTestKey = testKeyStr;
+      console.log("Llaves API renovadas exitosamente para el nuevo tenant.");
+    } catch (keyErr) {
+      console.error("Error renovando llaves API del tenant:", keyErr);
+    }
 
     // Completamos la información Legal (Crucial para timbrar al 100%)
     await facturapi.organizations.updateLegal(org.id, {

@@ -162,19 +162,24 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Forma Pago</label>
-                  <select className="form-control" value={formaPago} onChange={e => setFormaPago(e.target.value)} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <option value="03">03 - Transferencia Electrónica</option>
-                    <option value="01">01 - Efectivo</option>
-                    <option value="04">04 - Tarjeta Crédito</option>
-                    <option value="99">99 - Por definir</option>
+                  <label>Método de Pago</label>
+                  <select className="form-control" value={metodoPago} onChange={e => {
+                    const val = e.target.value;
+                    setMetodoPago(val);
+                    if (val === 'PPD') setFormaPago('99');
+                    else if (val === 'PUE' && formaPago === '99') setFormaPago('03'); // Fallback to Transferencia si estaba en 99
+                  }} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <option value="PUE">PUE - Pago en Una Sola Exhibición</option>
+                    <option value="PPD">PPD - Pago en Parcialidades / Diferido</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Método Pago</label>
-                  <select className="form-control" value={metodoPago} onChange={e => setMetodoPago(e.target.value)} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                    <option value="PUE">Pago en Una Sola Exhibición</option>
-                    <option value="PPD">Pago en Parcialidades / Diferido</option>
+                  <label>Forma de Pago</label>
+                  <select className="form-control" value={formaPago} onChange={e => setFormaPago(e.target.value)} disabled={metodoPago === 'PPD'} style={{ backgroundColor: 'rgba(0,0,0,0.5)', opacity: metodoPago === 'PPD' ? 0.6 : 1 }}>
+                    <option value="03">03 - Transferencia Electrónica</option>
+                    <option value="01">01 - Efectivo</option>
+                    <option value="04">04 - Tarjeta Crédito</option>
+                    <option value="99">99 - Por definir (Obligatorio para PPD)</option>
                   </select>
                 </div>
              </div>
@@ -192,22 +197,38 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
 
           <div>
             <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>3. Conceptos (El Carrito)</h3>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)' }}>
                 <div className="form-group" style={{ flex: '1 1 300px' }}>
-                  <label>Catálogo de Productos</label>
+                  <label style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Buscar Producto o Servicio</label>
                   <ProductSelector 
                      options={productosFiltrados} 
                      value={tempProductoId} 
                      onChange={setTempProductoId} 
                      disabled={!empresaId} 
-                     placeholder="Añade un producto al carrito... (Teclea para buscar)"
+                     placeholder="🔍 Teclea para buscar en tu catálogo..."
                   />
                 </div>
-                <div className="form-group" style={{ flex: '1 1 100px' }}>
+                <div className="form-group" style={{ flex: '0 1 120px' }}>
                   <label>Cantidad</label>
-                  <input type="number" step="0.01" min="0.01" className="form-control" value={tempCantidad} onChange={e => setTempCantidad(e.target.value)} disabled={!tempProductoId} />
+                  <input 
+                     type="number" step="0.01" min="0.01" className="form-control" 
+                     value={tempCantidad} onChange={e => setTempCantidad(e.target.value)} 
+                     onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); handleAgregarConcepto(); } }}
+                     disabled={!tempProductoId} 
+                     style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}
+                  />
                 </div>
-                <button type="button" className="btn" onClick={handleAgregarConcepto} disabled={!tempProductoId} style={{ flex: '1 1 150px' }}>+ Anexar</button>
+                <button 
+                  type="button" 
+                  className="btn" 
+                  onClick={handleAgregarConcepto} 
+                  disabled={!tempProductoId} 
+                  style={{ flex: '0 1 180px', height: '48px', backgroundColor: 'var(--accent)', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', transition: 'all 0.2s ease' }}
+                  onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  + Agregar al Ticket
+                </button>
             </div>
             
             {/* Tabla del Carrito */}
