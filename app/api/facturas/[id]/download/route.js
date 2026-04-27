@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
 
   try {
     const fac = await prisma.factura.findUnique({
-      where: { id: id },
+      where: { uuid: id },
       include: { empresa: true }
     });
 
