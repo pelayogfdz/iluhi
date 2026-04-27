@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import facturapi from '../../../../../lib/facturapi'
+import Facturapi from 'facturapi'
+import prisma from '../../../../../lib/prisma'
 
 export async function GET(request, { params }) {
   const { id } = await params
@@ -10,33 +11,48 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Formato inválido. Use pdf, xml o zip' }, { status: 400 })
   }
 
-  // Verificar llave Facturapi
-  if (!process.env.FACTURAPI_KEY || process.env.FACTURAPI_KEY.includes('PENDING_KEY')) {
-    return NextResponse.json({ error: 'LLave Facturapi no configurada en el entorno' }, { status: 500 })
-  }
-
   try {
+    const fac = await prisma.factura.findUnique({
+      where: { id: id },
+      include: { empresa: true }
+    });
+
+    if (!fac || !fac.uuid) {
+      return NextResponse.json({ error: 'Factura no encontrada o no timbrada' }, { status: 404 })
+    }
+
+    let targetKey = fac.empresa.facturapiLiveKey || process.env.FACTURAPI_LIVE_KEY;
+    if (fac.estatus && fac.estatus.includes('Test Fallback')) {
+      targetKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+    } else if (!fac.empresa.cerPath) {
+      targetKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+    }
+
+    if (!targetKey || targetKey.includes('PENDING_KEY')) {
+      return NextResponse.json({ error: 'LLave Facturapi no configurada para la empresa' }, { status: 500 })
+    }
+
+    const tenantFacturapi = new Facturapi(targetKey);
+
     let stream;
     let contentType;
-    let fileName = `Factura_${id}`;
+    let fileName = `Factura_${fac.uuid}`;
     
     if (format === 'pdf') {
-      stream = await facturapi.invoices.downloadPdf(id);
+      stream = await tenantFacturapi.invoices.downloadPdf(fac.uuid);
       contentType = 'application/pdf';
       fileName += '.pdf';
     } else if (format === 'xml') {
-      stream = await facturapi.invoices.downloadXml(id);
+      stream = await tenantFacturapi.invoices.downloadXml(fac.uuid);
       contentType = 'application/xml';
       fileName += '.xml';
     } else if (format === 'zip') {
-      stream = await facturapi.invoices.downloadZip(id);
+      stream = await tenantFacturapi.invoices.downloadZip(fac.uuid);
       contentType = 'application/zip';
       fileName += '.zip';
     }
 
     const { Readable } = require('stream');
-    
-    // El SDK de Facturapi devuelve un Node.js stream, Next.js usa Web Streams
     const webStream = Readable.toWeb(stream);
 
     return new Response(webStream, {
