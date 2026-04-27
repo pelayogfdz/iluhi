@@ -98,6 +98,16 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
 
   // Calculos visuales
   const totalSub = items.reduce((acc, current) => acc + (current.precio * current.cantidad), 0)
+  
+  const totalIVA = items.reduce((acc, current) => {
+      if (current.impuesto === '002' || !current.impuesto) {
+          const tasa = current.tasaOCuota ? parseFloat(current.tasaOCuota) : 0.16;
+          return acc + (current.precio * current.cantidad * tasa);
+      }
+      return acc;
+  }, 0);
+
+  const totalFinal = totalSub + totalIVA;
 
   return (
     <div className="responsive-columns">
@@ -273,17 +283,19 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
       <div className="glass-panel" style={{ position: 'sticky', top: '2rem' }}>
         <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>Resumen Premiliminar</h3>
         <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+
            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
              <span style={{ color: 'var(--text-secondary)' }}>Subtotal:</span>
              <span>$ {totalSub.toFixed(2)}</span>
            </div>
            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-             <span style={{ color: 'var(--text-secondary)' }}>Impuestos Aprox:</span>
-             <span style={{ color: 'var(--accent)' }}>Calculado por PAC en vuelo</span>
+             <span style={{ color: 'var(--text-secondary)' }}>IVA Aprox:</span>
+             <span style={{ color: 'var(--accent)' }}>$ {totalIVA.toFixed(2)}</span>
            </div>
            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', fontWeight: 'bold', fontSize: '1.2rem' }}>
-             <span>Base Total:</span>
-             <span>$ {totalSub.toFixed(2)}</span>
+             <span>Total Estimado:</span>
+             <span>$ {totalFinal.toFixed(2)}</span>
            </div>
         </div>
         <p style={{ marginTop: '2rem', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>

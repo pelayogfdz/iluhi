@@ -126,9 +126,21 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     }
 
     // 4. Salvar el Comprobante Logístico a Supabase
-    // Sumarizaciones simples (Facturapi recalcula en producción, esto es solo referencial interno)
+    // Sumarizaciones reales (Facturapi recalcula en producción, esto es referencial interno)
     let sumTotal = 0;
-    items.forEach(i => sumTotal += (parseFloat(i.precio) * parseInt(i.cantidad)));
+    let totalImpuestosTrasladados = 0;
+    
+    items.forEach(i => {
+      const lineSub = parseFloat(i.precio) * parseInt(i.cantidad);
+      sumTotal += lineSub;
+      
+      const tasa = parseFloat(i.tasaOCuota || 0.16);
+      if (i.impuesto === '002' || !i.impuesto) {
+        totalImpuestosTrasladados += (lineSub * tasa);
+      }
+    });
+
+    const totalCalculado = sumTotal + totalImpuestosTrasladados;
 
     const newFactura = await prisma.factura.create({
       data: {
@@ -137,8 +149,8 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         formaPago,
         metodoPago,
         subTotal: sumTotal,
-        totalImpuestosTrasladados: 0, // Placeholder
-        total: sumTotal, // Placeholder
+        totalImpuestosTrasladados: totalImpuestosTrasladados,
+        total: totalCalculado,
         estatus: fallbackStatus,
         notasServicio: notasServicio || null,
         uuid: receipt.id || null
