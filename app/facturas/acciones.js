@@ -193,6 +193,9 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
           throw pacError;
         }
       }
+    } else {
+       console.log(`[SIMULACION] Cancelando factura ${fac.uuid} con motivo ${motivo}`);
+    }
 
     await prisma.factura.update({
       where: { id: facturaId },
@@ -268,6 +271,9 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
           throw pacError;
         }
       }
+    } else {
+       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'} Moneda: ${moneda}`);
+    }
 
     await prisma.factura.update({
       where: { id: facturaId },
