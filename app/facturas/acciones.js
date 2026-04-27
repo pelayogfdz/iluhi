@@ -57,7 +57,14 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         tax_system: cliente.regimen,
         email: cliente.correoDestino || '',
         address: {
-          zip: cliente.codigoPostal
+          zip: cliente.codigoPostal,
+          street: cliente.calle || undefined,
+          exterior: cliente.numExterior || undefined,
+          interior: cliente.numInterior || undefined,
+          neighborhood: cliente.colonia || undefined,
+          city: cliente.ciudad || undefined,
+          municipality: cliente.municipio || undefined,
+          state: cliente.estado || undefined
         }
       },
       items: items.map((i) => ({
@@ -244,7 +251,14 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
           tax_system: fac.cliente?.regimen || '616',
           email: fac.cliente?.correoDestino || '',
           address: {
-            zip: fac.cliente?.codigoPostal || '00000'
+            zip: fac.cliente?.codigoPostal || '00000',
+            street: fac.cliente?.calle || undefined,
+            exterior: fac.cliente?.numExterior || undefined,
+            interior: fac.cliente?.numInterior || undefined,
+            neighborhood: fac.cliente?.colonia || undefined,
+            city: fac.cliente?.ciudad || undefined,
+            municipality: fac.cliente?.municipio || undefined,
+            state: fac.cliente?.estado || undefined
           }
         } : undefined,
         complements: [
@@ -323,7 +337,14 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
           tax_system: fac.cliente.regimen,
           email: fac.cliente.correoDestino || '',
           address: {
-            zip: fac.cliente.codigoPostal
+            zip: fac.cliente.codigoPostal,
+            street: fac.cliente.calle || undefined,
+            exterior: fac.cliente.numExterior || undefined,
+            interior: fac.cliente.numInterior || undefined,
+            neighborhood: fac.cliente.colonia || undefined,
+            city: fac.cliente.ciudad || undefined,
+            municipality: fac.cliente.municipio || undefined,
+            state: fac.cliente.estado || undefined
           }
         } : undefined,
         payment_form: formaPago,

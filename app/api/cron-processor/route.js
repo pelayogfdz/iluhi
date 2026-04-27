@@ -313,12 +313,15 @@ export async function GET(request) {
         attachments: []
       };
 
+      const activeKey = empresa.facturapiLiveKey || empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY;
+      const tenantClient = new FacturapiClient(activeKey);
+
       if (type === 'COTIZACION') {
         mailOptions.subject = `Cotización de Servicios - ${empresa.razonSocial}`;
         mailOptions.text = processTemplate(empresa.plantillaCotizacion || 'Adjunto enviamos la cotización de servicios.', cliente, factura);
         
         try {
-           const pdfBuffer = await generateCotizacionPdf(factura, empresa, cliente, facturapiCentral);
+           const pdfBuffer = await generateCotizacionPdf(factura, empresa, cliente, tenantClient);
            if (pdfBuffer) {
               mailOptions.attachments.push({
                 filename: `Cotizacion_${factura.folio || '00'}.pdf`,
@@ -334,7 +337,7 @@ export async function GET(request) {
         mailOptions.text = processTemplate(empresa.plantillaOrdenServicio || 'Tu orden de servicio ha sido puesta en marcha.', cliente, factura);
 
         try {
-           const pdfBuffer = await generateOrdenServicioPdf(factura, empresa, cliente, facturapiCentral);
+           const pdfBuffer = await generateOrdenServicioPdf(factura, empresa, cliente, tenantClient);
            if (pdfBuffer) {
               mailOptions.attachments.push({
                 filename: `OrdenServicio_${factura.folio || '00'}.pdf`,
@@ -350,8 +353,8 @@ export async function GET(request) {
         mailOptions.text = processTemplate(empresa.plantillaFactura || 'Adjunto entregamos tu factura y archivo XML XML timbrados de forma oficial.', cliente, factura);
         
         if (factura.uuid && factura.uuid !== 'mock_uuid_123') {
-           const pdfStream = await facturapiCentral.invoices.downloadPdf(factura.uuid);
-           const xmlStream = await facturapiCentral.invoices.downloadXml(factura.uuid);
+           const pdfStream = await tenantClient.invoices.downloadPdf(factura.uuid);
+           const xmlStream = await tenantClient.invoices.downloadXml(factura.uuid);
            mailOptions.attachments.push({ filename: `Factura_${factura.uuid}.pdf`, content: pdfStream });
            mailOptions.attachments.push({ filename: `Factura_${factura.uuid}.xml`, content: xmlStream });
         }
