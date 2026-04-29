@@ -74,18 +74,32 @@ export async function prepararYTimbrarFactura(formDataRaw) {
             product_key: i.claveProdServ,
             price: parseFloat(i.precio),
             tax_included: false,
+            taxability: i.objetoImp || '02',
             unit_key: i.claveUnidad || 'H87'
           },
           quantity: parseInt(i.cantidad)
         };
 
-        if ((i.impuesto === '002' || i.impuesto === '003') && i.tasaOCuota !== null && i.tasaOCuota !== '') {
-          itemPayload.product.taxes = [
-            {
-              type: i.impuesto === '002' ? 'IVA' : 'IEPS',
-              rate: parseFloat(i.tasaOCuota)
-            }
-          ];
+        // Reglas de Impuestos (Solo aplica si es objeto de impuesto 02 o 03)
+        if (i.objetoImp === '02' || i.objetoImp === '03') {
+          if (i.tipoFactor === 'Exento') {
+            itemPayload.product.taxes = [
+              {
+                type: i.impuesto === '003' ? 'IEPS' : 'IVA',
+                factor: 'Exento'
+              }
+            ];
+          } else if (i.impuesto && (i.tipoFactor === 'Tasa' || i.tipoFactor === 'Cuota')) {
+            const isRetencion = i.impuesto === '001'; // ISR suele ser retención
+            itemPayload.product.taxes = [
+              {
+                type: i.impuesto === '003' ? 'IEPS' : (i.impuesto === '001' ? 'ISR' : 'IVA'),
+                factor: i.tipoFactor,
+                rate: parseFloat(i.tasaOCuota || 0),
+                ...(isRetencion ? { withholding: true } : {})
+              }
+            ];
+          }
         }
         return itemPayload;
       }),
