@@ -326,12 +326,9 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         last_balance: originalInvoice.amount_due || originalInvoice.total || montoAbonadoFloat
       };
       
-      // Facturapi requiere declarar los impuestos desglosados
+      // Facturapi requiere declarar los impuestos desglosados (pero no el tax_object manualmente)
       if (taxObjectToSet === "02" && relatedTaxes.length > 0) {
-          relatedDocPayload.tax_object = "02";
           relatedDocPayload.taxes = relatedTaxes;
-      } else {
-          relatedDocPayload.tax_object = "01";
       }
 
       const payload = {
