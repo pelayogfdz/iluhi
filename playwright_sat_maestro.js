@@ -22,13 +22,17 @@ const isTestOne = args.includes('--test-one');
 const startDateArg = args.find(a => a.startsWith('--start-date='));
 const endDateArg = args.find(a => a.startsWith('--end-date='));
 const empresaIdArg = args.find(a => a.startsWith('--empresa-id='));
+const takeArg = args.find(a => a.startsWith('--take='));
 const startDate = startDateArg ? startDateArg.split('=')[1] : null;
 const endDate = endDateArg ? endDateArg.split('=')[1] : null;
 const filtroEmpresaId = empresaIdArg ? empresaIdArg.split('=')[1] : null;
+const takeCount = takeArg ? parseInt(takeArg.split('=')[1], 10) : null;
+const isRandom = args.includes('--random');
 
 const skipBuzon = args.includes('--skip-buzon') || args.includes('--cfdi-only') || args.includes('--opinion-only') || args.includes('--csf-only');
 const buzonOnly = args.includes('--buzon-only');
-const skipCfdi = args.includes('--skip-cfdi') || buzonOnly || args.includes('--opinion-only') || args.includes('--csf-only'); 
+const fiscalRoutine = args.includes('--fiscal-routine');
+const skipCfdi = args.includes('--skip-cfdi') || buzonOnly || args.includes('--opinion-only') || args.includes('--csf-only') || fiscalRoutine; 
 const skipDocumentos = args.includes('--skip-documentos') || args.includes('--cfdi-only') || buzonOnly;
 const opinionOnly = args.includes('--opinion-only');
 const csfOnly = args.includes('--csf-only');
@@ -126,13 +130,19 @@ async function extractAll() {
     console.log(`Iniciando Sincronizador Maestro SAT. Histórico: ${isHistorico}, Test-One: ${isTestOne}`);
     
     // Obtener empresas
-    const queryArgs = { where: { NOT: { fielPassword: null } } };
+    const queryArgs = { where: { NOT: { fielPassword: null } }, orderBy: { razonSocial: 'asc' } };
     if (filtroEmpresaId) {
         queryArgs.where.id = filtroEmpresaId;
     }
     if (isTestOne) queryArgs.take = 1;
+    if (takeCount && !isRandom) queryArgs.take = takeCount;
 
-    const empresas = await prisma.empresa.findMany(queryArgs);
+    let empresas = await prisma.empresa.findMany(queryArgs);
+    if (isRandom && empresas.length > 0) {
+        empresas = empresas.sort(() => 0.5 - Math.random());
+        if (takeCount) empresas = empresas.slice(0, takeCount);
+    }
+    
     if (!empresas || empresas.length === 0) {
         console.log("No hay empresas configuradas. Abortando.");
         process.exit(1);
@@ -145,10 +155,22 @@ async function extractAll() {
     for (const emp of empresas) {
         let browser;
         try {
-            browser = await chromium.launch({
+            const launchOptions = {
                 headless: true, // headless para background
                 args: ['--disable-blink-features=AutomationControlled', '--no-sandbox']
-            });
+            };
+            
+            // Integración de Proxy Residencial (si está configurado en .env)
+            if (process.env.PROXY_SERVER) {
+                launchOptions.proxy = {
+                    server: process.env.PROXY_SERVER,
+                    username: process.env.PROXY_USERNAME,
+                    password: process.env.PROXY_PASSWORD
+                };
+                console.log(`[PROXY] Navegando usando proxy residencial: ${process.env.PROXY_SERVER}`);
+            }
+
+            browser = await chromium.launch(launchOptions);
 
         if (!emp.fielCerBase64 || !emp.fielKeyBase64) continue;
         console.log(`\n======================================================`);
@@ -475,6 +497,7 @@ async function extractAll() {
             // DESHABILITADO TEMPORALMENTE: El módulo 32-D de Opinión tiene un firewall Cloudflare excesivamente agresivo 
             // que devuelve "Access Forbidden" a los bots sin proxy residencial.
             // Para evitar que el fallo corrompa los nombres de la fase de Constancias, se salta hasta la iteración Premium.
+            /*
             await executeWithRetry("Fase 2: Opinión de Cumplimiento", 5, 5 * 60 * 1000, async () => {
                 console.log(">> FASE 2: Extrayendo Opinión de Cumplimiento...");
                 const pdfOPCName = `Opinion_Cumplimiento_${emp.rfc}_${Date.now()}.pdf`;
@@ -483,7 +506,7 @@ async function extractAll() {
                 
                 await loginFIEL(pageFiscal, "https://login.siat.sat.gob.mx/nidp/idff/sso?id=fiel", emp, cerPath, keyPath);
                 
-                const opcPortal = "https://wwwmat.sat.gob.mx/aplicacion/operacion/32846/consulta-tu-opinion-de-cumplimiento-de-obligaciones-fiscales";
+                const opcPortal = "https://www.sat.gob.mx/aplicacion/operacion/32846/consulta-tu-opinion-de-cumplimiento-de-obligaciones-fiscales";
                 await pageFiscal.goto(opcPortal, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(()=>{});
                 await delay(4000);
                 
@@ -523,10 +546,11 @@ async function extractAll() {
                     throw new Error("Falló la descarga de Opinión, no se encontró archivo interceptado.");
                 }
             });
+            */
 
             await executeWithRetry("Fase 3: Constancia de Situación Fiscal", 5, 5 * 60 * 1000, async () => {
                 console.log(">> FASE 3: Extrayendo Constancia de Situación Fiscal...");
-                const targetCSF = "https://wwwmat.sat.gob.mx/app/seg/cont/accesoC?parametro=1&url=/operacion/43824/reimprime-tus-acuses-del-rfc&target=principal&tipoLogeo=c&hostServer=https://wwwmat.sat.gob.mx";
+                const targetCSF = "https://www.sat.gob.mx/app/seg/cont/accesoC?parametro=1&url=/operacion/43824/reimprime-tus-acuses-del-rfc&target=principal&tipoLogeo=c&hostServer=https://www.sat.gob.mx";
                 
                 await loginFIEL(pageFiscal, targetCSF, emp, cerPath, keyPath);
                 
@@ -580,7 +604,7 @@ async function extractAll() {
         if (!skipBuzon) {
             await executeWithRetry("Fase 4: Buzón Tributario", 5, 5 * 60 * 1000, async () => {
                 console.log(">> FASE 4: Extrayendo Buzón Tributario...");
-                const targetBuzon = "https://wwwmat.sat.gob.mx/iniciar-expediente/mis-notificaciones/";
+                const targetBuzon = "https://www.sat.gob.mx/iniciar-expediente/mis-notificaciones/";
                 const ssoUrlBuzon = `https://login.siat.sat.gob.mx/nidp/idff/sso?id=buzon&sid=0&option=credential&target=${encodeURIComponent(targetBuzon)}`;
                 
                 await loginFIEL(pageFiscal, ssoUrlBuzon, emp, cerPath, keyPath);
@@ -619,6 +643,9 @@ async function extractAll() {
         } finally {
             if (browser) await browser.close().catch(()=>{});
         }
+        
+        console.log(`Finalizado proceso para ${emp.razonSocial}. Esperando 5 minutos antes de la siguiente empresa...`);
+        await delay(5 * 60 * 1000);
     } // End Empresa Loop
 
     await prisma.$disconnect();

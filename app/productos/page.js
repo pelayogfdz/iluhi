@@ -32,7 +32,7 @@ export default async function ProductosPage({ searchParams }) {
   const productos = await prisma.producto.findMany({ 
     include: { empresa: true },
     where: finalWhere,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { descripcion: 'asc' }
   })
 
   return (

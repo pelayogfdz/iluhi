@@ -11,6 +11,13 @@ async function createEmpresa(formData) {
   const razonSocial = formData.get('razonSocial')
   const regimen = formData.get('regimen')
   const codigoPostal = formData.get('codigoPostal')
+  const calle = formData.get('calle') || ''
+  const numExterior = formData.get('numExterior') || ''
+  const numInterior = formData.get('numInterior') || ''
+  const colonia = formData.get('colonia') || ''
+  const municipio = formData.get('municipio') || ''
+  const ciudad = formData.get('ciudad') || ''
+  const estado = formData.get('estado') || ''
   
   // Create organization in Facturapi using the User Key
   let facturapiId = null;
@@ -37,11 +44,31 @@ async function createEmpresa(formData) {
     // Completamos la información Legal (Crucial para timbrar al 100%)
     await facturapi.organizations.updateLegal(org.id, {
       name: razonSocial,
+      legal_name: razonSocial,
       tax_id: rfc,
       tax_system: regimen.split(' ')[0], // Facturapi espera el número (ej. "601")
-      zip: codigoPostal
+      address: {
+        zip: codigoPostal,
+        street: calle || undefined,
+        exterior: numExterior || undefined,
+        interior: numInterior || undefined,
+        neighborhood: colonia || undefined,
+        city: ciudad || undefined,
+        municipality: municipio || undefined,
+        state: estado || undefined
+      }
     });
     console.log("Configuración Legal sincronizada con Facturapi.");
+
+    // Configurar automáticamente las series para que empiecen en el folio 5000
+    try {
+      await facturapi.organizations.updateSeriesGroup(org.id, 'F', { next_folio: 5000, next_folio_test: 5000 });
+      await facturapi.organizations.updateSeriesGroup(org.id, 'NC', { next_folio: 5000, next_folio_test: 5000 });
+      await facturapi.organizations.updateSeriesGroup(org.id, 'P', { next_folio: 5000, next_folio_test: 5000 });
+      console.log("Series (F, NC, P) configuradas para iniciar en el folio 5000.");
+    } catch (seriesErr) {
+      console.error("Error al configurar series a 5000:", seriesErr);
+    }
 
   } catch (error) {
     console.error("Error al crear Organización en Facturapi:", error);
@@ -55,6 +82,13 @@ async function createEmpresa(formData) {
       razonSocial,
       regimen,
       codigoPostal,
+      calle,
+      numExterior,
+      numInterior,
+      colonia,
+      municipio,
+      ciudad,
+      estado,
       facturapiId,
       facturapiLiveKey,
       facturapiTestKey
@@ -117,6 +151,43 @@ export default function NuevaEmpresaPage() {
           <div className="form-group">
             <label htmlFor="codigoPostal">Código Postal</label>
             <input type="text" id="codigoPostal" name="codigoPostal" className="form-control" required placeholder="Ej. 11000" />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="calle">Calle</label>
+              <input type="text" id="calle" name="calle" className="form-control" placeholder="Ej. Av. Reforma" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="numExterior">Núm. Exterior</label>
+              <input type="text" id="numExterior" name="numExterior" className="form-control" placeholder="Ej. 222" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="numInterior">Núm. Interior</label>
+              <input type="text" id="numInterior" name="numInterior" className="form-control" placeholder="Ej. Int. 4" />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="colonia">Colonia</label>
+              <input type="text" id="colonia" name="colonia" className="form-control" placeholder="Ej. Juárez" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="municipio">Municipio/Alcaldía</label>
+              <input type="text" id="municipio" name="municipio" className="form-control" placeholder="Ej. Cuauhtémoc" />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="ciudad">Ciudad</label>
+              <input type="text" id="ciudad" name="ciudad" className="form-control" placeholder="Ej. Ciudad de México" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="estado">Estado</label>
+              <input type="text" id="estado" name="estado" className="form-control" placeholder="Ej. Ciudad de México" />
+            </div>
           </div>
 
           <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginTop: '1rem' }}>

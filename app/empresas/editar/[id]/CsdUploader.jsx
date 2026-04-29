@@ -77,6 +77,23 @@ export default function CsdUploader({ empresa }) {
           </div>
         )}
       </div>
+
+      {empresa.csdVigencia && (
+        <div style={{
+          background: new Date(empresa.csdVigencia) < new Date() ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+          padding: '0.75rem 1rem',
+          borderRadius: '8px',
+          marginBottom: '1rem',
+          fontSize: '0.9rem',
+          display: 'flex',
+          justifyContent: 'space-between'
+        }}>
+          <span>📅 Vigencia del CSD:</span>
+          <strong style={{ color: new Date(empresa.csdVigencia) < new Date() ? '#ef4444' : '#10b981' }}>
+            {new Date(empresa.csdVigencia).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </strong>
+        </div>
+      )}
        
        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem', alignItems: 'end' }}>
           

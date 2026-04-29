@@ -35,7 +35,7 @@ export default async function ClientesPage({ searchParams }) {
         { codigoPostal: { contains: q } }
       ]
     } : { ...accessFilter },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { razonSocial: 'asc' }
   })
 
   return (

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import prisma from '../../../lib/prisma';
 import { cookies } from 'next/headers';
 import { decrypt } from '../../../lib/auth';
+import SearchableSelect from '../../components/SearchableSelect'
 
 async function createCliente(formData) {
   'use server'
@@ -134,31 +135,35 @@ export default async function NuevoClientePage({ searchParams }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
                 <label htmlFor="regimen">Régimen Fiscal Receptor</label>
-                <select id="regimen" name="regimen" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                  <option value="">-- Seleccionar Régimen --</option>
-                  <option value="601">601 - General de Ley Personas Morales</option>
-                  <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
-                  <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
-                  <option value="606">606 - Arrendamiento</option>
-                  <option value="607">607 - Régimen de Enajenación o Adquisición de Bienes</option>
-                  <option value="608">608 - Demás ingresos</option>
-                  <option value="610">610 - Residentes en el Extranjero sin E.P. en México</option>
-                  <option value="611">611 - Ingresos por Dividendos (socios y accionistas)</option>
-                  <option value="612">612 - Personas Físicas con Actividades Empresariales y Profesionales</option>
-                  <option value="614">614 - Ingresos por intereses</option>
-                  <option value="615">615 - Régimen de los ingresos por obtención de premios</option>
-                  <option value="616">616 - Sin obligaciones fiscales</option>
-                  <option value="620">620 - Sociedades Cooperativas de Producción</option>
-                  <option value="621">621 - Incorporación Fiscal</option>
-                  <option value="622">622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
-                  <option value="623">623 - Opcional para Grupos de Sociedades</option>
-                  <option value="624">624 - Coordinados</option>
-                  <option value="625">625 - Régimen de las Actividades Emp. Plataformas Tecnológicas</option>
-                  <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
-                  <option value="628">628 - Hidrocarburos</option>
-                  <option value="629">629 - De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales</option>
-                  <option value="630">630 - Enajenación de acciones en bolsa de valores</option>
-                </select>
+                <SearchableSelect 
+                  name="regimen"
+                  options={[
+                    { value: "601", label: "601 - General de Ley Personas Morales" },
+                    { value: "603", label: "603 - Personas Morales con Fines no Lucrativos" },
+                    { value: "605", label: "605 - Sueldos y Salarios e Ingresos Asimilados a Salarios" },
+                    { value: "606", label: "606 - Arrendamiento" },
+                    { value: "607", label: "607 - Régimen de Enajenación o Adquisición de Bienes" },
+                    { value: "608", label: "608 - Demás ingresos" },
+                    { value: "610", label: "610 - Residentes en el Extranjero sin E.P. en México" },
+                    { value: "611", label: "611 - Ingresos por Dividendos (socios y accionistas)" },
+                    { value: "612", label: "612 - Personas Físicas con Actividades Empresariales y Profesionales" },
+                    { value: "614", label: "614 - Ingresos por intereses" },
+                    { value: "615", label: "615 - Régimen de los ingresos por obtención de premios" },
+                    { value: "616", label: "616 - Sin obligaciones fiscales" },
+                    { value: "620", label: "620 - Sociedades Cooperativas de Producción" },
+                    { value: "621", label: "621 - Incorporación Fiscal" },
+                    { value: "622", label: "622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras" },
+                    { value: "623", label: "623 - Opcional para Grupos de Sociedades" },
+                    { value: "624", label: "624 - Coordinados" },
+                    { value: "625", label: "625 - Régimen de las Actividades Emp. Plataformas Tecnológicas" },
+                    { value: "626", label: "626 - Régimen Simplificado de Confianza (RESICO)" },
+                    { value: "628", label: "628 - Hidrocarburos" },
+                    { value: "629", label: "629 - De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales" },
+                    { value: "630", label: "630 - Enajenación de acciones en bolsa de valores" }
+                  ]}
+                  placeholder="-- Seleccionar Régimen --"
+                  required={true}
+                />
               </div>
 
               <div className="form-group">
@@ -169,34 +174,38 @@ export default async function NuevoClientePage({ searchParams }) {
 
           <div className="form-group">
             <label htmlFor="usoCfdi">Uso de CFDI por defecto</label>
-            <select id="usoCfdi" name="usoCfdi" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <option value="">-- Seleccionar Uso CFDI --</option>
-              <option value="G01">G01 - Adquisición de mercancías</option>
-              <option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
-              <option value="G03">G03 - Gastos en general</option>
-              <option value="I01">I01 - Construcciones</option>
-              <option value="I02">I02 - Mobiliario y equipo de oficina por inversiones</option>
-              <option value="I03">I03 - Equipo de transporte</option>
-              <option value="I04">I04 - Equipo de computo y accesorios</option>
-              <option value="I05">I05 - Dados, troqueles, moldes, matrices y herramental</option>
-              <option value="I06">I06 - Comunicaciones telefónicas</option>
-              <option value="I07">I07 - Comunicaciones satelitales</option>
-              <option value="I08">I08 - Otra maquinaria y equipo</option>
-              <option value="D01">D01 - Honorarios médicos, dentales y hospitalarios</option>
-              <option value="D02">D02 - Gastos médicos por incapacidad o discapacidad</option>
-              <option value="D03">D03 - Gastos funerales</option>
-              <option value="D04">D04 - Donativos</option>
-              <option value="D05">D05 - Intereses reales efectivamente pagados por créditos hipotecarios</option>
-              <option value="D06">D06 - Aportaciones voluntarias al SAR</option>
-              <option value="D07">D07 - Primas por seguros de gastos médicos</option>
-              <option value="D08">D08 - Gastos de transportación escolar obligatoria</option>
-              <option value="D09">D09 - Depósitos en cuentas para el ahorro, planes de pensiones</option>
-              <option value="D10">D10 - Pagos por servicios educativos (colegiaturas)</option>
-              <option value="P01">P01 - Por definir (Solo comprobante de Pagos y Retenciones)</option>
-              <option value="S01">S01 - Sin efectos fiscales</option>
-              <option value="CP01">CP01 - Pagos</option>
-              <option value="CN01">CN01 - Nómina</option>
-            </select>
+            <SearchableSelect 
+              name="usoCfdi"
+              options={[
+                { value: "G01", label: "G01 - Adquisición de mercancías" },
+                { value: "G02", label: "G02 - Devoluciones, descuentos o bonificaciones" },
+                { value: "G03", label: "G03 - Gastos en general" },
+                { value: "I01", label: "I01 - Construcciones" },
+                { value: "I02", label: "I02 - Mobiliario y equipo de oficina por inversiones" },
+                { value: "I03", label: "I03 - Equipo de transporte" },
+                { value: "I04", label: "I04 - Equipo de computo y accesorios" },
+                { value: "I05", label: "I05 - Dados, troqueles, moldes, matrices y herramental" },
+                { value: "I06", label: "I06 - Comunicaciones telefónicas" },
+                { value: "I07", label: "I07 - Comunicaciones satelitales" },
+                { value: "I08", label: "I08 - Otra maquinaria y equipo" },
+                { value: "D01", label: "D01 - Honorarios médicos, dentales y hospitalarios" },
+                { value: "D02", label: "D02 - Gastos médicos por incapacidad o discapacidad" },
+                { value: "D03", label: "D03 - Gastos funerales" },
+                { value: "D04", label: "D04 - Donativos" },
+                { value: "D05", label: "D05 - Intereses reales efectivamente pagados por créditos hipotecarios" },
+                { value: "D06", label: "D06 - Aportaciones voluntarias al SAR" },
+                { value: "D07", label: "D07 - Primas por seguros de gastos médicos" },
+                { value: "D08", label: "D08 - Gastos de transportación escolar obligatoria" },
+                { value: "D09", label: "D09 - Depósitos en cuentas para el ahorro, planes de pensiones" },
+                { value: "D10", label: "D10 - Pagos por servicios educativos (colegiaturas)" },
+                { value: "P01", label: "P01 - Por definir (Solo comprobante de Pagos y Retenciones)" },
+                { value: "S01", label: "S01 - Sin efectos fiscales" },
+                { value: "CP01", label: "CP01 - Pagos" },
+                { value: "CN01", label: "CN01 - Nómina" }
+              ]}
+              placeholder="-- Seleccionar Uso CFDI --"
+              required={true}
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
@@ -229,15 +238,18 @@ export default async function NuevoClientePage({ searchParams }) {
             </div>
             <div className="form-group">
               <label>Condiciones de Pago (Días)</label>
-              <select name="condicionesPago" className="form-control" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                <option value="">-- Seleccionar --</option>
-                <option value="Contado">Contado</option>
-                <option value="15 Días">15 Días</option>
-                <option value="30 Días">30 Días</option>
-                <option value="45 Días">45 Días</option>
-                <option value="60 Días">60 Días</option>
-                <option value="90 Días">90 Días</option>
-              </select>
+              <SearchableSelect 
+                name="condicionesPago"
+                options={[
+                  { value: "Contado", label: "Contado" },
+                  { value: "15 Días", label: "15 Días" },
+                  { value: "30 Días", label: "30 Días" },
+                  { value: "45 Días", label: "45 Días" },
+                  { value: "60 Días", label: "60 Días" },
+                  { value: "90 Días", label: "90 Días" }
+                ]}
+                placeholder="-- Seleccionar --"
+              />
             </div>
             <div className="form-group">
               <label>Cuenta Bancaria principal (Opcional)</label>

@@ -33,7 +33,7 @@ export default async function EmpresasPage({ searchParams }) {
 
   const empresas = await prisma.empresa.findMany({
     where: finalWhere,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { razonSocial: 'asc' }
   })
 
   return (

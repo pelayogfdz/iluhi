@@ -33,6 +33,8 @@ export async function GET(request) {
         args.push('--opinion-only');
     } else if (mode === 'csf') {
         args.push('--csf-only');
+    } else if (mode === 'fiscal-routine') {
+        args.push('--fiscal-routine');
     } else {
         args.push('--cfdi-only');
     }

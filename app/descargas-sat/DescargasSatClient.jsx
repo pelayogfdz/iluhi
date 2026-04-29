@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { fetchDocumentosSATHistory, getEmpresasSelector, fetchBase64Documento, subirOpinionManual } from './acciones'
+import SearchableSelect from '../components/SearchableSelect'
 
 export default function DescargasSatClient({ empresas }) {
   // === Sync Controls ===
@@ -221,12 +222,17 @@ export default function DescargasSatClient({ empresas }) {
       <div className="glass-panel card">
         {/* Barra Global de Filtros */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', alignItems: 'flex-end', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
-          <div style={{ flex: '1 1 200px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Filtro de Empresa</label>
-            <select className="form-control" value={filtroEmpresaId} onChange={e => setFiltroEmpresaId(e.target.value)}>
-              <option value="ALL">🏢 Todas las Empresas</option>
-              {empresas.map(emp => <option key={emp.id} value={emp.id}>{emp.razonSocial}</option>)}
-            </select>
+          <div className="filter-card">
+            <label>Filtrar por Empresa</label>
+            <SearchableSelect 
+              value={filtroEmpresaId}
+              onChange={setFiltroEmpresaId}
+              options={[
+                { value: '', label: 'Todas las Empresas' },
+                ...empresas.map(e => ({ value: e.id, label: e.razonSocial }))
+              ]}
+              placeholder="Todas las Empresas"
+            />
           </div>
           <div style={{ flex: '1 1 150px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Desde</label>

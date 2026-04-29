@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 
 export async function getUsuarios() {
   return await prisma.usuario.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { nombre: 'asc' },
     include: { empresas: true }
   });
 }

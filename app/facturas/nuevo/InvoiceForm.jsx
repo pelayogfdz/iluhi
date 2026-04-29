@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { prepararYTimbrarFactura } from '../acciones'
 import ProductSelector from '../../components/ProductSelector'
+import SearchableSelect from '../../components/SearchableSelect'
 
 export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const router = useRouter()
@@ -13,6 +14,11 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   // Estado del Formulario Principal
   const [empresaId, setEmpresaId] = useState('')
   const [clienteId, setClienteId] = useState('')
+
+  const empresasOptions = empresas.map(emp => ({
+    value: emp.id,
+    label: `${emp.razonSocial} (${emp.rfc})`
+  }));
   const [usoCfdi, setUsoCfdi] = useState('G03')
   const [formaPago, setFormaPago] = useState('03')
   const [metodoPago, setMetodoPago] = useState('PUE')
@@ -121,20 +127,24 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label>Empresa Emisora (SaaS Tenant)</label>
-              <select className="form-control" value={empresaId} onChange={e => { setEmpresaId(e.target.value); setClienteId(''); setItems([]); }} required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                <option value="">Selecciona Empresa...</option>
-                {empresas.map(emp => <option key={emp.id} value={emp.id}>{emp.razonSocial}</option>)}
-              </select>
+              <SearchableSelect 
+                value={empresaId}
+                onChange={(val) => { setEmpresaId(val); setClienteId(''); setItems([]); }}
+                options={empresasOptions}
+                placeholder="Selecciona Empresa..."
+                required={true}
+              />
             </div>
 
             <div className="form-group">
               <label>Paso 2: Cliente Receptor</label>
-              <select className="form-control" value={clienteId} onChange={e => setClienteId(e.target.value)} required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                <option value="">Selecciona al cliente</option>
-                {clientesFiltrados.map(c => (
-                  <option key={c.id} value={c.id}>{c.razonSocial} ({c.rfc})</option>
-                ))}
-              </select>
+              <SearchableSelect 
+                value={clienteId}
+                onChange={setClienteId}
+                options={clientesFiltrados.map(c => ({ value: c.id, label: `${c.razonSocial} (${c.rfc})` }))}
+                placeholder="Selecciona al cliente"
+                required={true}
+              />
             </div>
           </div>
 

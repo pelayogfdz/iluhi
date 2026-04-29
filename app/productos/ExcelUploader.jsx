@@ -4,12 +4,18 @@ import { useState } from 'react'
 import * as xlsx from 'xlsx'
 import { importarProductosMasivos } from './acciones'
 import { useRouter } from 'next/navigation'
+import SearchableSelect from '../components/SearchableSelect'
 
 export default function ExcelUploader({ empresas }) {
   const [empresaId, setEmpresaId] = useState('')
   const [cargando, setCargando] = useState(false)
   const [resultado, setResultado] = useState('')
   const router = useRouter()
+
+  const empresasOptions = empresas.map(emp => ({
+    value: emp.id,
+    label: `${emp.razonSocial} (${emp.rfc})`
+  }));
 
   const handleFileUpload = async (e) => {
     e.preventDefault()
@@ -72,12 +78,12 @@ export default function ExcelUploader({ empresas }) {
       
       <div className="form-group" style={{ marginBottom: '1.5rem' }}>
         <label htmlFor="empSelectMasivo">1. Selecciona a qué Empresa le inyectaremos el catálogo</label>
-        <select id="empSelectMasivo" className="form-control" value={empresaId} onChange={e => setEmpresaId(e.target.value)} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <option value="">-- Selecciona Empresa --</option>
-          {empresas.map(emp => (
-             <option key={emp.id} value={emp.id}>{emp.razonSocial}</option>
-          ))}
-        </select>
+        <SearchableSelect 
+          value={empresaId}
+          onChange={setEmpresaId}
+          options={empresasOptions}
+          placeholder="-- Selecciona Empresa --"
+        />
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>

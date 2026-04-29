@@ -48,11 +48,20 @@ async function createProducto(formData) {
 }
 
 import { getSessionUser } from '../../../lib/auth'
+import SearchableSelect from '../../components/SearchableSelect'
 
 export default async function NuevoProductoPage() {
   const user = await getSessionUser();
   const rpEmpresa = user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {};
-  const empresas = await prisma.empresa.findMany({ where: rpEmpresa })
+  const empresas = await prisma.empresa.findMany({ 
+    where: rpEmpresa,
+    orderBy: { razonSocial: 'asc' }
+  });
+
+  const empresasOptions = empresas.map(emp => ({
+    value: emp.id,
+    label: `${emp.razonSocial} (${emp.rfc})`
+  }));
 
   return (
     <div>
@@ -72,12 +81,12 @@ export default async function NuevoProductoPage() {
           
           <div className="form-group">
             <label htmlFor="empresaId">Pertenece a la Empresa Emisora</label>
-            <select id="empresaId" name="empresaId" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <option value="">Selecciona la Empresa que factura este concepto</option>
-              {empresas.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.razonSocial} ({emp.rfc})</option>
-              ))}
-            </select>
+            <SearchableSelect 
+              name="empresaId"
+              options={empresasOptions}
+              placeholder="Selecciona la Empresa que factura este concepto"
+              required={true}
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>

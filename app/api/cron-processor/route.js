@@ -410,30 +410,17 @@ export async function GET(request) {
 
     const methodName = "spa" + "wn";
 
-    // Regla 1: Constancia de Situación Fiscal (CSF) a la 1:00 AM
-    if (mxHour === 1 && (dayOfMonth === 2 || dayOfMonth === 18 || dayOfMonth === 22)) {
-        if (getLock('last_csf_sync.txt') !== todayStr) {
-            setLock('last_csf_sync.txt', todayStr);
-            cp[methodName]('node', [scriptPath, '--csf-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
-            console.log("SAT Sync automático (CSF) lanzado para el día:", todayStr);
-        }
-    }
-
-    // Regla 2: Opinión de Cumplimiento a las 3:00 AM
-    if (mxHour === 3 && (dayOfMonth === 3 || dayOfMonth === 19 || dayOfMonth === 22)) {
-        if (getLock('last_opinion_sync.txt') !== todayStr) {
-            setLock('last_opinion_sync.txt', todayStr);
-            cp[methodName]('node', [scriptPath, '--opinion-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
-            console.log("SAT Sync automático (OPINION) lanzado para el día:", todayStr);
-        }
-    }
-
-    // Regla 3: Buzón Tributario a las 5:00 AM (Todos los días)
-    if (mxHour === 5) {
-        if (getLock('last_buzon_sync.txt') !== todayStr) {
-            setLock('last_buzon_sync.txt', todayStr);
-            cp[methodName]('node', [scriptPath, '--buzon-only', '--skip-cfdi'], { detached: true, stdio: 'ignore' }).unref();
-            console.log("SAT Sync automático (BUZON) lanzado para el día:", todayStr);
+    // Regla Unificada: Rutina Fiscal (Opinión, Constancia, Buzón) a la 1:00 AM (Todos los días)
+    if (mxHour === 1) {
+        if (getLock('last_fiscal_routine_sync.txt') !== todayStr) {
+            setLock('last_fiscal_routine_sync.txt', todayStr);
+            const logFile = fs.openSync(tmpDir + '/maestro_fiscal_out.log', 'a');
+            const subprocess = cp[methodName]('node', [scriptPath, '--fiscal-routine'], { 
+                detached: true, 
+                stdio: ['ignore', logFile, logFile] 
+            });
+            subprocess.unref();
+            console.log("SAT Sync automático (FISCAL ROUTINE) lanzado para el día:", todayStr);
         }
     }
 

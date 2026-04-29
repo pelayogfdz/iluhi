@@ -5,8 +5,9 @@ import CsdUploader from './CsdUploader'
 import LogoUploader from './LogoUploader'
 import FielUploader from './FielUploader'
 import SociosPanel from './SociosPanel'
+import Facturapi from 'facturapi'
 
-
+const facturapiAdmin = new Facturapi(process.env.FACTURAPI_USER_KEY)
 
 export default async function EditarEmpresaPage({ params }) {
   const { id } = await params
@@ -18,10 +19,24 @@ export default async function EditarEmpresaPage({ params }) {
     redirect('/empresas')
   }
 
+  // Fetch Facturapi organization to get certificate expiration dates
+  let facturapiOrg = null;
+  try {
+    if (empresa.facturapiId) {
+      facturapiOrg = await facturapiAdmin.organizations.retrieve(empresa.facturapiId);
+    }
+  } catch (err) {
+    console.error("Error fetching Facturapi Org details:", err.message);
+  }
+
+  const csdExpiresAt = facturapiOrg?.certificate?.expires_at || null;
+  const fielExpiresAt = facturapiOrg?.fiel?.expires_at || null;
+
   // Serializar fechas para pasar a client components
   const empresaData = {
     ...empresa,
-    fielVigencia: empresa.fielVigencia ? empresa.fielVigencia.toISOString() : null,
+    fielVigencia: fielExpiresAt ? new Date(fielExpiresAt).toISOString() : (empresa.fielVigencia ? empresa.fielVigencia.toISOString() : null),
+    csdVigencia: csdExpiresAt ? new Date(csdExpiresAt).toISOString() : null,
     createdAt: empresa.createdAt.toISOString(),
     updatedAt: empresa.updatedAt.toISOString()
   }
@@ -37,7 +52,7 @@ export default async function EditarEmpresaPage({ params }) {
         </div>
       </div>
       <EditForm empresa={empresa} />
-      <CsdUploader empresa={empresa} />
+      <CsdUploader empresa={empresaData} />
       <FielUploader empresa={empresaData} />
       <LogoUploader empresaId={empresa.id} />
       <SociosPanel empresaId={empresa.id} />
