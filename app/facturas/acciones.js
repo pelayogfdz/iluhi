@@ -255,7 +255,7 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
   try {
     const fac = await prisma.factura.findUnique({ 
         where: { id: facturaId },
-        include: { empresa: true }
+        include: { empresa: true, cliente: true }
     });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
     
@@ -266,13 +266,23 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
       : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
+      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+      
+      // fac.uuid stores the Facturapi Internal ID in our DB. We need the real SAT UUID.
+      const originalInvoice = await tenantFacturapi.invoices.retrieve(fac.uuid).catch(() => null);
+      if (!originalInvoice || !originalInvoice.uuid) {
+        return { success: false, error: 'No se pudo obtener el UUID del SAT para esta factura. Es posible que aún no esté timbrada.' };
+      }
+      
+      const realSatUuid = originalInvoice.uuid;
+
       const payload = {
         type: 'P',
-        customer: fac.clienteId ? {
-          legal_name: fac.cliente?.razonSocial || 'Público General',
-          tax_id: fac.cliente?.rfc || 'XAXX010101000',
-          tax_system: fac.cliente?.regimen || '616',
-          email: fac.cliente?.correoDestino || '',
+        customer: fac.cliente ? {
+          legal_name: fac.cliente.razonSocial || 'Público General',
+          tax_id: fac.cliente.rfc || 'XAXX010101000',
+          tax_system: fac.cliente.regimen || '616',
+          email: fac.cliente.correoDestino || '',
           address: {
             zip: fac.cliente?.codigoPostal || '00000',
             street: fac.cliente?.calle || undefined,
@@ -296,7 +306,7 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
                 numOperacion: numOperacion || undefined,
                 related_documents: [
                   {
-                    uuid: fac.uuid,
+                    uuid: realSatUuid,
                     amount: parseFloat(montoAbonado),
                     installment: 1
                   }
