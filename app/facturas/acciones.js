@@ -276,6 +276,64 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
       
       const realSatUuid = originalInvoice.uuid;
 
+      // Calcular impuestos proporcionales (Requerido por SAT CFDI 4.0 al usar uuid directamente)
+      const montoAbonadoFloat = parseFloat(montoAbonado);
+      let taxObjectToSet = "01"; // 01 - No objeto de impuesto
+      const relatedTaxes = [];
+      
+      if (originalInvoice.items && originalInvoice.items.length > 0) {
+        const invoiceTaxesMap = {};
+        let totalBaseOriginal = 0;
+        
+        originalInvoice.items.forEach(item => {
+           if (item.product && item.product.taxability !== "01" && item.product.taxes && item.product.taxes.length > 0) {
+               taxObjectToSet = "02"; // 02 - Sí objeto de impuesto
+               const itemBase = (item.product.price * item.quantity) - (item.discount || 0);
+               totalBaseOriginal += itemBase;
+               
+               item.product.taxes.forEach(t => {
+                   const key = `${t.type}_${t.rate}_${t.withholding ? 'W' : 'T'}`;
+                   if (!invoiceTaxesMap[key]) {
+                      invoiceTaxesMap[key] = {
+                         type: t.type,
+                         rate: t.rate,
+                         withholding: t.withholding || false,
+                         originalBaseSum: 0
+                      };
+                   }
+                   invoiceTaxesMap[key].originalBaseSum += itemBase;
+               });
+           }
+        });
+
+        // Aplicar factor de proporción: Pago Actual / Total de la Factura
+        const propFactor = originalInvoice.total > 0 ? (montoAbonadoFloat / originalInvoice.total) : 0;
+        
+        Object.values(invoiceTaxesMap).forEach(t => {
+           relatedTaxes.push({
+               type: t.type,
+               rate: t.rate,
+               withholding: t.withholding,
+               base: parseFloat((t.originalBaseSum * propFactor).toFixed(6))
+           });
+        });
+      }
+
+      const relatedDocPayload = {
+        uuid: realSatUuid,
+        amount: montoAbonadoFloat,
+        installment: 1,
+        last_balance: originalInvoice.amount_due || originalInvoice.total || montoAbonadoFloat
+      };
+      
+      // Facturapi requiere declarar los impuestos desglosados
+      if (taxObjectToSet === "02" && relatedTaxes.length > 0) {
+          relatedDocPayload.tax_object = "02";
+          relatedDocPayload.taxes = relatedTaxes;
+      } else {
+          relatedDocPayload.tax_object = "01";
+      }
+
       const payload = {
         type: 'P',
         customer: fac.cliente ? {
@@ -304,14 +362,7 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
                 currency: moneda || 'MXN',
                 exchange: parseFloat(tipoCambio) || 1,
                 numOperacion: numOperacion || undefined,
-                related_documents: [
-                  {
-                    uuid: realSatUuid,
-                    amount: parseFloat(montoAbonado),
-                    installment: 1,
-                    last_balance: originalInvoice.amount_due || originalInvoice.total || parseFloat(montoAbonado)
-                  }
-                ]
+                related_documents: [relatedDocPayload]
               }
             ]
           }
