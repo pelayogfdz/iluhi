@@ -254,7 +254,12 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             {/* Tabla del Carrito */}
             <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', minHeight: '100px', overflowX: 'auto' }}>
                {items.length === 0 ? <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '1rem' }}>El carrito está vacío.</p> : 
-               items.map((it, idx) => (
+               items.map((it, idx) => {
+                 const subtotal = it.cantidad * it.precio;
+                 const iva = it.impuesto === '002' ? subtotal * it.tasaOCuota : 0;
+                 const totalItem = subtotal + iva;
+
+                 return (
                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0.5rem 0', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ flex: '1 1 250px' }}>
                       <input 
@@ -266,13 +271,20 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                       />
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Clave SAT: {it.claveProdServ} | Impuesto: {it.impuesto === '002' ? 'IVA '+(it.tasaOCuota*100)+'%' : 'Exento/Otro'}</div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span>{it.cantidad} x ${it.precio.toFixed(2)}</span>
-                      <span style={{ fontWeight: 'bold', width: '80px', textAlign: 'right' }}>$ {(it.cantidad * it.precio).toFixed(2)}</span>
-                      <button type="button" onClick={() => handleEliminarConcepto(idx)} style={{ background: 'red', color: 'white', border: 'none', borderRadius: '4px', padding: '0.2rem 0.6rem', cursor: 'pointer' }}>X</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.9rem' }}>
+                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)' }}>
+                         <span>{it.cantidad} x ${it.precio.toFixed(2)}</span>
+                      </div>
+                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
+                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Costo: ${subtotal.toFixed(2)}</span>
+                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>IVA: ${iva.toFixed(2)}</span>
+                         <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'white' }}>Total: ${totalItem.toFixed(2)}</span>
+                      </div>
+                      <button type="button" onClick={() => handleEliminarConcepto(idx)} style={{ background: 'red', color: 'white', border: 'none', borderRadius: '4px', padding: '0.4rem 0.6rem', cursor: 'pointer', height: 'fit-content' }}>X</button>
                     </div>
                  </div>
-               ))}
+                 );
+               })}
             </div>
           </div>
 
