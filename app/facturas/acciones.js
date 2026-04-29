@@ -296,7 +296,7 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
                 numOperacion: numOperacion || undefined,
                 related_documents: [
                   {
-                    document: fac.uuid,
+                    uuid: fac.uuid,
                     amount: parseFloat(montoAbonado),
                     installment: 1
                   }
