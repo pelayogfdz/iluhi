@@ -67,22 +67,28 @@ export async function prepararYTimbrarFactura(formDataRaw) {
           state: cliente.estado || undefined
         }
       },
-      items: items.map((i) => ({
-        product: {
-          description: i.descripcion,
-          product_key: i.claveProdServ,
-          price: parseFloat(i.precio),
-          tax_included: false,
-          taxes: [
+      items: items.map((i) => {
+        const itemPayload = {
+          product: {
+            description: i.descripcion,
+            product_key: i.claveProdServ,
+            price: parseFloat(i.precio),
+            tax_included: false,
+            unit_key: i.claveUnidad || 'H87'
+          },
+          quantity: parseInt(i.cantidad)
+        };
+
+        if ((i.impuesto === '002' || i.impuesto === '003') && i.tasaOCuota !== null && i.tasaOCuota !== '') {
+          itemPayload.product.taxes = [
             {
-              type: i.impuesto === '002' ? 'IVA' : i.impuesto === '001' ? 'ISR' : 'IEPS',
+              type: i.impuesto === '002' ? 'IVA' : 'IEPS',
               rate: parseFloat(i.tasaOCuota)
             }
-          ],
-          unit_key: i.claveUnidad
-        },
-        quantity: parseInt(i.cantidad)
-      })),
+          ];
+        }
+        return itemPayload;
+      }),
       use: usoCfdi,
       payment_form: formaPago,
       payment_method: metodoPago
@@ -118,12 +124,14 @@ export async function prepararYTimbrarFactura(formDataRaw) {
             receipt = await testFacturapi.invoices.create(facturaPayload);
             fallbackStatus = 'Timbrada (Test Fallback)';
           } catch(fallbackErr) {
-             console.error("Fallo de API del PAC (Fallback Test): ", fallbackErr);
-             return { success: false, error: 'Error del SAT/PAC: ' + (fallbackErr.message || JSON.stringify(fallbackErr)) }
+             const errorMsg = fallbackErr.response?.data?.message || fallbackErr.message || "Error desconocido";
+             console.error("Fallo de API del PAC (Fallback Test): ", errorMsg);
+             return { success: false, error: 'Error del SAT/PAC: ' + errorMsg }
           }
         } else {
-          console.error("Fallo de API del PAC: ", pacError);
-          return { success: false, error: 'Error del SAT/PAC: ' + (pacError.message || JSON.stringify(pacError)) }
+          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+          console.error("Fallo de API del PAC: ", errorMsg);
+          return { success: false, error: 'Error del SAT/PAC: ' + errorMsg }
         }
       }
     } else {
@@ -202,14 +210,15 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         await tenantFacturapi.invoices.cancel(fac.uuid, payload);
-      } catch (pacError) {
+        } catch (pacError) {
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
           console.log("Facturapi rechazó Live por falta de CSD real. Cancelando con Test Key...");
           const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
           const testFacturapi = new facturapi.constructor(fallbackKey);
           await testFacturapi.invoices.cancel(fac.uuid, payload);
         } else {
-          throw pacError;
+          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+          throw new Error(errorMsg);
         }
       }
     } else {
@@ -287,14 +296,15 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         await tenantFacturapi.invoices.create(payload);
-      } catch (pacError) {
+        } catch (pacError) {
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
           console.log("Facturapi rechazó Live por falta de CSD real. Emitiendo Complemento con Test Key...");
           const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
           const testFacturapi = new facturapi.constructor(fallbackKey);
           await testFacturapi.invoices.create(payload);
         } else {
-          throw pacError;
+          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+          throw new Error(errorMsg);
         }
       }
     } else {
@@ -369,9 +379,22 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
         ]
       };
 
-      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
-      receipt = await tenantFacturapi.invoices.create(payload);
-      fallbackStatus = 'Nota de Crédito Generada';
+      try {
+        const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+        receipt = await tenantFacturapi.invoices.create(payload);
+        fallbackStatus = 'Nota de Crédito Generada';
+      } catch (pacError) {
+        if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
+          console.log("Facturapi rechazó Live por falta de CSD real. Emitiendo Nota de Crédito con Test Key...");
+          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+          const testFacturapi = new facturapi.constructor(fallbackKey);
+          receipt = await testFacturapi.invoices.create(payload);
+          fallbackStatus = 'Nota de Crédito Generada (Test Fallback)';
+        } else {
+          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+          throw new Error(errorMsg);
+        }
+      }
     } else {
        console.log(`[SIMULACION] Emitiendo Nota de Crédito a factura ${fac.uuid} por $${monto}`);
        receipt = { id: 'mock_egreso_' + Math.floor(Math.random() * 1000) };
@@ -384,8 +407,9 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
 
     return { success: true, egresoId: receipt.id };
   } catch(error) {
-    console.error("Error al emitir Nota de Crédito: ", error);
-    return { success: false, error: error.message };
+    const errorMsg = error.response?.data?.message || error.message || "Error desconocido";
+    console.error("Error al emitir Nota de Crédito: ", errorMsg);
+    return { success: false, error: errorMsg };
   }
 }
 

@@ -91,15 +91,21 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
       }))
     };
 
-    const serverRes = await prepararYTimbrarFactura(payload)
+    try {
+      const serverRes = await prepararYTimbrarFactura(payload)
 
-    if (serverRes.success) {
-      setResultado({ msg: `✅ Factura Armada con Estatus: ${serverRes.status}`, type: "success" })
-      setTimeout(() => router.push('/facturas'), 2500)
-    } else {
-      setResultado({ msg: `❌ ${serverRes.error}`, type: "error" })
+      if (serverRes.success) {
+        setResultado({ msg: `✅ Factura Armada con Estatus: ${serverRes.status}`, type: "success" })
+        setTimeout(() => router.push('/facturas'), 2500)
+      } else {
+        setResultado({ msg: `❌ ${serverRes.error}`, type: "error" })
+      }
+    } catch (error) {
+      console.error("Error al disparar la accion del servidor:", error);
+      setResultado({ msg: `❌ Error de red o tiempo de espera agotado. Facturapi/SAT tardó demasiado o la conexión falló. Por favor intente nuevamente.`, type: "error" })
+    } finally {
+      setCargando(false)
     }
-    setCargando(false)
   }
 
   // Calculos visuales
