@@ -308,7 +308,8 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
                   {
                     uuid: realSatUuid,
                     amount: parseFloat(montoAbonado),
-                    installment: 1
+                    installment: 1,
+                    last_balance: originalInvoice.amount_due || originalInvoice.total || parseFloat(montoAbonado)
                   }
                 ]
               }
