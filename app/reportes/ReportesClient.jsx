@@ -222,6 +222,7 @@ export default function ReportesClient({ empresas, clientes }) {
           <table className="table" style={{ width: '100%', minWidth: '900px' }}>
             <thead>
               <tr>
+                <th>Factura / Folio</th>
                 <th>Fecha</th>
                 <th>Emisor</th>
                 <th>Receptor</th>
@@ -234,6 +235,15 @@ export default function ReportesClient({ empresas, clientes }) {
             <tbody>
               {facturas.map(f => (
                 <tr key={f.id}>
+                  <td>
+                    {f.uuid !== 'N/A' ? (
+                      <a href={`/api/facturas/${f.uuid}/download?type=pdf`} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold' }}>
+                        {f.folioInterno !== 'N/A' ? f.folioInterno : (f.uuid.substring(0,8) + '...')}
+                      </a>
+                    ) : (
+                      <span style={{ color: 'var(--text-secondary)' }}>Sin Folio</span>
+                    )}
+                  </td>
                   <td>{new Date(f.fecha).toLocaleDateString()}</td>
                   <td>{f.empresa}</td>
                   <td>{f.cliente}</td>
