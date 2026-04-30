@@ -388,7 +388,6 @@ export async function GET(request) {
     
     // Check if within bounds
     const nowLocal = new Date();
-    const timeSinceLastGlobal = nowLocal.getTime() - lastGlobalTick.getTime();
 
     // 2. TAREAS MAESTRAS DEL SAT (Verificadas cada hora o en cada tick real)
     // Extraer solo la fecha YYYY-MM-DD
@@ -439,5 +438,104 @@ export async function GET(request) {
     console.error("Error en auto-trigger SAT:", syncErr);
   }
 
-  return NextResponse.json({ success: true, processed: procesadas });
+  // === ENCUESTAS DE SATISFACCION (Post-Factura 24h) ===
+  let encuestasProcesadas = 0;
+  try {
+    const date24hAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const date48hAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    const facturasPendientes = await prisma.facturaEmitida.findMany({
+        where: {
+            encuestaEnviada: false,
+            estatus: { not: "Cancelado" },
+            fechaEmision: {
+                lte: date24hAgo,
+                gte: date48hAgo
+            }
+        },
+        include: { empresa: true },
+        take: 5 // Process in batches to avoid timeouts
+    });
+
+    for (const factura of facturasPendientes) {
+        const empresa = factura.empresa;
+        if (!empresa.encuestaMensaje || !empresa.encuestaAsunto || !empresa.smtpUser || !empresa.smtpPass || !empresa.smtpHost) {
+            continue;
+        }
+
+        const cliente = await prisma.cliente.findUnique({
+            where: { rfc: factura.receptorRfc }
+        });
+
+        if (!cliente || !cliente.correoDestino) {
+            await prisma.facturaEmitida.update({
+                where: { id: factura.id },
+                data: { encuestaEnviada: true }
+            });
+            continue;
+        }
+
+        let mensajeHTML = empresa.encuestaMensaje
+            .replace(/{{nombre}}/g, cliente.razonSocial)
+            .replace(/{{rfc}}/g, cliente.rfc)
+            .replace(/{{empresa_emisora}}/g, empresa.razonSocial);
+        
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        const starsHtml = `
+        <div style="text-align: center; margin: 30px 0;">
+            <p style="font-size: 16px; color: #555;">¿Cómo calificarías nuestra respuesta y servicio?</p>
+            <div style="font-size: 30px; letter-spacing: 12px;">
+                <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=1" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=2" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=3" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=4" style="text-decoration:none; color:#ddd;">&#9733;</a>
+                <a href="${baseUrl}/api/encuestas-tracker?factura=${factura.uuid}&rating=5" style="text-decoration:none; color:#ddd;">&#9733;</a>
+            </div>
+        </div>`;
+
+        if (mensajeHTML.includes('{{panel_calificacion}}')) {
+            mensajeHTML = mensajeHTML.replace(/{{panel_calificacion}}/g, starsHtml);
+        } else {
+            mensajeHTML += `<br>${starsHtml}`;
+        }
+
+        if (empresa.encuestaEnlace) {
+            mensajeHTML = mensajeHTML.replace(/{{enlace}}/g, `<a href="${empresa.encuestaEnlace}">${empresa.encuestaEnlace}</a>`);
+        }
+        let asunto = empresa.encuestaAsunto
+            .replace(/{{nombre}}/g, cliente.razonSocial)
+            .replace(/{{empresa_emisora}}/g, empresa.razonSocial);
+
+        const transporter = nodemailer.createTransport({
+            host: empresa.smtpHost,
+            port: empresa.smtpPort || 465,
+            secure: (empresa.smtpPort === 465),
+            auth: {
+                user: empresa.smtpUser,
+                pass: empresa.smtpPass
+            }
+        });
+
+        try {
+            await transporter.sendMail({
+                from: `"${empresa.razonSocial}" <${empresa.smtpUser}>`,
+                to: cliente.correoDestino,
+                subject: asunto,
+                html: mensajeHTML
+            });
+
+            await prisma.facturaEmitida.update({
+                where: { id: factura.id },
+                data: { encuestaEnviada: true }
+            });
+            encuestasProcesadas++;
+        } catch (mailError) {
+            console.error(`[Error SMTP Encuestas] Fallo envío a ${cliente.correoDestino}:`, mailError.message);
+        }
+    }
+  } catch (err) {
+      console.error("Error global procesando encuestas:", err);
+  }
+
+  return NextResponse.json({ success: true, processed: procesadas, encuestasProcesadas });
 }

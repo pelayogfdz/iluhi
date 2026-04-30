@@ -366,28 +366,59 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         ]
       };
 
+      let newReceipt = null;
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
-        await tenantFacturapi.invoices.create(payload);
-        } catch (pacError) {
+        newReceipt = await tenantFacturapi.invoices.create(payload);
+      } catch (pacError) {
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
           console.log("Facturapi rechazó Live por falta de CSD real. Emitiendo Complemento con Test Key...");
           const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
           const testFacturapi = new facturapi.constructor(fallbackKey);
-          await testFacturapi.invoices.create(payload);
+          newReceipt = await testFacturapi.invoices.create(payload);
         } else {
           const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
           throw new Error(errorMsg);
         }
       }
+
+      const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
+      if (newReceipt) {
+        existingComplements.push({
+          id: newReceipt.id,
+          uuid: newReceipt.uuid,
+          amount: parseFloat(montoAbonado),
+          date: new Date().toISOString()
+        });
+      }
+
+      await prisma.factura.update({
+        where: { id: facturaId },
+        data: { 
+          estatus: newReceipt && newReceipt.status === 'valid' ? 'Timbrada - Complementado Local' : 'Timbrada (Test Fallback) - Complementado',
+          complementosPago: existingComplements
+        }
+      })
     } else {
        console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'} Moneda: ${moneda}`);
-    }
+       
+       const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
+       existingComplements.push({
+         id: `sim_comp_${Date.now()}`,
+         uuid: `sim_uuid_${Date.now()}`,
+         amount: parseFloat(montoAbonado),
+         date: new Date().toISOString(),
+         simulated: true
+       });
 
-    await prisma.factura.update({
-      where: { id: facturaId },
-      data: { estatus: 'Timbrada - Complementado Local' } // Optionally we can append something.
-    })
+       await prisma.factura.update({
+         where: { id: facturaId },
+         data: { 
+           estatus: 'Timbrada - Complementado Local',
+           complementosPago: existingComplements
+         }
+       })
+    }
 
     return { success: true };
   } catch(error) {

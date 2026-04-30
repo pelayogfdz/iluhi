@@ -213,6 +213,9 @@ model Factura {
   
   estatus                   String   @default("Borrador") // Borrador, Timbrada, Cancelada
   
+  // Complementos
+  complementosPago          Json?    @default("[]")
+  
   xmlUrl                    String?
   pdfUrl                    String?
   xmlBase64                 String?  // XML descargado por el CRON de sincronización SAT

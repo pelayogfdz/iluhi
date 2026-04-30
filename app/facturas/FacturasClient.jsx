@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -61,6 +61,11 @@ export default function FacturasClient({ facturasInitial, empresas }) {
     const fac = facturasInitial.find(f => f.id === facturaId)
     if (!fac || !fac.uuid) return alert("Esta factura no tiene UUID asignado.")
     window.open(`/api/facturas/${fac.uuid}/download?type=${type}`, '_blank')
+  }
+
+  const openDownloadComplement = (facturaUuid, compId, type) => {
+    if (!facturaUuid || !compId) return alert("El complemento no tiene un ID válido.");
+    window.open(`/api/facturas/${facturaUuid}/download-pago?pagoId=${compId}&type=${type}`, '_blank');
   }
 
   const downloadSelected = async () => {
@@ -193,7 +198,8 @@ export default function FacturasClient({ facturasInitial, empresas }) {
           ) : facturasInitial.map(fac => {
              const hasUUID = !!fac.uuid;
              return (
-              <tr key={fac.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: selectedDocs.includes(fac.id) ? 'rgba(255,255,255,0.05)' : 'transparent' }}>
+              <React.Fragment key={fac.id}>
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: selectedDocs.includes(fac.id) ? 'rgba(255,255,255,0.05)' : 'transparent' }}>
                 <td style={{ padding: '1rem 0', paddingLeft: '1rem' }}>
                   {hasUUID && <input type="checkbox" checked={selectedDocs.includes(fac.id)} onChange={() => toggleSelect(fac.id)} />}
                 </td>
@@ -234,6 +240,29 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                   <BotonCancelar factura={fac} onCancel={handleCancelFactura} />
                 </td>
               </tr>
+              {/* Renglón para Recibos Electrónicos de Pago (Complementos) */}
+              {Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0 && (
+                <tr style={{ background: 'rgba(14, 116, 144, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td colSpan="2"></td>
+                  <td colSpan="8" style={{ padding: '0.5rem 1rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 'bold', marginBottom: '8px' }}>
+                      ↳ Complementos de Pago (REP)
+                    </div>
+                    {fac.complementosPago.map(comp => (
+                      <div key={comp.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '4px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '6px' }}>
+                        <span style={{ fontFamily: 'monospace', color: '#ccc', width: '280px', fontSize: '0.85rem' }}>{comp.uuid || comp.id}</span>
+                        <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toFixed(2)}</span>
+                        <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{new Date(comp.date).toLocaleDateString()}</span>
+                        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                          <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>
+                          <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#eab308'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'xml')}>📥 XML REP</button>
+                        </div>
+                      </div>
+                    ))}
+                  </td>
+                </tr>
+              )}
+              </React.Fragment>
             )
           })}
         </tbody>
