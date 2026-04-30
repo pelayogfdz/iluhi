@@ -10,7 +10,7 @@ import facturapi from '../../lib/facturapi'
 
 export async function prepararYTimbrarFactura(formDataRaw) {
   try {
-    const { empresaId, clienteId, usoCfdi, formaPago, metodoPago, items, notasServicio } = formDataRaw;
+    const { empresaId, clienteId, usoCfdi, formaPago, metodoPago, items, notasServicio, fechaTimbrado } = formDataRaw;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'Debe agregar al menos un concepto a la factura.' }
@@ -111,6 +111,17 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     if (notasServicio && notasServicio.trim() !== '') {
       // Usa un HTML basico para respetar saltos de linea usando replace de newlines
       facturaPayload.pdf_custom_section = `<div><strong>Notas del Servicio:</strong><br/>${notasServicio.replace(/\n/g, '<br/>')}</div>`;
+    }
+
+    if (fechaTimbrado && fechaTimbrado.trim() !== '') {
+      try {
+        const customDate = new Date(fechaTimbrado);
+        if (!isNaN(customDate.getTime())) {
+          facturaPayload.date = customDate.toISOString();
+        }
+      } catch (err) {
+        console.error("Error parseando fechaTimbrado:", err);
+      }
     }
 
     console.log("PAYLOAD REDIRIGIDO A FACTURAPI: ", JSON.stringify(facturaPayload, null, 2));

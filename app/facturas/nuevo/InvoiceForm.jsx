@@ -23,6 +23,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const [formaPago, setFormaPago] = useState('03')
   const [metodoPago, setMetodoPago] = useState('PUE')
   const [notasServicio, setNotasServicio] = useState('')
+  const [fechaTimbrado, setFechaTimbrado] = useState('')
 
   // Estado del carrito de conceptos
   const [items, setItems] = useState([])
@@ -85,6 +86,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
       formaPago,
       metodoPago,
       notasServicio,
+      fechaTimbrado,
       items: items.map(it => ({
         ...it,
         productoId: it.id // Mapeo de Producto DB
@@ -295,9 +297,23 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             </div>
           </div>
 
-          <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', marginTop: '1rem' }}>
-            {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC (FACTURAPI)'}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                Fecha de Timbrado (Opcional - máx. 72hrs previas)
+              </label>
+              <input 
+                type="datetime-local" 
+                className="input" 
+                value={fechaTimbrado}
+                onChange={(e) => setFechaTimbrado(e.target.value)}
+              />
+            </div>
+            
+            <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', flex: 2 }}>
+              {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC (FACTURAPI)'}
+            </button>
+          </div>
 
           {resultado && (
             <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '8px', backgroundColor: resultado.type === 'error' ? 'rgba(255,0,0,0.2)' : 'rgba(0,255,0,0.2)'}}>
