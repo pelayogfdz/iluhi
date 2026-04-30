@@ -290,9 +290,11 @@ export async function GET(request) {
       if (!empresa.smtpUser || !empresa.smtpPass || !empresa.smtpHost) {
         throw new Error("La empresa no tiene la configuración SMTP guardada.");
       }
-      if (!cliente.correoDestino) {
-        throw new Error("El cliente no tiene un correo destino configurado.");
+      const correosList = [cliente.correoDestino, cliente.correoDestino2, cliente.correoDestino3].filter(c => c && c.trim() !== '');
+      if (correosList.length === 0) {
+        throw new Error("El cliente no tiene ningún correo destino configurado.");
       }
+      const correosUnidos = correosList.join(', ');
 
       // Configure nodemailer
       const transporter = nodemailer.createTransport({
@@ -307,7 +309,7 @@ export async function GET(request) {
 
       const mailOptions = {
         from: `"${empresa.razonSocial}" <${empresa.smtpUser}>`,
-        to: cliente.correoDestino,
+        to: correosUnidos,
         subject: `Notificación - ${empresa.razonSocial}`,
         text: '',
         attachments: []
@@ -467,13 +469,15 @@ export async function GET(request) {
             where: { rfc: factura.receptorRfc }
         });
 
-        if (!cliente || !cliente.correoDestino) {
+        const correosEncuestaList = [cliente.correoDestino, cliente.correoDestino2, cliente.correoDestino3].filter(c => c && c.trim() !== '');
+        if (!cliente || correosEncuestaList.length === 0) {
             await prisma.facturaEmitida.update({
                 where: { id: factura.id },
                 data: { encuestaEnviada: true }
             });
             continue;
         }
+        const correosEncuestaUnidos = correosEncuestaList.join(', ');
 
         let mensajeHTML = empresa.encuestaMensaje
             .replace(/{{nombre}}/g, cliente.razonSocial)
@@ -519,7 +523,7 @@ export async function GET(request) {
         try {
             await transporter.sendMail({
                 from: `"${empresa.razonSocial}" <${empresa.smtpUser}>`,
-                to: cliente.correoDestino,
+                to: correosEncuestaUnidos,
                 subject: asunto,
                 html: mensajeHTML
             });
