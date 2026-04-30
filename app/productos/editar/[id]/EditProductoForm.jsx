@@ -28,33 +28,43 @@ export default function EditProductoForm({ producto, empresas }) {
     setCargando(true)
     setMsg(null)
 
-    // Form data gives us native form objects since it includes the Autocomplete hiddens
-    const data = new FormData(e.target)
-    
-    // We assemble the unified payload
-    const payload = {
-      empresaId: formData.empresaId,
-      noIdentificacion: formData.noIdentificacion,
-      descripcion: formData.descripcion,
-      claveProdServ: (data.get('claveProdServ') || '').split(' - ')[0].trim(), // From the SatAutocomplete hidden input
-      claveUnidad: (data.get('claveUnidad') || '').split(' - ')[0].trim(),   // From the SatAutocomplete hidden input
-      precio: parseFloat(formData.precio) || 0,
-      impuesto: formData.impuesto,
-      objetoImp: formData.objetoImp,
-      tipoFactor: formData.tipoFactor,
-      tasaOCuota: parseFloat(formData.tasaOCuota) || 0
-    }
-    
-    const result = await actualizarProducto(producto.id, payload)
-    
-    if (result.success) {
-      setMsg({ type: 'success', text: '✅ Producto actualizado exitosamente.' })
-      setTimeout(() => {
-        router.push('/productos')
-        router.refresh()
-      }, 1500)
-    } else {
-      setMsg({ type: 'error', text: '❌ Error: ' + result.error })
+    try {
+      // Form data gives us native form objects since it includes the Autocomplete hiddens
+      const data = new FormData(e.target)
+      
+      // We assemble the unified payload
+      const payload = {
+        empresaId: formData.empresaId,
+        noIdentificacion: formData.noIdentificacion,
+        descripcion: formData.descripcion,
+        claveProdServ: (data.get('claveProdServ') || '').toString().split(' - ')[0].trim(), // From the SatAutocomplete hidden input
+        claveUnidad: (data.get('claveUnidad') || '').toString().split(' - ')[0].trim(),   // From the SatAutocomplete hidden input
+        precio: parseFloat(formData.precio) || 0,
+        impuesto: formData.impuesto,
+        objetoImp: formData.objetoImp,
+        tipoFactor: formData.tipoFactor,
+        tasaOCuota: parseFloat(formData.tasaOCuota) || 0
+      }
+      
+      console.log("Submitting payload:", payload)
+      
+      const result = await actualizarProducto(producto.id, payload)
+      
+      console.log("Result:", result)
+      
+      if (result.success) {
+        setMsg({ type: 'success', text: '✅ Producto actualizado exitosamente.' })
+        setTimeout(() => {
+          router.push('/productos')
+          router.refresh()
+        }, 1500)
+      } else {
+        setMsg({ type: 'error', text: '❌ Error: ' + result.error })
+        setCargando(false)
+      }
+    } catch (error) {
+      console.error("Error in handleSubmit:", error)
+      setMsg({ type: 'error', text: '❌ Error inesperado: ' + error.message })
       setCargando(false)
     }
   }

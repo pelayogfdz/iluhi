@@ -2,69 +2,70 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model Usuario {
-  id             String   @id @default(uuid())
-  nombre         String
-  correo         String   @unique
-  passwordHash   String
+  id           String @id @default(uuid())
+  nombre       String
+  correo       String @unique
+  passwordHash String
 
   // Permisos de Acceso a Módulos (Palomitas)
-  permisoEmpresas   Boolean @default(false)
-  permisoClientes   Boolean @default(false)
-  permisoProductos  Boolean @default(false)
-  permisoFacturas   Boolean @default(false)
-  permisoReportes   Boolean @default(false)
-  permisoUsuarios   Boolean @default(false)
+  permisoEmpresas           Boolean @default(false)
+  permisoClientes           Boolean @default(false)
+  permisoProductos          Boolean @default(false)
+  permisoFacturas           Boolean @default(false)
+  permisoReportes           Boolean @default(false)
+  permisoUsuarios           Boolean @default(false)
   permisoAsignacionClientes Boolean @default(false)
-  permisoEliminarEmpresas Boolean @default(false)
+  permisoEliminarEmpresas   Boolean @default(false)
 
-  empresas       Empresa[]
-  clientesAsignados Cliente[] @relation("UsuarioClientes")
+  empresas          Empresa[]
+  clientesAsignados Cliente[]   @relation("UsuarioClientes")
+  pagosFlujoCreados PagoFlujo[] @relation("UsuarioPagoFlujo")
 
-  createdAt      DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Empresa {
-  id           String     @id @default(uuid())
-  rfc          String     @unique
+  id           String @id @default(uuid())
+  rfc          String @unique
   razonSocial  String
   regimen      String
   codigoPostal String
-  
-  calle        String?
-  numExterior  String?
-  numInterior  String?
-  colonia      String?
-  municipio    String?
-  ciudad       String?
-  estado       String?
-  correo       String?
-  
-  facturapiId  String?    @unique
+
+  calle       String?
+  numExterior String?
+  numInterior String?
+  colonia     String?
+  municipio   String?
+  ciudad      String?
+  estado      String?
+  correo      String?
+
+  facturapiId      String? @unique
   facturapiLiveKey String?
   facturapiTestKey String?
-  
+
   // Confidencial (CSD)
-  cerPath            String?
-  keyPath            String?
-  passwordCsd        String?
+  cerPath     String?
+  keyPath     String?
+  passwordCsd String?
 
   // SMTP Mail Server
-  smtpHost           String?
-  smtpPort           Int?
-  smtpUser           String?
-  smtpPass           String?
-  
+  smtpHost String?
+  smtpPort Int?
+  smtpUser String?
+  smtpPass String?
+
   // SAT FIEL (e.firma Avanzada) Descargas
   fielCerBase64           String?
   fielKeyBase64           String?
@@ -73,162 +74,164 @@ model Empresa {
   opinionCumplimiento     String? // POSITIVA, NEGATIVA, EN_TRAMITE
   ultimaValidacionOpinion DateTime?
   // Planeación y Extras
-  objetoSocial           String?
-  actividadEconomica     String?
-  
+  objetoSocial            String?
+  actividadEconomica      String?
+
   // Modulo Automatizacion de Encuestas de Satisfaccion (Post-Factura)
-  encuestaAsunto         String?  // Asunto del correo enviado a las 24h
-  encuestaMensaje        String?  // Texto del correo (soporta {{nombre}})
-  encuestaEnlace         String?  // URL del forms de satisfaccion (Typeform, soporte)
-  googleReviewsUrl       String?  // URL directo de Google Maps Reviews
-  
+  encuestaAsunto   String? // Asunto del correo enviado a las 24h
+  encuestaMensaje  String? // Texto del correo (soporta {{nombre}})
+  encuestaEnlace   String? // URL del forms de satisfaccion (Typeform, soporte)
+  googleReviewsUrl String? // URL directo de Google Maps Reviews
+
   // Plantillas de Correo
   plantillaCotizacion    String?
   plantillaOrdenServicio String?
   plantillaFactura       String?
-  
+
   // Relaciones
-  usuarios     Usuario[]
-  productos    Producto[]
-  facturas     Factura[]
+  usuarios          Usuario[]
+  productos         Producto[]
+  facturas          Factura[]
   facturasRecibidas FacturaRecibida[]
-  facturasEmitidas FacturaEmitida[]
-  socios       Socio[]
-  documentosSat DocumentoSat[]
-  satSyncLogs   SatSyncLog[]
-  archivosEmpresa ArchivoEmpresa[]
-  
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  facturasEmitidas  FacturaEmitida[]
+  socios            Socio[]
+  documentosSat     DocumentoSat[]
+  satSyncLogs       SatSyncLog[]
+  archivosEmpresa   ArchivoEmpresa[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Socio {
-  id             String    @id @default(uuid())
-  nombre         String
-  rfc            String
-  
+  id     String @id @default(uuid())
+  nombre String
+  rfc    String
+
   // FIEL Personal del socio
-  fielCerBase64  String?
-  fielKeyBase64  String?
-  fielPassword   String?
-  fielVigencia   DateTime?
-  
-  empresaId      String
-  empresa        Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
-  createdAt      DateTime  @default(now())
+  fielCerBase64 String?
+  fielKeyBase64 String?
+  fielPassword  String?
+  fielVigencia  DateTime?
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model Cliente {
-  id           String     @id @default(uuid())
-  rfc               String
-  razonSocial       String
-  regimen           String
-  codigoPostal      String
-  usoCfdi           String
-  
+  id           String @id @default(uuid())
+  rfc          String
+  razonSocial  String
+  regimen      String
+  codigoPostal String
+  usoCfdi      String
+
   // Direccion y Contacto (CRM Completo)
-  calle             String?
-  numExterior       String?
-  numInterior       String?
-  colonia           String?
-  municipio         String?
-  ciudad            String?
-  estado            String?
-  
+  calle       String?
+  numExterior String?
+  numInterior String?
+  colonia     String?
+  municipio   String?
+  ciudad      String?
+  estado      String?
+
   // Contacto y Condiciones Comerciales
   contactoPrincipal String?
   telefono          String?
   condicionesPago   String?
   cuentaBancaria    String?
-  
+
   // Para envío de factura
-  correoDestino     String?
-  correoDestino2    String?
-  correoDestino3    String?
-  
-  facturas        Factura[]
-  usuariosAsignados Usuario[] @relation("UsuarioClientes")
-  archivos        ArchivoCliente[]
-  
-  createdAt    DateTime   @default(now())
+  correoDestino  String?
+  correoDestino2 String?
+  correoDestino3 String?
+
+  facturas          Factura[]
+  usuariosAsignados Usuario[]        @relation("UsuarioClientes")
+  archivos          ArchivoCliente[]
+
+  createdAt DateTime @default(now())
+
   @@unique([rfc]) // Un cliente con el mismo RFC globalmente
 }
 
 model ArchivoCliente {
-  id               String   @id @default(uuid())
-  clienteId        String
-  cliente          Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  
-  categoria        String   // 'MATERIALIDAD', 'ENTREGABLES', 'CONTRATOS', etc.
-  nombreArchivo    String
-  archivoBase64    String?  
-  
-  fechaSubida      DateTime @default(now())
+  id        String  @id @default(uuid())
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  categoria     String // 'MATERIALIDAD', 'ENTREGABLES', 'CONTRATOS', etc.
+  nombreArchivo String
+  archivoBase64 String?
+
+  fechaSubida DateTime @default(now())
 }
 
-model Producto { // Renombrado lógicamente como "Productos y Servicios" en UI
-  id                 String   @id @default(uuid())
-  noIdentificacion   String
-  descripcion        String
-  claveProdServ      String // Validado contra tabla SAT
-  claveUnidad        String // Validado contra tabla SAT
-  precio             Float
-  
+model Producto {
+  id               String @id @default(uuid())
+  noIdentificacion String
+  descripcion      String
+  claveProdServ    String // Validado contra tabla SAT
+  claveUnidad      String // Validado contra tabla SAT
+  precio           Float
+
   // Impuestos CFDI 4.0
-  objetoImp          String   @default("02") // 01 No objeto, 02 Sí objeto, 03 Sí objeto y exento
-  tipoFactor         String   @default("Tasa") // Tasa, Cuota, Exento
-  tasaOCuota         Float    @default(0.160000)
-  impuesto           String?  // 002 (IVA), 003 (IEPS), 001 (ISR)
-  
-  empresaId      String
-  empresa        Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
-  createdAt      DateTime @default(now())
+  objetoImp  String  @default("02") // 01 No objeto, 02 Sí objeto, 03 Sí objeto y exento
+  tipoFactor String  @default("Tasa") // Tasa, Cuota, Exento
+  tasaOCuota Float   @default(0.160000)
+  impuesto   String? // 002 (IVA), 003 (IEPS), 001 (ISR)
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model Factura {
-  id                        String   @id @default(uuid())
-  uuid                      String?  @unique // Timbre Fiscal
-  serie                     String?
-  folio                     Int?
-  fechaEmision              DateTime @default(now())
-  
+  id           String   @id @default(uuid())
+  uuid         String?  @unique // Timbre Fiscal
+  serie        String?
+  folio        Int?
+  fechaEmision DateTime @default(now())
+
   // CFDI 4.0 Nodos Comprobante
-  moneda                    String   @default("MXN")
-  tipoCambio                Float?
-  tipoComprobante           String   @default("I") // I, E, T, P, N
-  exportacion               String   @default("01") // 01 No aplica
-  formaPago                 String?  // Ej. 03 Transferencia
-  metodoPago                String?  // Ej. PUE o PPD
-  condicionesDePago         String?  // Texto libre
-  notasServicio             String?
-  
+  moneda            String  @default("MXN")
+  tipoCambio        Float?
+  tipoComprobante   String  @default("I") // I, E, T, P, N
+  exportacion       String  @default("01") // 01 No aplica
+  formaPago         String? // Ej. 03 Transferencia
+  metodoPago        String? // Ej. PUE o PPD
+  condicionesDePago String? // Texto libre
+  notasServicio     String?
+
   // Desgloses Totales
   subTotal                  Float
-  descuento                 Float    @default(0)
-  totalImpuestosTrasladados Float    @default(0)
-  totalImpuestosRetenidos   Float    @default(0)
+  descuento                 Float @default(0)
+  totalImpuestosTrasladados Float @default(0)
+  totalImpuestosRetenidos   Float @default(0)
   total                     Float
-  
-  estatus                   String   @default("Borrador") // Borrador, Timbrada, Cancelada
-  
+
+  estatus String @default("Borrador") // Borrador, Timbrada, Cancelada
+
   // Complementos
-  complementosPago          Json?    @default("[]")
-  
-  xmlUrl                    String?
-  pdfUrl                    String?
-  xmlBase64                 String?  // XML descargado por el CRON de sincronización SAT
+  complementosPago Json? @default("[]")
 
-  empresaId      String
-  empresa        Empresa  @relation(fields: [empresaId], references: [id])
-  
-  clienteId      String
-  cliente        Cliente  @relation(fields: [clienteId], references: [id])
+  xmlUrl    String?
+  pdfUrl    String?
+  xmlBase64 String? // XML descargado por el CRON de sincronización SAT
 
-  emailTasks     EmailTask[]
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
 
-  createdAt      DateTime @default(now())
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  emailTasks EmailTask[]
+  pagosFlujo PagoFlujo[] @relation("FacturaPagoFlujo")
+
+  createdAt DateTime @default(now())
 }
 
 // ============================================
@@ -239,7 +242,7 @@ model EmailTask {
   id           String   @id @default(uuid())
   facturaId    String
   factura      Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
-  type         String   // COTIZACION, ORDEN_SERVICIO, FACTURA
+  type         String // COTIZACION, ORDEN_SERVICIO, FACTURA
   scheduledFor DateTime
   status       String   @default("PENDING") // PENDING, SENT, FAILED
   error        String?
@@ -247,91 +250,109 @@ model EmailTask {
 }
 
 model SatCatalogoProducto {
-  clave       String   @id
+  clave       String @id
   descripcion String
-  
+
   @@index([descripcion]) // Acelera las búsquedas de texto predictivo
 }
 
 model SatCatalogoUnidad {
-  clave       String   @id
-  nombre      String
+  clave  String @id
+  nombre String
 }
 
 model DocumentoSat {
-  id               String   @id @default(uuid())
-  tipo             String   // "CONSTANCIA", "OPINION", "BUZON"
-  fechaDocumento   DateTime @default(now())
-  descripcion      String?
-  archivoBase64    String?  
-  
-  empresaId        String
-  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
-  createdAt        DateTime @default(now())
+  id             String   @id @default(uuid())
+  tipo           String // "CONSTANCIA", "OPINION", "BUZON"
+  fechaDocumento DateTime @default(now())
+  descripcion    String?
+  archivoBase64  String?
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model SatSyncLog {
-  id               String   @id @default(uuid())
-  empresaId        String
-  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  tipo             String   // "CFDI", "OPINION", "CSF", "BUZON"
-  status           String   // "EXITO", "ERROR"
-  errorMsg         String?  @db.Text
-  detalles         String?  @db.Text
-  createdAt        DateTime @default(now())
+  id        String   @id @default(uuid())
+  empresaId String
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo      String // "CFDI", "OPINION", "CSF", "BUZON"
+  status    String // "EXITO", "ERROR"
+  errorMsg  String?  @db.Text
+  detalles  String?  @db.Text
+  createdAt DateTime @default(now())
 }
 
 model FacturaRecibida {
-  id               String   @id @default(uuid())
-  uuid             String   @unique
-  emisorRfc        String
-  emisorNombre     String
-  fechaEmision     DateTime
-  total            Float
-  moneda           String   @default("MXN")
-  estatus          String   @default("Vigente")
-  tipoDeComprobante String  @default("I") // I (Ingreso), P (Pago), etc.
-  xmlBase64        String?
-  pdfBase64        String?
-  
-  empresaId        String
-  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
-  createdAt        DateTime @default(now())
+  id                String   @id @default(uuid())
+  uuid              String   @unique
+  emisorRfc         String
+  emisorNombre      String
+  fechaEmision      DateTime
+  total             Float
+  moneda            String   @default("MXN")
+  estatus           String   @default("Vigente")
+  tipoDeComprobante String   @default("I") // I (Ingreso), P (Pago), etc.
+  xmlBase64         String?
+  pdfBase64         String?
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model FacturaEmitida {
-  id               String   @id @default(uuid())
-  uuid             String   @unique
-  receptorRfc      String
-  receptorNombre   String
-  fechaEmision     DateTime
-  total            Float
-  moneda           String   @default("MXN")
-  estatus          String   @default("Vigente")
-  tipoDeComprobante String  @default("I")
-  xmlBase64        String?
-  pdfBase64        String?
-  
-  encuestaEnviada  Boolean  @default(false)
+  id                String   @id @default(uuid())
+  uuid              String   @unique
+  receptorRfc       String
+  receptorNombre    String
+  fechaEmision      DateTime
+  total             Float
+  moneda            String   @default("MXN")
+  estatus           String   @default("Vigente")
+  tipoDeComprobante String   @default("I")
+  xmlBase64         String?
+  pdfBase64         String?
+
+  encuestaEnviada      Boolean @default(false)
   calificacionServicio Int?
-  
-  empresaId        String
-  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
-  createdAt        DateTime @default(now())
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model ArchivoEmpresa {
-  id               String   @id @default(uuid())
-  empresaId        String
-  empresa          Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
-  categoria        String   // 'EXPEDIENTE' o 'PLANEACION'
-  tipoDocumento    String   // ACTA_CONSTITUTIVA, ASAMBLEAS, PODERES, IDENTIFICACIONES, CONTRATOS_CLIENTES, ENTREGABLES_CLIENTES, CONTRATOS_PROVEEDORES, ENTREGABLES_PROVEEDORES
-  nombreArchivo    String
-  archivoBase64    String?  
-  
-  fechaSubida      DateTime @default(now())
+  id        String  @id @default(uuid())
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  categoria     String // 'EXPEDIENTE' o 'PLANEACION'
+  tipoDocumento String // ACTA_CONSTITUTIVA, ASAMBLEAS, PODERES, IDENTIFICACIONES, CONTRATOS_CLIENTES, ENTREGABLES_CLIENTES, CONTRATOS_PROVEEDORES, ENTREGABLES_PROVEEDORES
+  nombreArchivo String
+  archivoBase64 String?
+
+  fechaSubida DateTime @default(now())
+}
+
+model PagoFlujo {
+  id        String   @id @default(uuid())
+  banco     String
+  monto     Float
+  fechaPago DateTime
+  horaPago  String?
+  estatus   String   @default("Pendiente")
+
+  facturaId String?
+  factura   Factura? @relation("FacturaPagoFlujo", fields: [facturaId], references: [id])
+
+  creadorId String?
+  creador   Usuario? @relation("UsuarioPagoFlujo", fields: [creadorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

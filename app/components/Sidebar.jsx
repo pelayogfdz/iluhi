@@ -94,6 +94,7 @@ export default function Sidebar({ user, doLogout }) {
           {user.permisoClientes && <Link href="/clientes" className="nav-link" onClick={closeMenu}>👥 Clientes</Link>}
           {user.permisoProductos && <Link href="/productos" className="nav-link" onClick={closeMenu}>📦 Catálogo de Productos</Link>}
           {user.permisoFacturas && <Link href="/facturas" className="nav-link" onClick={closeMenu}>🧾 Facturas</Link>}
+          <Link href="/flujo-trabajo" className="nav-link" onClick={closeMenu}>🔄 Flujo de Trabajo</Link>
           {user.permisoUsuarios && <Link href="/usuarios" className="nav-link" onClick={closeMenu}>🔑 Usuarios</Link>}
           {user.permisoReportes && <Link href="/reportes" className="nav-link" onClick={closeMenu}>📊 Reportes</Link>}
           {user.permisoEmpresas && <Link href="/descargas-sat" className="nav-link" onClick={closeMenu}>📥 Descargas SAT</Link>}

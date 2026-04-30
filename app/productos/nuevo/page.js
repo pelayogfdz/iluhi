@@ -18,10 +18,10 @@ async function createProducto(formData) {
   
   // Si viene "43201601 - Computadoras...", extraemos "43201601"
   const rawProd = formData.get('claveProdServ') || ''
-  const claveProdServ = rawProd.split(' - ')[0].trim()
+  const claveProdServ = rawProd.toString().split(' - ')[0].trim()
   
   const rawUnidad = formData.get('claveUnidad') || ''
-  const claveUnidad = rawUnidad.split(' - ')[0].trim()
+  const claveUnidad = rawUnidad.toString().split(' - ')[0].trim()
 
   const precio = parseFloat(formData.get('precio')) || 0
   const impuesto = formData.get('impuesto')
