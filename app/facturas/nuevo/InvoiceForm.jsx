@@ -61,6 +61,23 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
     setItems(newArr);
   }
 
+  const handleChangeSubtotal = (index, newSubtotal) => {
+    if (isNaN(newSubtotal)) return;
+    const newArr = [...items];
+    newArr[index] = { ...newArr[index], precio: newSubtotal / newArr[index].cantidad };
+    setItems(newArr);
+  }
+
+  const handleChangeTotal = (index, newTotal) => {
+    if (isNaN(newTotal)) return;
+    const newArr = [...items];
+    const it = newArr[index];
+    const tasa = (it.impuesto === '002' || !it.impuesto) ? (it.tasaOCuota ? parseFloat(it.tasaOCuota) : 0.16) : 0;
+    const newPrecio = newTotal / (it.cantidad * (1 + tasa));
+    newArr[index] = { ...newArr[index], precio: newPrecio };
+    setItems(newArr);
+  }
+
   const handleSometerFactura = async (e) => {
     e.preventDefault()
     if (!empresaId) {
@@ -284,10 +301,26 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                       <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)' }}>
                          <span>{it.cantidad} x ${it.precio.toFixed(2)}</span>
                       </div>
-                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
-                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Costo: ${subtotal.toFixed(2)}</span>
+                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
+                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Costo: $</span>
+                           <input 
+                             type="number" step="0.01" 
+                             value={subtotal.toFixed(2)} 
+                             onChange={(e) => handleChangeSubtotal(idx, parseFloat(e.target.value))} 
+                             style={{ width: '80px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '2px 4px', fontSize: '0.8rem', borderRadius: '4px', textAlign: 'right' }} 
+                           />
+                         </div>
                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>IVA: ${iva.toFixed(2)}</span>
-                         <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'white' }}>Total: ${totalItem.toFixed(2)}</span>
+                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                           <span style={{ fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>Total: $</span>
+                           <input 
+                             type="number" step="0.01" 
+                             value={totalItem.toFixed(2)} 
+                             onChange={(e) => handleChangeTotal(idx, parseFloat(e.target.value))} 
+                             style={{ width: '100px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--accent)', color: 'white', padding: '4px', fontSize: '1rem', fontWeight: 'bold', borderRadius: '4px', textAlign: 'right' }} 
+                           />
+                         </div>
                       </div>
                       <button type="button" onClick={() => handleEliminarConcepto(idx)} style={{ background: 'red', color: 'white', border: 'none', borderRadius: '4px', padding: '0.4rem 0.6rem', cursor: 'pointer', height: 'fit-content' }}>X</button>
                     </div>
