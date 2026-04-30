@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { registrarPagoFlujo, asignarFacturaAPago, eliminarPago } from "./acciones";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+
 
 export default function FlujoTrabajoClient({ facturasDisponibles, pagosPendientesIniciales, pagosAsignadosIniciales }) {
   const [activeTab, setActiveTab] = useState("tesoreria");
@@ -137,7 +136,7 @@ export default function FlujoTrabajoClient({ facturasDisponibles, pagosPendiente
                   {pagosPendientes.map(pago => (
                     <tr key={pago.id} className="hover:bg-gray-50">
                       <td className="py-3 px-4 text-gray-800">
-                        {format(new Date(pago.fechaPago), "dd/MM/yyyy")} {pago.horaPago && `- ${pago.horaPago}`}
+                        {new Date(pago.fechaPago).toLocaleDateString("es-MX")} {pago.horaPago && `- ${pago.horaPago}`}
                       </td>
                       <td className="py-3 px-4 text-gray-600">{pago.banco}</td>
                       <td className="py-3 px-4 font-bold text-gray-800">
@@ -158,7 +157,7 @@ export default function FlujoTrabajoClient({ facturasDisponibles, pagosPendiente
                   {pagosAsignados.slice(0, 5).map(pago => (
                     <tr key={pago.id} className="hover:bg-gray-50 opacity-70">
                       <td className="py-3 px-4 text-gray-800">
-                        {format(new Date(pago.fechaPago), "dd/MM/yyyy")}
+                        {new Date(pago.fechaPago).toLocaleDateString("es-MX")}
                       </td>
                       <td className="py-3 px-4 text-gray-600">{pago.banco}</td>
                       <td className="py-3 px-4 font-bold text-gray-800">
@@ -213,7 +212,7 @@ export default function FlujoTrabajoClient({ facturasDisponibles, pagosPendiente
                       </span>
                     </div>
                     <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <span>📅 {format(new Date(pago.fechaPago), "dd MMM yyyy")}</span>
+                      <span>📅 {new Date(pago.fechaPago).toLocaleDateString("es-MX", { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                       {pago.horaPago && <span>🕒 {pago.horaPago}</span>}
                     </div>
                   </div>
