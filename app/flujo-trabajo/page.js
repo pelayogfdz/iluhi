@@ -23,6 +23,14 @@ export default async function FlujoTrabajoPage() {
     take: 100 // Limitamos para rendimiento, la búsqueda full se podría hacer server-side en el futuro
   });
 
+  const empresasDisponibles = await prisma.empresa.findMany({
+    orderBy: { razonSocial: 'asc' }
+  });
+
+  const clientesDisponibles = await prisma.cliente.findMany({
+    orderBy: { razonSocial: 'asc' }
+  });
+
   // Cargar pagos pendientes
   const pagosPendientes = await prisma.pagoFlujo.findMany({
     where: { estatus: "Pendiente" },
@@ -51,6 +59,8 @@ export default async function FlujoTrabajoPage() {
 
         <FlujoTrabajoClient 
           facturasDisponibles={facturasDisponibles} 
+          empresasDisponibles={empresasDisponibles}
+          clientesDisponibles={clientesDisponibles}
           pagosPendientesIniciales={pagosPendientes}
           pagosAsignadosIniciales={pagosAsignados}
         />

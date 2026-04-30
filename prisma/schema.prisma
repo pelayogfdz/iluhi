@@ -98,6 +98,7 @@ model Empresa {
   documentosSat     DocumentoSat[]
   satSyncLogs       SatSyncLog[]
   archivosEmpresa   ArchivoEmpresa[]
+  pagosFlujo        PagoFlujo[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -151,6 +152,7 @@ model Cliente {
   facturas          Factura[]
   usuariosAsignados Usuario[]        @relation("UsuarioClientes")
   archivos          ArchivoCliente[]
+  pagosFlujo        PagoFlujo[]
 
   createdAt DateTime @default(now())
 
@@ -349,6 +351,12 @@ model PagoFlujo {
 
   facturaId String?
   factura   Factura? @relation("FacturaPagoFlujo", fields: [facturaId], references: [id])
+
+  empresaId String?
+  empresa   Empresa? @relation(fields: [empresaId], references: [id])
+
+  clienteId String?
+  cliente   Cliente? @relation(fields: [clienteId], references: [id])
 
   creadorId String?
   creador   Usuario? @relation("UsuarioPagoFlujo", fields: [creadorId], references: [id])

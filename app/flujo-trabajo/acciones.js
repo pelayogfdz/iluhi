@@ -11,6 +11,8 @@ export async function registrarPagoFlujo(datos) {
         monto: parseFloat(datos.monto),
         fechaPago: new Date(datos.fechaPago),
         horaPago: datos.horaPago,
+        empresaId: datos.empresaId,
+        clienteId: datos.clienteId || null,
         estatus: "Pendiente"
       }
     });
@@ -27,6 +29,7 @@ export async function obtenerPagosPendientes() {
   try {
     const pagos = await prisma.pagoFlujo.findMany({
       where: { estatus: "Pendiente" },
+      include: { empresa: true, cliente: true },
       orderBy: { createdAt: 'desc' }
     });
     return { success: true, pagos };
@@ -57,10 +60,16 @@ export async function obtenerPagosAsignados() {
 
 export async function asignarFacturaAPago(pagoId, facturaId) {
   try {
+    const factura = await prisma.factura.findUnique({
+      where: { id: facturaId },
+      select: { clienteId: true }
+    });
+
     const pago = await prisma.pagoFlujo.update({
       where: { id: pagoId },
       data: {
         facturaId: facturaId,
+        clienteId: factura?.clienteId, // Heredar cliente si no tenía
         estatus: "Asignado"
       }
     });
