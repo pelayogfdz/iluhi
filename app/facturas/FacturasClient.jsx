@@ -5,9 +5,10 @@ import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { useRouter, useSearchParams } from 'next/navigation'
 import BotonCancelar from './BotonCancelar'
+import BotonCancelarComplemento from './BotonCancelarComplemento'
 import BotonComplemento from './BotonComplemento'
 import BotonNotaCredito from './BotonNotaCredito'
-import { cancelarFactura, emitirComplementoPago, emitirNotaCredito } from './acciones'
+import { cancelarFactura, emitirComplementoPago, emitirNotaCredito, cancelarComplementoPago } from './acciones'
 
 export default function FacturasClient({ facturasInitial, empresas }) {
   const router = useRouter()
@@ -109,6 +110,13 @@ export default function FacturasClient({ facturasInitial, empresas }) {
      const res = await cancelarFactura(id, motivo, substitution);
      if(!res.success) throw new Error(res.error);
      alert("Factura enviada a cancelación exitosamente.");
+     router.refresh();
+  }
+
+  const handleCancelComplement = async (facturaId, receiptId, motivo) => {
+     const res = await cancelarComplementoPago(facturaId, receiptId, motivo);
+     if(!res.success) throw new Error(res.error);
+     alert("Complemento de pago cancelado exitosamente.");
      router.refresh();
   }
 
@@ -256,6 +264,7 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                         <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                           <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>
                           <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#eab308'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'xml')}>📥 XML REP</button>
+                          <BotonCancelarComplemento facturaId={fac.id} complemento={comp} onCancel={handleCancelComplement} />
                         </div>
                       </div>
                     ))}
