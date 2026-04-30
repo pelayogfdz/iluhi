@@ -162,7 +162,7 @@ export default function EditForm({ empresa }) {
           <div>
             <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '1.3rem' }}>Motor de Envíos Automáticos (SMTP)</h3>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-               Configura el correo desde el que CAANMA enviará las facturas y cotizaciones de esta empresa.
+               Configura el correo desde el que FACTURACIÓN SEIT enviará las facturas y cotizaciones de esta empresa.
             </p>
           </div>
           {(empresa.smtpHost && empresa.smtpUser && empresa.smtpPass) && (

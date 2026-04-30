@@ -2,7 +2,7 @@ import './globals.css'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'CFDI Multi-tenant Premium',
+  title: 'FACTURACIÓN SEIT',
   description: 'SaaS - Sistema de Facturación Electrónica',
 }
 

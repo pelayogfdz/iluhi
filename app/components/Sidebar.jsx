@@ -34,7 +34,7 @@ export default function Sidebar({ user, doLogout }) {
         zIndex: 2000
       }}>
         <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#fff' }}>
-          <span style={{ color: 'var(--primary)' }}>⚡</span> CFDI SaaS
+          <span style={{ color: 'var(--primary)' }}>⚡</span> FACTURACIÓN SEIT
         </div>
         <button 
           onClick={() => setOpen(!open)}
@@ -62,7 +62,7 @@ export default function Sidebar({ user, doLogout }) {
       {/* Actual Sidebar */}
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <span>⚡</span> CFDI SaaS
+          <span>⚡</span> FACTURACIÓN SEIT
         </div>
         
         {user.permisoFacturas && (
