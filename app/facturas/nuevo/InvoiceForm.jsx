@@ -61,20 +61,45 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
     setItems(newArr);
   }
 
-  const handleChangeSubtotal = (index, newSubtotal) => {
-    if (isNaN(newSubtotal)) return;
+  const handleChangeSubtotal = (index, valStr) => {
     const newArr = [...items];
-    newArr[index] = { ...newArr[index], precio: newSubtotal / newArr[index].cantidad };
+    const newSubtotal = parseFloat(valStr);
+    
+    if (isNaN(newSubtotal)) {
+      newArr[index] = { ...newArr[index], _subtotalStr: valStr };
+      setItems(newArr);
+      return;
+    }
+    
+    newArr[index] = { 
+      ...newArr[index], 
+      precio: newSubtotal / newArr[index].cantidad,
+      _subtotalStr: valStr,
+      _totalStr: undefined
+    };
     setItems(newArr);
   }
 
-  const handleChangeTotal = (index, newTotal) => {
-    if (isNaN(newTotal)) return;
+  const handleChangeTotal = (index, valStr) => {
     const newArr = [...items];
+    const newTotal = parseFloat(valStr);
+    
+    if (isNaN(newTotal)) {
+      newArr[index] = { ...newArr[index], _totalStr: valStr };
+      setItems(newArr);
+      return;
+    }
+    
     const it = newArr[index];
     const tasa = (it.impuesto === '002' || !it.impuesto) ? (it.tasaOCuota ? parseFloat(it.tasaOCuota) : 0.16) : 0;
     const newPrecio = newTotal / (it.cantidad * (1 + tasa));
-    newArr[index] = { ...newArr[index], precio: newPrecio };
+    
+    newArr[index] = { 
+      ...newArr[index], 
+      precio: newPrecio,
+      _totalStr: valStr,
+      _subtotalStr: undefined
+    };
     setItems(newArr);
   }
 
@@ -285,6 +310,9 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                  const iva = it.impuesto === '002' ? subtotal * it.tasaOCuota : 0;
                  const totalItem = subtotal + iva;
 
+                 const displaySubtotal = it._subtotalStr !== undefined ? it._subtotalStr : subtotal.toFixed(2);
+                 const displayTotal = it._totalStr !== undefined ? it._totalStr : totalItem.toFixed(2);
+
                  return (
                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0.5rem 0', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ flex: '1 1 250px' }}>
@@ -306,8 +334,13 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Costo: $</span>
                            <input 
                              type="number" step="0.01" 
-                             value={subtotal.toFixed(2)} 
-                             onChange={(e) => handleChangeSubtotal(idx, parseFloat(e.target.value))} 
+                             value={displaySubtotal} 
+                             onChange={(e) => handleChangeSubtotal(idx, e.target.value)} 
+                             onBlur={() => {
+                               const newArr = [...items];
+                               newArr[idx]._subtotalStr = undefined;
+                               setItems(newArr);
+                             }}
                              style={{ width: '80px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '2px 4px', fontSize: '0.8rem', borderRadius: '4px', textAlign: 'right' }} 
                            />
                          </div>
@@ -316,8 +349,13 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                            <span style={{ fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>Total: $</span>
                            <input 
                              type="number" step="0.01" 
-                             value={totalItem.toFixed(2)} 
-                             onChange={(e) => handleChangeTotal(idx, parseFloat(e.target.value))} 
+                             value={displayTotal} 
+                             onChange={(e) => handleChangeTotal(idx, e.target.value)} 
+                             onBlur={() => {
+                               const newArr = [...items];
+                               newArr[idx]._totalStr = undefined;
+                               setItems(newArr);
+                             }}
                              style={{ width: '100px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--accent)', color: 'white', padding: '4px', fontSize: '1rem', fontWeight: 'bold', borderRadius: '4px', textAlign: 'right' }} 
                            />
                          </div>
