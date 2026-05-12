@@ -158,6 +158,10 @@ export default function FlujoTrabajoClient({
       openEditEmpresaCliente(draggedPago);
     } else if (targetColumnId === "col3" && draggedPago.estatus !== "Asignado") {
       // Movido de Col2 a Col3 -> Requiere asignar Factura
+      if (!isOperaciones) {
+        alert("⚠️ Solo el departamento de Operaciones puede vincular facturas.");
+        return;
+      }
       if (!draggedPago.empresaId || !draggedPago.clienteId) {
         alert("⚠️ Primero debes identificar la empresa y el cliente del depósito antes de poder asignarle una factura.");
         return;
@@ -187,7 +191,10 @@ export default function FlujoTrabajoClient({
         <div className="font-black text-indigo-600 text-xl tracking-tight">${pago.monto?.toLocaleString("es-MX", {minimumFractionDigits: 2})}</div>
         <div className="flex gap-2">
           {columnId !== "col3" && (
-            <button onClick={() => columnId === "col1" ? openEditEmpresaCliente(pago) : openAssignFactura(pago)} className="text-gray-300 hover:text-indigo-500 bg-gray-50 shadow-sm border border-gray-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110">✏️</button>
+            <button onClick={() => openEditEmpresaCliente(pago)} title="Identificar Empresa/Cliente" className="text-gray-300 hover:text-blue-500 bg-gray-50 shadow-sm border border-gray-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110">✏️</button>
+          )}
+          {columnId === "col2" && isOperaciones && (
+            <button onClick={() => openAssignFactura(pago)} title="Vincular Factura" className="text-emerald-400 hover:text-emerald-600 bg-emerald-50 shadow-sm border border-emerald-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110">🔗</button>
           )}
           {isTesoreria && columnId !== "col3" && (
             <button onClick={() => handleEliminar(pago.id)} title="Eliminar Pago" className="text-red-300 hover:text-red-500 bg-red-50 shadow-sm border border-red-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110">🗑️</button>
@@ -253,11 +260,11 @@ export default function FlujoTrabajoClient({
       </div>
 
       {/* TABLERO KANBAN */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[600px]">
+      <div className="flex gap-6 min-h-[600px] overflow-x-auto pb-4 snap-x">
         
         {/* COLUMNA 1 */}
         <div 
-          className={`flex flex-col bg-gray-50/50 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${dragOverColumn === 'col1' ? 'border-indigo-400 bg-indigo-50/30 ring-4 ring-indigo-50' : 'border-dashed border-gray-200'}`}
+          className={`flex flex-col bg-gray-50/50 rounded-3xl border-2 transition-all duration-300 overflow-hidden min-w-[320px] flex-1 snap-center ${dragOverColumn === 'col1' ? 'border-indigo-400 bg-indigo-50/30 ring-4 ring-indigo-50' : 'border-dashed border-gray-200'}`}
           onDragOver={(e) => handleDragOver(e, 'col1')}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, 'col1')}
@@ -284,7 +291,7 @@ export default function FlujoTrabajoClient({
 
         {/* COLUMNA 2 */}
         <div 
-          className={`flex flex-col bg-blue-50/30 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${dragOverColumn === 'col2' ? 'border-blue-400 bg-blue-100/50 ring-4 ring-blue-50' : 'border-dashed border-blue-200'}`}
+          className={`flex flex-col bg-blue-50/30 rounded-3xl border-2 transition-all duration-300 overflow-hidden min-w-[320px] flex-1 snap-center ${dragOverColumn === 'col2' ? 'border-blue-400 bg-blue-100/50 ring-4 ring-blue-50' : 'border-dashed border-blue-200'}`}
           onDragOver={(e) => handleDragOver(e, 'col2')}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, 'col2')}
@@ -311,7 +318,7 @@ export default function FlujoTrabajoClient({
 
         {/* COLUMNA 3 */}
         <div 
-          className={`flex flex-col bg-emerald-50/30 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${dragOverColumn === 'col3' ? 'border-emerald-400 bg-emerald-100/50 ring-4 ring-emerald-50' : 'border-dashed border-emerald-200'}`}
+          className={`flex flex-col bg-emerald-50/30 rounded-3xl border-2 transition-all duration-300 overflow-hidden min-w-[320px] flex-1 snap-center ${dragOverColumn === 'col3' ? 'border-emerald-400 bg-emerald-100/50 ring-4 ring-emerald-50' : 'border-dashed border-emerald-200'}`}
           onDragOver={(e) => handleDragOver(e, 'col3')}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, 'col3')}

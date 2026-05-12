@@ -156,21 +156,29 @@ export async function subirOpinionManual(empresaId, fileBase64, tipoDocumento = 
       return { success: false, error: 'Selecciona una empresa específica.' }
     }
     
-    // Asumimos que la opinión que suben es positiva y actualizada
+    let descripcion = 'POSITIVA';
+    if (tipoDocumento === 'CONSTANCIA') {
+      descripcion = 'Constancia de Situación Fiscal';
+    } else if (tipoDocumento === 'BUZON') {
+      descripcion = 'Notificación de Buzón Tributario';
+    }
+
     await prisma.documentoSat.create({
       data: {
         tipo: tipoDocumento,
-        descripcion: 'POSITIVA', // Se puede mejorar para detectar negativa con OCR, pero se asume Positiva de momento
+        descripcion: descripcion,
         archivoBase64: fileBase64,
         empresaId
       }
     })
     
-    // Reflejamos en la vista principal de la empresa
-    await prisma.empresa.update({
-      where: { id: empresaId },
-      data: { opinionCumplimiento: 'POSITIVA', ultimaValidacionOpinion: new Date() }
-    })
+    // Reflejamos en la vista principal de la empresa solo si es una opinión
+    if (tipoDocumento === 'OPINION') {
+      await prisma.empresa.update({
+        where: { id: empresaId },
+        data: { opinionCumplimiento: 'POSITIVA', ultimaValidacionOpinion: new Date() }
+      })
+    }
     
     revalidatePath('/descargas-sat')
     return { success: true }

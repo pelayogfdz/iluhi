@@ -49,6 +49,10 @@ export default function DescargasSatClient({ empresas }) {
       alert("⚠️ Debes seleccionar un rango de fechas (Desde y Hasta) para realizar la Extracción Masiva de CFDI.");
       return;
     }
+    if ((mode === 'opinion' || mode === 'csf') && (!filtroEmpresaId || filtroEmpresaId === 'ALL')) {
+      alert("⚠️ Debes seleccionar una Empresa específica en el filtro superior para extraer este documento.");
+      return;
+    }
     setSyncing(true)
     setSyncResult(null)
     try {
@@ -124,7 +128,7 @@ export default function DescargasSatClient({ empresas }) {
     }
   }
 
-  const handleManualUpload = async (e, tipoDocumento = 'OPINION_SAT') => {
+  const handleManualUpload = async (e, tipoDocumento) => {
     const file = e.target.files[0]
     if (!file) return
     if (filtroEmpresaId === 'ALL') {
@@ -200,12 +204,6 @@ export default function DescargasSatClient({ empresas }) {
               📥 Carga Masiva Recibidas
             </label>
 
-            <button className="btn" style={{ background: '#10b981', fontSize: '0.95rem', padding: '0.6rem 1rem' }} onClick={() => handleSync('opinion')} disabled={syncing}>
-              ✅ Extraer Opinión 32-D
-            </button>
-            <button className="btn" style={{ background: '#3b82f6', fontSize: '0.95rem', padding: '0.6rem 1rem' }} onClick={() => handleSync('csf')} disabled={syncing}>
-              📄 Extraer CSF
-            </button>
           </div>
         </div>
 
@@ -362,6 +360,35 @@ export default function DescargasSatClient({ empresas }) {
               {/* === CONSTANCIAS === */}
               {activeTab === 'constancias' && (
                 <>
+                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 mb-8 border border-blue-100 shadow-sm">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="bg-white p-3 rounded-xl shadow-sm border border-blue-100 text-blue-500 text-2xl">
+                          📄
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-blue-900 mb-1">Carga y Extracción de Constancias (CSF)</h4>
+                          <p className="text-sm text-blue-700 leading-relaxed">
+                            Extrae la constancia directamente del SAT o sube el PDF de forma manual.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-center gap-2 min-w-[250px]">
+                        <button className="w-full btn flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5" onClick={() => handleSync('csf')} disabled={syncing}>
+                          {syncing ? '⏳ Extrayendo...' : '📄 Extraer CSF del SAT'}
+                        </button>
+
+                        <input type="file" id="csf-upload" accept="application/pdf" className="hidden" onChange={(e) => handleManualUpload(e, 'CONSTANCIA')} disabled={loadingPdf} />
+                        <label htmlFor="csf-upload" className="w-full flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-xl cursor-pointer transition-all shadow-md mt-2 text-sm">
+                          {loadingPdf ? '⏳ Subiendo...' : '📤 Subir Manualmente'}
+                        </label>
+                        <span className="text-xs text-blue-400 font-medium text-center">
+                          Asegúrate de seleccionar la empresa en el filtro
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <thead>
                     <tr>
                       <th>Fecha Descarga</th>
@@ -405,8 +432,12 @@ export default function DescargasSatClient({ empresas }) {
                       </div>
                       
                       <div className="flex flex-col items-center gap-2 min-w-[250px]">
-                        <input type="file" id="opinion-upload" accept="application/pdf" className="hidden" onChange={(e) => handleManualUpload(e, 'OPINION_SAT')} disabled={loadingPdf} />
-                        <label htmlFor="opinion-upload" className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl cursor-pointer transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                        <button className="w-full btn flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5" onClick={() => handleSync('opinion')} disabled={syncing}>
+                          {syncing ? '⏳ Extrayendo...' : '✅ Extraer 32-D del SAT'}
+                        </button>
+                        
+                        <input type="file" id="opinion-upload" accept="application/pdf" className="hidden" onChange={(e) => handleManualUpload(e, 'OPINION')} disabled={loadingPdf} />
+                        <label htmlFor="opinion-upload" className="w-full flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-xl cursor-pointer transition-all shadow-md mt-2 text-sm">
                           {loadingPdf ? (
                             <span className="animate-pulse">⏳ Subiendo...</span>
                           ) : (
@@ -646,6 +677,38 @@ export default function DescargasSatClient({ empresas }) {
               {/* === BUZON TRIBUTARIO === */}
               {activeTab === 'buzon' && (
                 <>
+                  <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-2xl p-6 mb-8 border border-amber-100 shadow-sm">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="bg-white p-3 rounded-xl shadow-sm border border-amber-100 text-amber-500 text-2xl">
+                          📬
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-bold text-amber-900 mb-1">Carga Manual de Notificaciones de Buzón</h4>
+                          <p className="text-sm text-amber-700 leading-relaxed">
+                            Sube notificaciones o acusos recibidos del Buzón Tributario de forma manual.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-center gap-2 min-w-[250px]">
+                        <input type="file" id="buzon-upload" accept="application/pdf" className="hidden" onChange={(e) => handleManualUpload(e, 'BUZON')} disabled={loadingPdf} />
+                        <label htmlFor="buzon-upload" className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-xl cursor-pointer transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                          {loadingPdf ? (
+                            <span className="animate-pulse">⏳ Subiendo...</span>
+                          ) : (
+                            <>
+                              <span className="text-xl">📤</span> 
+                              <span>Subir Notificación Manualmente</span>
+                            </>
+                          )}
+                        </label>
+                        <span className="text-xs text-amber-600 font-medium text-center">
+                          Asegúrate de seleccionar la empresa en el filtro
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <thead>
                     <tr>
                       <th>Fecha de Notificación</th>
