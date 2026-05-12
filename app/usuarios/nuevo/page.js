@@ -21,6 +21,9 @@ export default function NuevoUsuarioPage() {
     permisoReportes: false,
     permisoUsuarios: false,
     permisoAsignacionClientes: false,
+    permisoEliminarEmpresas: false,
+    permisoTesoreria: false,
+    permisoOperaciones: false,
     empresaIds: []
   })
 
@@ -132,6 +135,12 @@ export default function NuevoUsuarioPage() {
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#ef4444' }}>
             <input type="checkbox" name="permisoEliminarEmpresas" checked={formData.permisoEliminarEmpresas} onChange={handleChange} /> 🗑️ Eliminar Empresas
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#3b82f6' }}>
+            <input type="checkbox" name="permisoTesoreria" checked={formData.permisoTesoreria} onChange={handleChange} /> 💼 Tesorería (Flujo de Trabajo)
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#10b981' }}>
+            <input type="checkbox" name="permisoOperaciones" checked={formData.permisoOperaciones} onChange={handleChange} /> 🖱️ Operaciones (Flujo de Trabajo)
           </label>
         </div>
 

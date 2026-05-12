@@ -21,8 +21,10 @@ export default function EditarUsuarioPage() {
     permisoProductos: false,
     permisoFacturas: false,
     permisoReportes: false,
-    permisoUsuarios: false,
     permisoAsignacionClientes: false,
+    permisoEliminarEmpresas: false,
+    permisoTesoreria: false,
+    permisoOperaciones: false,
     empresaIds: []
   })
 
@@ -48,6 +50,9 @@ export default function EditarUsuarioPage() {
             permisoReportes: !!u.permisoReportes,
             permisoUsuarios: !!u.permisoUsuarios,
             permisoAsignacionClientes: !!u.permisoAsignacionClientes,
+            permisoEliminarEmpresas: !!u.permisoEliminarEmpresas,
+            permisoTesoreria: !!u.permisoTesoreria,
+            permisoOperaciones: !!u.permisoOperaciones,
             empresaIds: u.empresas ? u.empresas.map(e => e.id) : []
           })
         }
@@ -181,6 +186,12 @@ export default function EditarUsuarioPage() {
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#ef4444' }}>
             <input type="checkbox" name="permisoEliminarEmpresas" checked={formData.permisoEliminarEmpresas} onChange={handleChange} /> 🗑️ Eliminar Empresas
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#3b82f6' }}>
+            <input type="checkbox" name="permisoTesoreria" checked={formData.permisoTesoreria} onChange={handleChange} /> 💼 Tesorería (Flujo de Trabajo)
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#10b981' }}>
+            <input type="checkbox" name="permisoOperaciones" checked={formData.permisoOperaciones} onChange={handleChange} /> 🖱️ Operaciones (Flujo de Trabajo)
           </label>
         </div>
 

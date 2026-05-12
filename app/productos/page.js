@@ -72,11 +72,13 @@ export default async function ProductosPage({ searchParams }) {
                 <td>{p.claveProdServ}</td>
                 <td>{p.claveUnidad}</td>
                 <td>${p.precio.toFixed(2)}</td>
-                <td>
-                  <Link href={`/productos/editar/${p.id}`}>
-                    <button className="btn" style={{padding: '0.4rem 1rem'}}>Editar</button>
+                <td style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'stretch' }}>
+                  <Link href={`/productos/editar/${p.id}`} style={{ width: '100%' }}>
+                    <button className="btn" style={{ width: '100%', padding: '0.4rem 1rem'}}>Editar</button>
                   </Link>
-                  <EliminarProductoBtn id={p.id} />
+                  <div style={{ width: '100%' }}>
+                    <EliminarProductoBtn id={p.id} />
+                  </div>
                 </td>
               </tr>
             ))}

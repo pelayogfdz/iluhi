@@ -27,10 +27,16 @@ model Usuario {
   permisoUsuarios           Boolean @default(false)
   permisoAsignacionClientes Boolean @default(false)
   permisoEliminarEmpresas   Boolean @default(false)
+  
+  // Roles de Flujo de Trabajo
+  permisoTesoreria          Boolean @default(false)
+  permisoOperaciones        Boolean @default(false)
 
   empresas          Empresa[]
   clientesAsignados Cliente[]   @relation("UsuarioClientes")
   pagosFlujoCreados PagoFlujo[] @relation("UsuarioPagoFlujo")
+  pagosFacturaAsignada PagoFlujo[] @relation("FacturaAsignadaPor")
+  pagosClienteEditado  PagoFlujo[] @relation("ClienteEditadoPor")
 
   createdAt DateTime @default(now())
 }
@@ -77,6 +83,16 @@ model Empresa {
   objetoSocial            String?
   actividadEconomica      String?
 
+  // Credenciales Institucionales
+  imssCerBase64             String?
+  imssKeyBase64             String?
+  imssPassword              String?
+  infonavitRegistroPatronal String?
+  infonavitCorreo           String?
+  infonavitPassword         String?
+  isnUsuario                String?
+  isnPassword               String?
+
   // Modulo Automatizacion de Encuestas de Satisfaccion (Post-Factura)
   encuestaAsunto   String? // Asunto del correo enviado a las 24h
   encuestaMensaje  String? // Texto del correo (soporta {{nombre}})
@@ -87,6 +103,13 @@ model Empresa {
   plantillaCotizacion    String?
   plantillaOrdenServicio String?
   plantillaFactura       String?
+
+  // Customización Visual de Documentos PDF
+  logoBase64      String?  @db.Text
+  colorPrimario   String?  @default("#0054a6")
+  colorSecundario String?  @default("#333333")
+  tipografiaPdf   String?  @default("Helvetica")
+  layoutPdf       String?  @default("CLASICO") // CLASICO, MODERNO, MINIMALISTA
 
   // Relaciones
   usuarios          Usuario[]
@@ -360,6 +383,12 @@ model PagoFlujo {
 
   creadorId String?
   creador   Usuario? @relation("UsuarioPagoFlujo", fields: [creadorId], references: [id])
+
+  facturaAsignadaPorId String?
+  facturaAsignadaPor   Usuario? @relation("FacturaAsignadaPor", fields: [facturaAsignadaPorId], references: [id])
+
+  clienteEditadoPorId String?
+  clienteEditadoPor   Usuario? @relation("ClienteEditadoPor", fields: [clienteEditadoPorId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

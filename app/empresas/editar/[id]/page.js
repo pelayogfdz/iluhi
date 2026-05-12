@@ -4,6 +4,7 @@ import EditForm from './EditForm'
 import CsdUploader from './CsdUploader'
 import LogoUploader from './LogoUploader'
 import FielUploader from './FielUploader'
+import ImssUploader from './ImssUploader'
 import SociosPanel from './SociosPanel'
 import Facturapi from 'facturapi'
 
@@ -54,6 +55,7 @@ export default async function EditarEmpresaPage({ params }) {
       <EditForm empresa={empresa} />
       <CsdUploader empresa={empresaData} />
       <FielUploader empresa={empresaData} />
+      <ImssUploader empresa={empresaData} />
       <LogoUploader empresaId={empresa.id} />
       <SociosPanel empresaId={empresa.id} />
     </div>

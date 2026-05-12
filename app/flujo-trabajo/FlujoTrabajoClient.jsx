@@ -1,378 +1,443 @@
 "use client";
 
 import { useState } from "react";
-import { registrarPagoFlujo, asignarFacturaAPago, eliminarPago } from "./acciones";
+import { registrarPagoFlujo, asignarFacturaAPago, editarEmpresaClientePago, eliminarPago } from "./acciones";
 
 export default function FlujoTrabajoClient({ 
   facturasDisponibles, 
   empresasDisponibles = [],
   clientesDisponibles = [],
   pagosPendientesIniciales, 
-  pagosAsignadosIniciales 
+  pagosAsignadosIniciales,
+  currentUser 
 }) {
-  const [activeTab, setActiveTab] = useState("tesoreria");
-  const [pagosPendientes, setPagosPendientes] = useState(pagosPendientesIniciales);
-  const [pagosAsignados, setPagosAsignados] = useState(pagosAsignadosIniciales);
+  const [pagos, setPagos] = useState([...pagosPendientesIniciales, ...pagosAsignadosIniciales]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(""); // "CREATE_TESORERIA", "EDIT_EMPRESA_CLIENTE", "ASSIGN_FACTURA"
+  const [selectedPagoId, setSelectedPagoId] = useState(null);
+  
+  // Forms
+  const [tesoreriaForm, setTesoreriaForm] = useState({ empresaId: "", clienteId: "", banco: "", monto: "", fechaPago: "" });
+  const [empresaClienteForm, setEmpresaClienteForm] = useState({ empresaId: "", clienteId: "" });
+  const [facturaForm, setFacturaForm] = useState({ facturaId: "" });
 
-  // Estados Tesoreria
-  const [loadingTesoreria, setLoadingTesoreria] = useState(false);
-  const [formData, setFormData] = useState({ 
-    empresaId: "",
-    clienteId: "",
-    banco: "", 
-    monto: "", 
-    fechaPago: "", 
-    horaPago: "" 
-  });
+  const [loading, setLoading] = useState(false);
 
-  // Estados Operaciones
-  const [facturaSearch, setFacturaSearch] = useState("");
-  const [draggedPago, setDraggedPago] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  // Permisos
+  const isTesoreria = !!currentUser?.permisoTesoreria;
+  const isOperaciones = !!currentUser?.permisoOperaciones;
 
-  // === FUNCIONES TESORERIA ===
-  const handleTesoreriaSubmit = async (e) => {
+  // Tesoreria: Create Pago
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    setLoadingTesoreria(true);
-    
-    const res = await registrarPagoFlujo(formData);
-    
+    setLoading(true);
+    const res = await registrarPagoFlujo({ ...tesoreriaForm, userId: currentUser.id });
     if (res.success) {
-      // Manualmente agregamos los datos de empresa y cliente al objeto de pago creado para la vista
-      const empresa = empresasDisponibles.find(e => e.id === formData.empresaId);
-      const cliente = clientesDisponibles.find(c => c.id === formData.clienteId);
-      
+      const empresa = empresasDisponibles.find(e => e.id === tesoreriaForm.empresaId);
+      const cliente = clientesDisponibles.find(c => c.id === tesoreriaForm.clienteId);
       const nuevoPago = {
         ...res.pago,
         empresa,
-        cliente
+        cliente,
+        creador: { nombre: currentUser.nombre }
       };
-
-      setPagosPendientes([nuevoPago, ...pagosPendientes]);
-      setFormData({ empresaId: "", clienteId: "", banco: "", monto: "", fechaPago: "", horaPago: "" });
-      alert("Pago registrado correctamente");
+      setPagos([nuevoPago, ...pagos]);
+      setIsModalOpen(false);
+      setTesoreriaForm({ empresaId: "", clienteId: "", banco: "", monto: "", fechaPago: "" });
     } else {
       alert(res.error);
     }
-    setLoadingTesoreria(false);
+    setLoading(false);
   };
 
-  const handleEliminarPago = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar este pago del flujo?")) return;
-    const res = await eliminarPago(id);
+  // Ambos: Edit Empresa / Cliente
+  const handleEditEmpresaCliente = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const res = await editarEmpresaClientePago(selectedPagoId, { ...empresaClienteForm, userId: currentUser.id });
     if (res.success) {
-      setPagosPendientes(pagosPendientes.filter(p => p.id !== id));
+      const empresa = empresasDisponibles.find(em => em.id === empresaClienteForm.empresaId);
+      const cliente = clientesDisponibles.find(c => c.id === empresaClienteForm.clienteId);
+      
+      setPagos(pagos.map(p => {
+        if (p.id === selectedPagoId) {
+          return { ...p, empresaId: empresaClienteForm.empresaId, clienteId: empresaClienteForm.clienteId, empresa, cliente, clienteEditadoPor: { nombre: currentUser.nombre } };
+        }
+        return p;
+      }));
+      setIsModalOpen(false);
     } else {
-      alert("Error al eliminar");
+      alert(res.error);
+    }
+    setLoading(false);
+  };
+
+  // Operaciones: Assign Factura
+  const handleAssignFactura = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const res = await asignarFacturaAPago(selectedPagoId, facturaForm.facturaId, currentUser.id);
+    if (res.success) {
+      const factura = facturasDisponibles.find(f => f.id === facturaForm.facturaId);
+      setPagos(pagos.map(p => {
+        if (p.id === selectedPagoId) {
+          return { ...p, estatus: "Asignado", facturaId: facturaForm.facturaId, factura, facturaAsignadaPor: { nombre: currentUser.nombre } };
+        }
+        return p;
+      }));
+      setIsModalOpen(false);
+    } else {
+      alert(res.error);
+    }
+    setLoading(false);
+  };
+
+  const handleEliminar = async (id) => {
+    if(!confirm("¿Seguro que deseas eliminar este pago?")) return;
+    const res = await eliminarPago(id);
+    if(res.success) {
+      setPagos(pagos.filter(p => p.id !== id));
+    } else {
+      alert("Error eliminando: " + res.error);
     }
   };
 
+  const openEditEmpresaCliente = (pago) => {
+    setSelectedPagoId(pago.id);
+    setEmpresaClienteForm({ empresaId: pago.empresaId || "", clienteId: pago.clienteId || "" });
+    setModalType("EDIT_EMPRESA_CLIENTE");
+    setIsModalOpen(true);
+  };
 
-  // === FUNCIONES DRAG & DROP OPERACIONES ===
+  const openAssignFactura = (pago) => {
+    setSelectedPagoId(pago.id);
+    setFacturaForm({ facturaId: pago.facturaId || "" });
+    setModalType("ASSIGN_FACTURA");
+    setIsModalOpen(true);
+  };
+
+  const [draggedPago, setDraggedPago] = useState(null);
+  const [dragOverColumn, setDragOverColumn] = useState(null);
+
+  // Drag handlers
   const handleDragStart = (e, pago) => {
     setDraggedPago(pago);
-    setIsDragging(true);
-    // Establecer algo visual
     e.dataTransfer.effectAllowed = "move";
+    // Slight delay to allow UI to update while dragging
+    setTimeout(() => {
+      e.target.style.opacity = "0.5";
+    }, 0);
   };
 
-  const handleDragEnd = () => {
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = "1";
     setDraggedPago(null);
-    setIsDragging(false);
+    setDragOverColumn(null);
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e, columnId) => {
     e.preventDefault(); // Necesario para permitir el drop
-    e.dataTransfer.dropEffect = "move";
+    if (dragOverColumn !== columnId) {
+      setDragOverColumn(columnId);
+    }
   };
 
-  const handleDrop = async (e, factura) => {
+  const handleDragLeave = (e) => {
+    setDragOverColumn(null);
+  };
+
+  const handleDrop = (e, targetColumnId) => {
     e.preventDefault();
+    setDragOverColumn(null);
+    
     if (!draggedPago) return;
 
-    // Confirmación nativa rápida para evitar drops por accidente
-    const confirmar = window.confirm(
-      `¿Enlazar el pago de $${draggedPago.monto.toLocaleString("es-MX")} a la factura ${factura.folio || 'S/F'}?`
-    );
-    
-    if (!confirmar) {
-      handleDragEnd();
-      return;
+    // Determinar la lógica según el movimiento de columnas
+    if (targetColumnId === "col2" && (!draggedPago.empresaId || !draggedPago.clienteId)) {
+      // Movido de Col1 a Col2 -> Requiere asignar Empresa/Cliente
+      openEditEmpresaCliente(draggedPago);
+    } else if (targetColumnId === "col3" && draggedPago.estatus !== "Asignado") {
+      // Movido de Col2 a Col3 -> Requiere asignar Factura
+      if (!draggedPago.empresaId || !draggedPago.clienteId) {
+        alert("⚠️ Primero debes identificar la empresa y el cliente del depósito antes de poder asignarle una factura.");
+        return;
+      }
+      openAssignFactura(draggedPago);
+    } else if (targetColumnId === "col1" && (draggedPago.empresaId || draggedPago.clienteId)) {
+      // Opcional: Permitir regresar a la col1 (quitar empresa/cliente)
+      // Por ahora no lo haremos arrastrable hacia atrás directamente, pueden editar con el lapicito.
+      alert("⚠️ Para desvincular empresa/cliente, usa el ícono de editar en la tarjeta.");
     }
-
-    const res = await asignarFacturaAPago(draggedPago.id, factura.id);
-    if (res.success) {
-      setPagosPendientes(prev => prev.filter(p => p.id !== draggedPago.id));
-      alert("¡Enlazado exitosamente!");
-      // Recarga rapida para estabilizar
-      window.location.reload();
-    } else {
-      alert(res.error);
-    }
-    handleDragEnd();
   };
 
-  // Buscador
-  const facturasFiltradas = facturasDisponibles.filter(f => 
-    (f.folio && f.folio.toString().includes(facturaSearch)) ||
-    (f.cliente && f.cliente.razonSocial.toLowerCase().includes(facturaSearch.toLowerCase())) ||
-    (f.total && f.total.toString().includes(facturaSearch))
-  ).slice(0, 15);
+  // Dividir pagos en columnas
+  const pagosCol1 = pagos.filter(p => !p.empresaId || !p.clienteId);
+  const pagosCol2 = pagos.filter(p => p.empresaId && p.clienteId && p.estatus !== "Asignado");
+  const pagosCol3 = pagos.filter(p => p.estatus === "Asignado");
 
-  return (
-    <div className="space-y-6">
+  const renderCard = (pago, columnId) => (
+    <div
+      key={pago.id}
+      draggable
+      onDragStart={(e) => handleDragStart(e, pago)}
+      onDragEnd={handleDragEnd}
+      className={`group bg-white p-5 rounded-2xl shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all relative ${draggedPago?.id === pago.id ? 'ring-2 ring-indigo-400 opacity-50' : ''}`}
+    >
+      <div className="flex justify-between items-start mb-3">
+        <div className="font-black text-indigo-600 text-xl tracking-tight">${pago.monto?.toLocaleString("es-MX", {minimumFractionDigits: 2})}</div>
+        <div className="flex gap-2">
+          {columnId !== "col3" && (
+            <button onClick={() => columnId === "col1" ? openEditEmpresaCliente(pago) : openAssignFactura(pago)} className="text-gray-300 hover:text-indigo-500 bg-gray-50 shadow-sm border border-gray-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110">✏️</button>
+          )}
+          {isTesoreria && columnId !== "col3" && (
+            <button onClick={() => handleEliminar(pago.id)} title="Eliminar Pago" className="text-red-300 hover:text-red-500 bg-red-50 shadow-sm border border-red-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110">🗑️</button>
+          )}
+        </div>
+      </div>
       
-      {/* Selector de Pestañas */}
-      <div className="flex bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 p-1 w-max">
-        <button 
-          onClick={() => setActiveTab("tesoreria")}
-          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tesoreria' ? 'bg-[#3b82f6] text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}
-        >
-          💼 Tesorería (Carga)
-        </button>
-        <button 
-          onClick={() => setActiveTab("operaciones")}
-          className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'operaciones' ? 'bg-[#10b981] text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}
-        >
-          🖱️ Operaciones (Drag & Drop)
-        </button>
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
+          <span className="bg-gray-100 p-1 rounded">🏦</span> {pago.banco}
+        </div>
+        <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
+          <span className="bg-gray-100 p-1 rounded">📅</span> {new Date(pago.fechaPago).toLocaleDateString("es-MX")}
+        </div>
       </div>
 
-      {activeTab === "tesoreria" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Formulario Tesoreria */}
-          <div className="col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Registrar Pago Recibido</h2>
-            <form onSubmit={handleTesoreriaSubmit} className="space-y-4">
-              
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
-                <label className="block text-sm font-semibold text-blue-900 mb-1">Empresa Receptora *</label>
-                <select 
-                  required
-                  value={formData.empresaId} 
-                  onChange={e => setFormData({...formData, empresaId: e.target.value})} 
-                  className="w-full border-blue-200 rounded-lg shadow-sm p-2 text-sm bg-white"
-                >
-                  <option value="">-- Selecciona a dónde cayó el pago --</option>
-                  {empresasDisponibles.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.razonSocial}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Banco *</label>
-                <input required type="text" value={formData.banco} onChange={e => setFormData({...formData, banco: e.target.value})} className="w-full border-gray-300 rounded-lg shadow-sm p-2 border" placeholder="Ej. BBVA, Santander..." />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Monto ($) *</label>
-                  <input required type="number" step="0.01" value={formData.monto} onChange={e => setFormData({...formData, monto: e.target.value})} className="w-full border-gray-300 rounded-lg shadow-sm p-2 border" placeholder="0.00" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
-                  <input required type="date" value={formData.fechaPago} onChange={e => setFormData({...formData, fechaPago: e.target.value})} className="w-full border-gray-300 rounded-lg shadow-sm p-2 border" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cliente (Opcional si se conoce)</label>
-                <select 
-                  value={formData.clienteId} 
-                  onChange={e => setFormData({...formData, clienteId: e.target.value})} 
-                  className="w-full border-gray-300 rounded-lg shadow-sm p-2 text-sm border bg-gray-50"
-                >
-                  <option value="">-- Pago no identificado / No estoy seguro --</option>
-                  {clientesDisponibles.map(cli => (
-                    <option key={cli.id} value={cli.id}>{cli.razonSocial}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button disabled={loadingTesoreria} type="submit" className="w-full mt-4 bg-[#3b82f6] text-white py-3 rounded-xl font-bold shadow hover:bg-blue-600 disabled:opacity-50 transition-all">
-                {loadingTesoreria ? "Guardando..." : "Subir Pago al Flujo"}
-              </button>
-            </form>
-          </div>
-
-          {/* Historial de Tesoreria */}
-          <div className="col-span-1 lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Pagos Registrados Recientemente</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-gray-50 text-gray-600 font-medium border-b">
-                  <tr>
-                    <th className="py-3 px-4">Fecha</th>
-                    <th className="py-3 px-4">Empresa / Banco</th>
-                    <th className="py-3 px-4">Cliente (Opcional)</th>
-                    <th className="py-3 px-4">Monto</th>
-                    <th className="py-3 px-4">Estatus</th>
-                    <th className="py-3 px-4"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {pagosPendientes.map(pago => (
-                    <tr key={pago.id} className="hover:bg-gray-50">
-                      <td className="py-3 px-4 text-gray-800">
-                        {new Date(pago.fechaPago).toLocaleDateString("es-MX")}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-blue-700 text-xs">{pago.empresa?.razonSocial || 'Desconocida'}</div>
-                        <div className="text-gray-600 text-xs">{pago.banco}</div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-500 text-xs max-w-[150px] truncate">
-                        {pago.cliente?.razonSocial || <span className="italic">No identificado</span>}
-                      </td>
-                      <td className="py-3 px-4 font-bold text-gray-800">
-                        ${pago.monto?.toLocaleString("es-MX", {minimumFractionDigits: 2})}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-full font-medium border border-orange-200">
-                          En Espera
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <button onClick={() => handleEliminarPago(pago.id)} className="text-red-500 hover:text-red-700 font-medium text-xs">Eliminar</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {pagosAsignados.slice(0, 5).map(pago => (
-                    <tr key={pago.id} className="hover:bg-gray-50 opacity-60">
-                      <td className="py-3 px-4 text-gray-800">{new Date(pago.fechaPago).toLocaleDateString("es-MX")}</td>
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-blue-700 text-xs">{pago.empresa?.razonSocial}</div>
-                        <div className="text-gray-600 text-xs">{pago.banco}</div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-500 text-xs truncate max-w-[150px]">
-                        {pago.cliente?.razonSocial || pago.factura?.cliente?.razonSocial}
-                      </td>
-                      <td className="py-3 px-4 font-bold text-gray-800">${pago.monto?.toLocaleString("es-MX", {minimumFractionDigits: 2})}</td>
-                      <td className="py-3 px-4">
-                        <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium border border-green-200">✅ Conciliado</span>
-                      </td>
-                      <td className="py-3 px-4"></td>
-                    </tr>
-                  ))}
-                  {pagosPendientes.length === 0 && pagosAsignados.length === 0 && (
-                    <tr><td colSpan="6" className="py-6 text-center text-gray-500">No hay pagos registrados.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {(pago.empresa || pago.cliente) && (
+        <div className="p-3 bg-gray-50 rounded-xl mb-4 border border-gray-100">
+          <div className="text-xs font-bold text-gray-400 mb-1">IDENTIFICADO COMO:</div>
+          <div className="font-bold text-gray-800 text-sm">{pago.empresa?.razonSocial || "Sin Empresa"}</div>
+          <div className="text-gray-500 text-xs">{pago.cliente?.razonSocial || "Sin Cliente"}</div>
         </div>
       )}
 
-      {activeTab === "operaciones" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Columna Izquierda: Pagos Pendientes (Draggable) */}
-          <div className="flex flex-col h-[700px]">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">📥 Pagos Entrantes</h2>
-              <p className="text-sm text-gray-500">Arrastra una tarjeta hacia una factura de la derecha.</p>
+      {pago.factura && (
+        <div className="p-3 bg-emerald-50 rounded-xl mb-4 border border-emerald-100">
+          <div className="text-xs font-black text-emerald-600 uppercase mb-1">Factura Vinculada</div>
+          <div className="font-bold text-emerald-900 text-sm">Folio: {pago.factura.folio || 'S/F'}</div>
+          <div className="text-emerald-700 text-xs font-bold">Total: ${pago.factura.total?.toLocaleString("es-MX")}</div>
+        </div>
+      )}
+
+      {/* Auditoría Footer */}
+      <div className="mt-4 pt-3 border-t border-gray-50 text-[10px] text-gray-400 flex flex-col gap-1 font-medium">
+        {pago.creador && <span>📥 Capturado por: {pago.creador.nombre}</span>}
+        {pago.clienteEditadoPor && <span>🔍 Identificado por: {pago.clienteEditadoPor.nombre}</span>}
+        {pago.facturaAsignadaPor && <span>🔗 Conciliado por: {pago.facturaAsignadaPor.nombre}</span>}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8 fade-in">
+      
+      {/* Botones de Accion Principales */}
+      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-lg border border-gray-100 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div>
+        <div>
+          <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
+            <span className="bg-indigo-100 text-indigo-600 p-2 rounded-xl">💸</span> 
+            Flujo de Pagos
+          </h2>
+          <p className="text-sm text-gray-500 font-medium mt-1">Arrastra los pagos entre etapas para identificarlos y conciliarlos.</p>
+        </div>
+        {isTesoreria && (
+          <button 
+            onClick={() => { setModalType("CREATE_TESORERIA"); setIsModalOpen(true); }}
+            className="bg-gray-900 hover:bg-black text-white font-bold py-3.5 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 transform hover:-translate-y-1"
+          >
+            <span>➕</span> Registrar Nuevo Depósito
+          </button>
+        )}
+      </div>
+
+      {/* TABLERO KANBAN */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[600px]">
+        
+        {/* COLUMNA 1 */}
+        <div 
+          className={`flex flex-col bg-gray-50/50 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${dragOverColumn === 'col1' ? 'border-indigo-400 bg-indigo-50/30 ring-4 ring-indigo-50' : 'border-dashed border-gray-200'}`}
+          onDragOver={(e) => handleDragOver(e, 'col1')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'col1')}
+        >
+          <div className="p-5 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-black text-gray-800 uppercase tracking-wider text-sm flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                1. Recién Ingresados
+              </h3>
+              <span className="bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-0.5 rounded-full">{pagosCol1.length}</span>
             </div>
+            <p className="text-xs text-gray-500">Pendientes de asignar Empresa/Cliente</p>
+          </div>
+          <div className="p-4 flex-1 space-y-4 overflow-y-auto">
+            {pagosCol1.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm font-medium opacity-60 p-6 text-center">
+                <span className="text-3xl mb-2">📥</span>
+                No hay depósitos nuevos.
+              </div>
+            ) : pagosCol1.map(p => renderCard(p, "col1"))}
+          </div>
+        </div>
+
+        {/* COLUMNA 2 */}
+        <div 
+          className={`flex flex-col bg-blue-50/30 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${dragOverColumn === 'col2' ? 'border-blue-400 bg-blue-100/50 ring-4 ring-blue-50' : 'border-dashed border-blue-200'}`}
+          onDragOver={(e) => handleDragOver(e, 'col2')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'col2')}
+        >
+          <div className="p-5 border-b border-blue-100 bg-white/50 backdrop-blur-sm">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-black text-blue-900 uppercase tracking-wider text-sm flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                2. Identificados
+              </h3>
+              <span className="bg-blue-200 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">{pagosCol2.length}</span>
+            </div>
+            <p className="text-xs text-blue-600/70">Esperando asignación de factura</p>
+          </div>
+          <div className="p-4 flex-1 space-y-4 overflow-y-auto">
+            {pagosCol2.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-blue-400 text-sm font-medium opacity-60 p-6 text-center">
+                <span className="text-3xl mb-2">🔍</span>
+                Arrastra un depósito aquí para identificarlo.
+              </div>
+            ) : pagosCol2.map(p => renderCard(p, "col2"))}
+          </div>
+        </div>
+
+        {/* COLUMNA 3 */}
+        <div 
+          className={`flex flex-col bg-emerald-50/30 rounded-3xl border-2 transition-all duration-300 overflow-hidden ${dragOverColumn === 'col3' ? 'border-emerald-400 bg-emerald-100/50 ring-4 ring-emerald-50' : 'border-dashed border-emerald-200'}`}
+          onDragOver={(e) => handleDragOver(e, 'col3')}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, 'col3')}
+        >
+          <div className="p-5 border-b border-emerald-100 bg-white/50 backdrop-blur-sm">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-black text-emerald-900 uppercase tracking-wider text-sm flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                3. Conciliados
+              </h3>
+              <span className="bg-emerald-200 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full">{pagosCol3.length}</span>
+            </div>
+            <p className="text-xs text-emerald-600/70">Factura vinculada y proceso cerrado</p>
+          </div>
+          <div className="p-4 flex-1 space-y-4 overflow-y-auto">
+            {pagosCol3.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-emerald-400 text-sm font-medium opacity-60 p-6 text-center">
+                <span className="text-3xl mb-2">✅</span>
+                Arrastra aquí para asignar factura.
+              </div>
+            ) : pagosCol3.map(p => renderCard(p, "col3"))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* === MODALES === */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 fade-in">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
             
-            <div className={`flex-1 overflow-y-auto pr-2 space-y-4 p-2 rounded-xl border-2 border-dashed ${isDragging ? 'border-orange-200 bg-orange-50' : 'border-transparent'}`}>
-              {pagosPendientes.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                  <div className="text-4xl mb-2">🎉</div>
-                  <p>No hay pagos pendientes.</p>
-                </div>
-              ) : (
-                pagosPendientes.map(pago => (
-                  <div 
-                    key={pago.id} 
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, pago)}
-                    onDragEnd={handleDragEnd}
-                    className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-all hover:border-orange-300"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="font-bold text-2xl text-emerald-600">
-                        ${pago.monto?.toLocaleString("es-MX", {minimumFractionDigits: 2})}
-                      </div>
-                      <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-md font-bold truncate max-w-[120px]">
-                        {pago.empresa?.razonSocial || 'Sin empresa'}
+            {modalType === "CREATE_TESORERIA" && (
+              <div className="p-8">
+                <h3 className="text-2xl font-black text-gray-900 mb-2">
+                  Registrar Depósito
+                </h3>
+                <p className="text-gray-500 text-sm mb-6">Ingresa los detalles del pago recibido en banco.</p>
+                <form onSubmit={handleCreateSubmit} className="space-y-5">
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Monto $ *</label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-3.5 text-gray-400 font-bold">$</span>
+                        <input required type="number" step="0.01" value={tesoreriaForm.monto} onChange={e => setTesoreriaForm({...tesoreriaForm, monto: e.target.value})} className="w-full pl-8 border-gray-200 bg-gray-50 rounded-xl p-3 border shadow-sm focus:ring-2 focus:ring-gray-900 font-bold text-gray-900" placeholder="0.00" />
                       </div>
                     </div>
-                    
-                    <div className="flex justify-between items-end mt-4">
-                      <div className="text-xs text-gray-500">
-                        🏦 {pago.banco} <br/>
-                        📅 {new Date(pago.fechaPago).toLocaleDateString("es-MX")}
-                      </div>
-                      <div className="text-xs font-medium text-gray-600 text-right">
-                        {pago.cliente ? (
-                          <span className="bg-gray-100 px-2 py-1 rounded">👤 {pago.cliente.razonSocial.substring(0, 20)}</span>
-                        ) : (
-                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">❓ Cliente sin identificar</span>
-                        )}
-                      </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Banco *</label>
+                      <input required type="text" value={tesoreriaForm.banco} onChange={e => setTesoreriaForm({...tesoreriaForm, banco: e.target.value})} className="w-full border-gray-200 bg-gray-50 rounded-xl p-3 border shadow-sm focus:ring-2 focus:ring-gray-900" placeholder="Ej. BBVA" />
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Columna Derecha: Facturas (Drop Zones) */}
-          <div className="flex flex-col h-[700px] bg-gray-50 p-6 rounded-3xl border border-gray-200 shadow-inner">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                🔗 Facturas (Destino)
-                {isDragging && <span className="animate-pulse h-3 w-3 bg-emerald-500 rounded-full"></span>}
-              </h2>
-              <p className="text-sm text-gray-500">Suelta el pago aquí encima para enlazarlo.</p>
-            </div>
-
-            <input 
-              type="text" 
-              value={facturaSearch}
-              onChange={e => setFacturaSearch(e.target.value)}
-              placeholder="Buscar Factura por Folio, Cliente o Monto..." 
-              className="w-full border-gray-300 rounded-xl shadow-sm p-3 border mb-6 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-              {facturasFiltradas.length > 0 ? (
-                facturasFiltradas.map(f => (
-                  <div 
-                    key={f.id} 
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, f)}
-                    className={`bg-white p-5 border-2 rounded-2xl flex flex-col justify-between transition-all relative overflow-hidden group
-                      ${isDragging ? 'border-dashed border-emerald-300 hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-lg hover:scale-[1.02]' : 'border-gray-100 hover:border-gray-300'}
-                    `}
-                  >
-                    {/* Overlay que aparece al arrastrar encima */}
-                    {isDragging && (
-                      <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
-                        <span className="bg-emerald-600 text-white font-bold py-1 px-4 rounded-full shadow-lg">Soltar Aquí</span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center w-full">
-                      <div>
-                        <div className="font-black text-gray-800 text-lg">Folio: {f.folio || 'S/F'}</div>
-                        <div className="text-sm font-semibold text-gray-600 max-w-[220px] truncate">{f.cliente?.razonSocial}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-gray-800">${f.total?.toLocaleString("es-MX", {minimumFractionDigits: 2})}</div>
-                        <div className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleDateString("es-MX")}</div>
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Fecha del Depósito *</label>
+                    <input required type="date" value={tesoreriaForm.fechaPago} onChange={e => setTesoreriaForm({...tesoreriaForm, fechaPago: e.target.value})} className="w-full border-gray-200 bg-gray-50 rounded-xl p-3 border shadow-sm focus:ring-2 focus:ring-gray-900" />
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-10 text-gray-500 text-sm">
-                  No se encontraron facturas.
-                </div>
-              )}
-            </div>
-          </div>
+                  
+                  <div className="flex gap-4 pt-4 mt-8 border-t border-gray-100">
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 rounded-xl bg-white text-gray-700 font-bold hover:bg-gray-100 border border-gray-200 transition-colors">Cancelar</button>
+                    <button disabled={loading} type="submit" className="flex-1 py-3.5 rounded-xl bg-gray-900 text-white font-bold hover:bg-black shadow-lg disabled:opacity-50 transition-all">Guardar Depósito</button>
+                  </div>
+                </form>
+              </div>
+            )}
 
+            {modalType === "EDIT_EMPRESA_CLIENTE" && (
+              <div className="p-8">
+                <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                  <span className="text-3xl">🔍</span>
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-2">
+                  Identificar Depósito
+                </h3>
+                <p className="text-gray-500 text-sm mb-6">¿A qué empresa le depositaron y qué cliente lo pagó?</p>
+                <form onSubmit={handleEditEmpresaCliente} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Empresa Receptora *</label>
+                    <select required value={empresaClienteForm.empresaId} onChange={e => setEmpresaClienteForm({...empresaClienteForm, empresaId: e.target.value})} className="w-full border-gray-200 bg-gray-50 rounded-xl p-3 border shadow-sm focus:ring-2 focus:ring-blue-500">
+                      <option value="">-- Seleccionar --</option>
+                      {empresasDisponibles.map(e => <option key={e.id} value={e.id}>{e.razonSocial}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Cliente Emisor *</label>
+                    <select required value={empresaClienteForm.clienteId} onChange={e => setEmpresaClienteForm({...empresaClienteForm, clienteId: e.target.value})} className="w-full border-gray-200 bg-gray-50 rounded-xl p-3 border shadow-sm focus:ring-2 focus:ring-blue-500">
+                      <option value="">-- Seleccionar --</option>
+                      {clientesDisponibles.map(c => <option key={c.id} value={c.id}>{c.razonSocial}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex gap-4 pt-4 mt-8 border-t border-gray-100">
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 rounded-xl bg-white text-gray-700 font-bold hover:bg-gray-100 border border-gray-200 transition-colors">Cancelar</button>
+                    <button disabled={loading} type="submit" className="flex-1 py-3.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg disabled:opacity-50 transition-all">Mover a Etapa 2</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {modalType === "ASSIGN_FACTURA" && (
+              <div className="p-8">
+                <div className="bg-emerald-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
+                  <span className="text-3xl">🔗</span>
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-2">
+                  Vincular Factura
+                </h3>
+                <p className="text-gray-500 text-sm mb-6">Selecciona la factura emitida correspondiente a este depósito.</p>
+                <form onSubmit={handleAssignFactura} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Buscar Factura *</label>
+                    <select required value={facturaForm.facturaId} onChange={e => setFacturaForm({...facturaForm, facturaId: e.target.value})} className="w-full border-gray-200 bg-gray-50 rounded-xl p-3 border shadow-sm focus:ring-2 focus:ring-emerald-500 font-medium">
+                      <option value="">-- Seleccionar Factura --</option>
+                      {facturasDisponibles.map(f => (
+                        <option key={f.id} value={f.id}>
+                          Folio: {f.folio || 'S/F'} | {f.cliente?.razonSocial?.substring(0, 20)}... | ${f.total?.toLocaleString("es-MX")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-4 pt-4 mt-8 border-t border-gray-100">
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 rounded-xl bg-white text-gray-700 font-bold hover:bg-gray-100 border border-gray-200 transition-colors">Cancelar</button>
+                    <button disabled={loading} type="submit" className="flex-1 py-3.5 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 shadow-lg disabled:opacity-50 transition-all">Conciliar (Etapa 3)</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+          </div>
         </div>
       )}
 

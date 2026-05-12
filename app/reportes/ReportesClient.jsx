@@ -4,6 +4,52 @@ import { useState, useEffect, useMemo } from 'react';
 import { obtenerReporteFacturas } from './acciones';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
+import Select from 'react-select';
+
+const customSelectStyles = {
+  control: (base) => ({
+    ...base,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    color: 'white',
+    borderRadius: '8px',
+    minHeight: '40px',
+    boxShadow: 'none',
+    '&:hover': {
+      borderColor: 'rgba(255, 255, 255, 0.3)'
+    }
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: 'white',
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: '#1a1f2e',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    zIndex: 9999
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+    color: 'white',
+    cursor: 'pointer',
+    '&:active': {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    }
+  }),
+  input: (base) => ({
+    ...base,
+    color: 'white',
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: 'rgba(255, 255, 255, 0.5)',
+  }),
+  indicatorSeparator: () => ({
+    display: 'none',
+  })
+};
 
 export default function ReportesClient({ empresas, clientes }) {
   const [filtros, setFiltros] = useState({
@@ -20,30 +66,33 @@ export default function ReportesClient({ empresas, clientes }) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch initial data
+  // Auto-fetch data on filter change
   useEffect(() => {
-    cargarReporte();
-  }, []);
-
-  const cargarReporte = async () => {
-    setCargando(true);
-    setError('');
-    try {
-      const res = await obtenerReporteFacturas(filtros);
-      if (res.success) {
-        setFacturas(res.facturas);
-      } else {
-        setError(res.error || 'Error al cargar los reportes');
+    const fetchReport = async () => {
+      setCargando(true);
+      setError('');
+      try {
+        const res = await obtenerReporteFacturas(filtros);
+        if (res.success) {
+          setFacturas(res.facturas);
+        } else {
+          setError(res.error || 'Error al cargar los reportes');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setCargando(false);
       }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setCargando(false);
-    }
-  };
+    };
+    fetchReport();
+  }, [filtros]);
 
   const handleChange = (e) => {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectChange = (name, selectedOption) => {
+    setFiltros({ ...filtros, [name]: selectedOption ? selectedOption.value : '' });
   };
 
   const handleExportExcel = () => {
@@ -70,8 +119,7 @@ export default function ReportesClient({ empresas, clientes }) {
     XLSX.writeFile(workbook, `Reporte_Facturas_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
-  // Group data for the chart (Group by Month or by Status as an example)
-  // Let's do a simple grouping by Estatus
+  // Group data for the chart
   const chartData = useMemo(() => {
     const counts = {};
     const amounts = {};
@@ -109,46 +157,86 @@ export default function ReportesClient({ empresas, clientes }) {
 
       {/* Panel de Filtros */}
       <div className="glass-panel" style={{ marginBottom: '2rem' }}>
-        <h4 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Filtros de Búsqueda</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h4 style={{ color: 'var(--accent)', margin: 0 }}>Filtros de Búsqueda</h4>
+          {cargando && <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Actualizando en tiempo real...</span>}
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           <div className="form-group">
             <label>Empresa Emisora</label>
-            <select name="empresaId" className="form-control" value={filtros.empresaId} onChange={handleChange}>
-              <option value="">Todas</option>
-              {empresas.map(e => <option key={e.id} value={e.id}>{e.razonSocial}</option>)}
-            </select>
+            <Select 
+              options={[{ value: '', label: 'Todas' }, ...empresas.map(e => ({ value: e.id, label: e.razonSocial }))]}
+              value={[{ value: '', label: 'Todas' }, ...empresas.map(e => ({ value: e.id, label: e.razonSocial }))].find(opt => opt.value === filtros.empresaId) || { value: '', label: 'Todas' }}
+              onChange={(opt) => handleSelectChange('empresaId', opt)}
+              styles={customSelectStyles}
+              placeholder="Buscar..."
+            />
           </div>
           <div className="form-group">
             <label>Cliente Receptor</label>
-            <select name="clienteId" className="form-control" value={filtros.clienteId} onChange={handleChange}>
-              <option value="">Todos</option>
-              {clientes.map(c => <option key={c.id} value={c.id}>{c.razonSocial}</option>)}
-            </select>
+            <Select 
+              options={[{ value: '', label: 'Todos' }, ...clientes.map(c => ({ value: c.id, label: c.razonSocial }))]}
+              value={[{ value: '', label: 'Todos' }, ...clientes.map(c => ({ value: c.id, label: c.razonSocial }))].find(opt => opt.value === filtros.clienteId) || { value: '', label: 'Todos' }}
+              onChange={(opt) => handleSelectChange('clienteId', opt)}
+              styles={customSelectStyles}
+              placeholder="Buscar..."
+            />
           </div>
           <div className="form-group">
             <label>Estatus</label>
-            <select name="estatus" className="form-control" value={filtros.estatus} onChange={handleChange}>
-              <option value="">Todos</option>
-              <option value="Timbrada">Timbradas / Activas</option>
-              <option value="Cancelada">Canceladas</option>
-              <option value="Borrador">Borradores</option>
-            </select>
+            <Select 
+              options={[
+                { value: '', label: 'Todos' },
+                { value: 'Timbrada', label: 'Timbradas / Activas' },
+                { value: 'Cancelada', label: 'Canceladas' },
+                { value: 'Borrador', label: 'Borradores' }
+              ]}
+              value={[
+                { value: '', label: 'Todos' },
+                { value: 'Timbrada', label: 'Timbradas / Activas' },
+                { value: 'Cancelada', label: 'Canceladas' },
+                { value: 'Borrador', label: 'Borradores' }
+              ].find(opt => opt.value === filtros.estatus) || { value: '', label: 'Todos' }}
+              onChange={(opt) => handleSelectChange('estatus', opt)}
+              styles={customSelectStyles}
+              placeholder="Buscar..."
+            />
           </div>
           <div className="form-group">
             <label>Método de Pago</label>
-            <select name="metodoPago" className="form-control" value={filtros.metodoPago} onChange={handleChange}>
-              <option value="">Todos</option>
-              <option value="PUE">PUE (Pago en una exhibición)</option>
-              <option value="PPD">PPD (Pago en parcialidades)</option>
-            </select>
+            <Select 
+              options={[
+                { value: '', label: 'Todos' },
+                { value: 'PUE', label: 'PUE (Pago en una exhibición)' },
+                { value: 'PPD', label: 'PPD (Pago en parcialidades)' }
+              ]}
+              value={[
+                { value: '', label: 'Todos' },
+                { value: 'PUE', label: 'PUE (Pago en una exhibición)' },
+                { value: 'PPD', label: 'PPD (Pago en parcialidades)' }
+              ].find(opt => opt.value === filtros.metodoPago) || { value: '', label: 'Todos' }}
+              onChange={(opt) => handleSelectChange('metodoPago', opt)}
+              styles={customSelectStyles}
+              placeholder="Buscar..."
+            />
           </div>
           <div className="form-group">
             <label>Complementos (Solo PPD)</label>
-            <select name="estadoComplemento" className="form-control" value={filtros.estadoComplemento} onChange={handleChange}>
-              <option value="Todos">Todos</option>
-              <option value="Emitido">Emitido</option>
-              <option value="Pendiente">Pendiente</option>
-            </select>
+            <Select 
+              options={[
+                { value: 'Todos', label: 'Todos' },
+                { value: 'Emitido', label: 'Emitido' },
+                { value: 'Pendiente', label: 'Pendiente' }
+              ]}
+              value={[
+                { value: 'Todos', label: 'Todos' },
+                { value: 'Emitido', label: 'Emitido' },
+                { value: 'Pendiente', label: 'Pendiente' }
+              ].find(opt => opt.value === filtros.estadoComplemento) || { value: 'Todos', label: 'Todos' }}
+              onChange={(opt) => handleSelectChange('estadoComplemento', opt)}
+              styles={customSelectStyles}
+              placeholder="Buscar..."
+            />
           </div>
           <div className="form-group">
             <label>Fecha Inicio</label>
@@ -158,11 +246,6 @@ export default function ReportesClient({ empresas, clientes }) {
             <label>Fecha Fin</label>
             <input type="date" name="fechaFin" className="form-control" value={filtros.fechaFin} onChange={handleChange} />
           </div>
-        </div>
-        <div style={{ marginTop: '1rem', textAlign: 'right' }}>
-           <button className="btn btn-secondary" onClick={cargarReporte} disabled={cargando}>
-             {cargando ? 'Cargando...' : 'Aplicar Filtros'}
-           </button>
         </div>
       </div>
 

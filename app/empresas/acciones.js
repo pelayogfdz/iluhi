@@ -58,7 +58,17 @@ export async function actualizarEmpresa(id, data) {
         encuestaAsunto: data.encuestaAsunto || null,
         encuestaMensaje: data.encuestaMensaje || null,
         encuestaEnlace: data.encuestaEnlace || null,
-        googleReviewsUrl: data.googleReviewsUrl || null
+        googleReviewsUrl: data.googleReviewsUrl || null,
+        logoBase64: data.logoBase64 || null,
+        colorPrimario: data.colorPrimario || '#0054a6',
+        colorSecundario: data.colorSecundario || '#333333',
+        tipografiaPdf: data.tipografiaPdf || 'Helvetica',
+        layoutPdf: data.layoutPdf || 'CLASICO',
+        infonavitRegistroPatronal: data.infonavitRegistroPatronal || null,
+        infonavitCorreo: data.infonavitCorreo || null,
+        infonavitPassword: data.infonavitPassword || null,
+        isnUsuario: data.isnUsuario || null,
+        isnPassword: data.isnPassword || null
       }
     });
     return { success: true };
@@ -199,6 +209,30 @@ export async function guardarFiel(empresaId, fielCerBase64, fielKeyBase64, fielP
     return { success: true, fielVigencia }
   } catch (error) {
     console.error("Error guardando FIEL: ", error)
+    return { success: false, error: error.message }
+  }
+}
+
+// ─── IMSS (Credenciales y Sellos) ─────────────────────────
+
+export async function guardarCredencialesImss(empresaId, imssCerBase64, imssKeyBase64, imssPassword) {
+  try {
+    if (!imssCerBase64 || !imssKeyBase64 || !imssPassword) {
+      throw new Error("Debes proporcionar el archivo .CER, el archivo .KEY y la contraseña de los sellos IMSS.")
+    }
+
+    await prisma.empresa.update({
+      where: { id: empresaId },
+      data: {
+        imssCerBase64,
+        imssKeyBase64,
+        imssPassword
+      }
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error guardando sellos IMSS: ", error)
     return { success: false, error: error.message }
   }
 }

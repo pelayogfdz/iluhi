@@ -39,6 +39,8 @@ export default async function UsuariosPage() {
                   {u.permisoFacturas && <span className="badge">🧾 Facturas</span>}
                   {u.permisoReportes && <span className="badge">📊 Reportes</span>}
                   {u.permisoUsuarios && <span className="badge">🔑 Usuarios</span>}
+                  {u.permisoTesoreria && <span className="badge" style={{backgroundColor: '#3b82f6'}}>💼 Tesorería</span>}
+                  {u.permisoOperaciones && <span className="badge" style={{backgroundColor: '#10b981'}}>🖱️ Operaciones</span>}
                 </td>
                 <td style={{ fontSize: '13px' }}>
                   {u.empresas?.length > 0 ? (

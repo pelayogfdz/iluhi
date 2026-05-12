@@ -82,6 +82,9 @@ export async function fetchDocumentosSATHistory(filtros) {
   const tipoMapeo = {
     'constancias': 'CONSTANCIA',
     'opiniones': 'OPINION',
+    'imss': 'OPINION_IMSS',
+    'infonavit': 'OPINION_INFONAVIT',
+    'isn': 'OPINION_ISN',
     'buzon': 'BUZON'
   }
   
@@ -147,7 +150,7 @@ export async function getEmpresasSelector() {
   })
 }
 
-export async function subirOpinionManual(empresaId, fileBase64) {
+export async function subirOpinionManual(empresaId, fileBase64, tipoDocumento = 'OPINION') {
   try {
     if (!empresaId || empresaId === 'ALL') {
       return { success: false, error: 'Selecciona una empresa específica.' }
@@ -156,7 +159,7 @@ export async function subirOpinionManual(empresaId, fileBase64) {
     // Asumimos que la opinión que suben es positiva y actualizada
     await prisma.documentoSat.create({
       data: {
-        tipo: 'OPINION',
+        tipo: tipoDocumento,
         descripcion: 'POSITIVA', // Se puede mejorar para detectar negativa con OCR, pero se asume Positiva de momento
         archivoBase64: fileBase64,
         empresaId

@@ -1,5 +1,6 @@
 import prisma from "../../lib/prisma";
 import FlujoTrabajoClient from "./FlujoTrabajoClient";
+import { getSessionUser } from "../../lib/auth";
 
 export const metadata = {
   title: "Flujo de Trabajo | SEIT",
@@ -7,6 +8,12 @@ export const metadata = {
 };
 
 export default async function FlujoTrabajoPage() {
+  const sessionUser = await getSessionUser();
+  let user = null;
+  if (sessionUser) {
+    user = await prisma.usuario.findUnique({ where: { id: sessionUser.id } });
+  }
+
   // Cargar facturas disponibles (Timbradas o Borrador/PPD, depende del caso de uso. Por ahora cargaremos todas ordenadas por folio descentente)
   const facturasDisponibles = await prisma.factura.findMany({
     where: {
@@ -34,6 +41,13 @@ export default async function FlujoTrabajoPage() {
   // Cargar pagos pendientes
   const pagosPendientes = await prisma.pagoFlujo.findMany({
     where: { estatus: "Pendiente" },
+    include: {
+      empresa: true,
+      cliente: true,
+      creador: { select: { nombre: true } },
+      facturaAsignadaPor: { select: { nombre: true } },
+      clienteEditadoPor: { select: { nombre: true } }
+    },
     orderBy: { createdAt: 'desc' }
   });
 
@@ -41,6 +55,11 @@ export default async function FlujoTrabajoPage() {
   const pagosAsignados = await prisma.pagoFlujo.findMany({
     where: { estatus: "Asignado" },
     include: {
+      empresa: true,
+      cliente: true,
+      creador: { select: { nombre: true } },
+      facturaAsignadaPor: { select: { nombre: true } },
+      clienteEditadoPor: { select: { nombre: true } },
       factura: {
         include: { cliente: true }
       }
@@ -63,6 +82,7 @@ export default async function FlujoTrabajoPage() {
           clientesDisponibles={clientesDisponibles}
           pagosPendientesIniciales={pagosPendientes}
           pagosAsignadosIniciales={pagosAsignados}
+          currentUser={user}
         />
       </div>
     </div>

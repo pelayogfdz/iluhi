@@ -11,8 +11,9 @@ export async function registrarPagoFlujo(datos) {
         monto: parseFloat(datos.monto),
         fechaPago: new Date(datos.fechaPago),
         horaPago: datos.horaPago,
-        empresaId: datos.empresaId,
+        empresaId: datos.empresaId || null,
         clienteId: datos.clienteId || null,
+        creadorId: datos.userId || null,
         estatus: "Pendiente"
       }
     });
@@ -58,7 +59,7 @@ export async function obtenerPagosAsignados() {
   }
 }
 
-export async function asignarFacturaAPago(pagoId, facturaId) {
+export async function asignarFacturaAPago(pagoId, facturaId, userId) {
   try {
     const factura = await prisma.factura.findUnique({
       where: { id: facturaId },
@@ -70,6 +71,7 @@ export async function asignarFacturaAPago(pagoId, facturaId) {
       data: {
         facturaId: facturaId,
         clienteId: factura?.clienteId, // Heredar cliente si no tenía
+        facturaAsignadaPorId: userId || null,
         estatus: "Asignado"
       }
     });
@@ -81,6 +83,26 @@ export async function asignarFacturaAPago(pagoId, facturaId) {
     return { success: false, error: "Error al asignar la factura al pago" };
   }
 }
+
+export async function editarEmpresaClientePago(pagoId, datos) {
+  try {
+    const pago = await prisma.pagoFlujo.update({
+      where: { id: pagoId },
+      data: {
+        empresaId: datos.empresaId || null,
+        clienteId: datos.clienteId || null,
+        clienteEditadoPorId: datos.userId || null
+      }
+    });
+    
+    revalidatePath("/flujo-trabajo");
+    return { success: true, pago };
+  } catch (error) {
+    console.error("Error al editar empresa/cliente de pago:", error);
+    return { success: false, error: "Error al actualizar la empresa y el cliente" };
+  }
+}
+
 
 export async function eliminarPago(pagoId) {
   try {

@@ -35,10 +35,30 @@ export default function EditForm({ empresa }) {
     encuestaAsunto: empresa.encuestaAsunto || '',
     encuestaMensaje: empresa.encuestaMensaje || '',
     encuestaEnlace: empresa.encuestaEnlace || '',
-    googleReviewsUrl: empresa.googleReviewsUrl || ''
+    googleReviewsUrl: empresa.googleReviewsUrl || '',
+    logoBase64: empresa.logoBase64 || '',
+    colorSecundario: empresa.colorSecundario || '#333333',
+    tipografiaPdf: empresa.tipografiaPdf || 'Helvetica',
+    layoutPdf: empresa.layoutPdf || 'CLASICO',
+    infonavitRegistroPatronal: empresa.infonavitRegistroPatronal || '',
+    infonavitCorreo: empresa.infonavitCorreo || '',
+    infonavitPassword: empresa.infonavitPassword || '',
+    isnUsuario: empresa.isnUsuario || '',
+    isnPassword: empresa.isnPassword || ''
   })
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFormData({ ...formData, logoBase64: reader.result })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handlePruebaSmtp = async () => {
     setProbarStatus({ type: 'loading', text: 'Probando conexión...' })
@@ -157,6 +177,59 @@ export default function EditForm({ empresa }) {
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2rem 0' }} />
+        <h3 style={{ color: 'var(--primary)' }}>🎨 Identidad Gráfica y PDFs (Cotizaciones y Órdenes)</h3>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+          Personaliza la apariencia de los documentos no fiscales (Cotizaciones y Órdenes de Servicio).<br/>
+          <small><em>Nota: Las facturas utilizarán el Logo y Color configurados directamente en el panel de Facturapi debido a restricciones fiscales.</em></small>
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label>Logotipo de la Empresa</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {formData.logoBase64 && (
+                <img src={formData.logoBase64} alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '4px', padding: '5px' }} />
+              )}
+              <input type="file" accept="image/*" onChange={handleLogoUpload} className="form-control" style={{ flex: 1 }} />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label>Color Primario</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input type="color" name="colorPrimario" value={formData.colorPrimario} onChange={handleChange} style={{ width: '50px', height: '40px', padding: '0', border: 'none', borderRadius: '4px' }} />
+              <input type="text" name="colorPrimario" value={formData.colorPrimario} onChange={handleChange} className="form-control" placeholder="#0054a6" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Color Secundario</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input type="color" name="colorSecundario" value={formData.colorSecundario} onChange={handleChange} style={{ width: '50px', height: '40px', padding: '0', border: 'none', borderRadius: '4px' }} />
+              <input type="text" name="colorSecundario" value={formData.colorSecundario} onChange={handleChange} className="form-control" placeholder="#333333" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Tipografía para PDFs</label>
+            <select name="tipografiaPdf" value={formData.tipografiaPdf} onChange={handleChange} className="form-control" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <option value="Helvetica">Helvetica (Moderna y Limpia)</option>
+              <option value="Times">Times New Roman (Clásica y Formal)</option>
+              <option value="Courier">Courier (Estilo Máquina de Escribir)</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Layout del Documento</label>
+            <select name="layoutPdf" value={formData.layoutPdf} onChange={handleChange} className="form-control" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <option value="CLASICO">Clásico (Tablas cerradas, formal)</option>
+              <option value="MODERNO">Moderno (Bloques de color, dinámico)</option>
+              <option value="MINIMALISTA">Minimalista (Espacios en blanco, sutil)</option>
+            </select>
+          </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2rem 0' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
           <span style={{ fontSize: '2rem' }}>✉️</span>
           <div>
@@ -213,6 +286,48 @@ export default function EditForm({ empresa }) {
                  {probarStatus.text}
                </div>
             )}
+          </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2rem 0' }} />
+        <h3 style={{ color: 'var(--primary)' }}>🔐 Accesos Portales (INFONAVIT, ISN)</h3>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+          Configura los accesos para la descarga automatizada (o manual) de opiniones de cumplimiento de estas instituciones.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+          {/* INFONAVIT */}
+          <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: '#fff' }}>Portal Empresarial INFONAVIT</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label>Registro Patronal</label>
+                <input type="text" name="infonavitRegistroPatronal" value={formData.infonavitRegistroPatronal} onChange={handleChange} className="form-control" placeholder="Ej. Y0000000000" />
+              </div>
+              <div className="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" name="infonavitCorreo" value={formData.infonavitCorreo} onChange={handleChange} className="form-control" placeholder="Ej. rh@empresa.com" />
+              </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>Contraseña</label>
+                <input type="password" name="infonavitPassword" value={formData.infonavitPassword} onChange={handleChange} className="form-control" placeholder="*************" />
+              </div>
+            </div>
+          </div>
+
+          {/* ISN (Recaudanet) */}
+          <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: '#fff' }}>Portal ISN (Recaudanet)</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label>Usuario / RFC</label>
+                <input type="text" name="isnUsuario" value={formData.isnUsuario} onChange={handleChange} className="form-control" placeholder="Ej. EMP000000XXX" />
+              </div>
+              <div className="form-group">
+                <label>Contraseña</label>
+                <input type="password" name="isnPassword" value={formData.isnPassword} onChange={handleChange} className="form-control" placeholder="*************" />
+              </div>
+            </div>
           </div>
         </div>
 

@@ -27,7 +27,7 @@ export default function EliminarProductoBtn({ id }) {
       onClick={handleEliminar} 
       className="btn btn-danger" 
       disabled={isDeleting}
-      style={{ padding: '0.4rem 1rem', marginLeft: '0.5rem', backgroundColor: '#ef4444', borderColor: '#ef4444' }}
+      style={{ width: '100%', padding: '0.4rem 1rem', backgroundColor: '#ef4444', borderColor: '#ef4444' }}
     >
       {isDeleting ? '...' : 'Eliminar'}
     </button>
