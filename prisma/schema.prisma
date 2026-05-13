@@ -49,6 +49,8 @@ model Empresa {
   codigoPostal String
   tipoEmpresa  String?
   numeroRepse  String?
+  representanteLegal String?
+  apoderado          String?
 
   calle       String?
   numExterior String?

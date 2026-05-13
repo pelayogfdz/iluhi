@@ -16,6 +16,10 @@ export default function EditForm({ empresa }) {
     rfc: empresa.rfc || '',
     tipoEmpresa: empresa.tipoEmpresa || '',
     numeroRepse: empresa.numeroRepse || '',
+    representanteLegal: empresa.representanteLegal || '',
+    apoderado: empresa.apoderado || '',
+    objetoSocial: empresa.objetoSocial || '',
+    actividadEconomica: empresa.actividadEconomica || '',
     razonSocial: empresa.razonSocial || '',
     regimen: empresa.regimen || '',
     codigoPostal: empresa.codigoPostal || '',
@@ -123,6 +127,27 @@ export default function EditForm({ empresa }) {
           <div className="form-group">
             <label>Razón Social Oficial</label>
             <input required type="text" name="razonSocial" value={formData.razonSocial} onChange={handleChange} className="form-control" />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Representante Legal</label>
+              <input type="text" name="representanteLegal" value={formData.representanteLegal} onChange={handleChange} className="form-control" />
+            </div>
+            <div className="form-group">
+              <label>Apoderado Legal</label>
+              <input type="text" name="apoderado" value={formData.apoderado} onChange={handleChange} className="form-control" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Actividad / Objeto Social</label>
+            <textarea name="objetoSocial" value={formData.objetoSocial} onChange={handleChange} className="form-control" rows="3"></textarea>
+          </div>
+
+          <div className="form-group">
+            <label>Actividad Económica (Actualizada por CSF)</label>
+            <textarea name="actividadEconomica" value={formData.actividadEconomica} className="form-control" rows="3" disabled style={{ opacity: 0.7 }}></textarea>
           </div>
           <div className="form-group">
             <label>Régimen Fiscal Emisor (Clave SAT)</label>

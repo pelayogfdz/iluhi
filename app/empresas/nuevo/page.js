@@ -20,6 +20,10 @@ async function createEmpresa(formData) {
   const estado = formData.get('estado') || ''
   const tipoEmpresa = formData.get('tipoEmpresa') || null
   const numeroRepse = formData.get('numeroRepse') || null
+  const representanteLegal = formData.get('representanteLegal') || null
+  const apoderado = formData.get('apoderado') || null
+  const objetoSocial = formData.get('objetoSocial') || null
+  const actividadEconomica = formData.get('actividadEconomica') || null
   
   // Create organization in Facturapi using the User Key
   let facturapiId = null;
@@ -95,7 +99,11 @@ async function createEmpresa(formData) {
       facturapiLiveKey,
       facturapiTestKey,
       tipoEmpresa,
-      numeroRepse
+      numeroRepse,
+      representanteLegal,
+      apoderado,
+      objetoSocial,
+      actividadEconomica
     }
   })
   
@@ -141,6 +149,27 @@ export default function NuevaEmpresaPage() {
           <div className="form-group">
             <label htmlFor="razonSocial">Razón Social</label>
             <input type="text" id="razonSocial" name="razonSocial" className="form-control" required placeholder="Ej. Corporativo Ejemplo S.A. de C.V." />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="representanteLegal">Representante Legal (Opcional)</label>
+              <input type="text" id="representanteLegal" name="representanteLegal" className="form-control" placeholder="Nombre completo del representante" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="apoderado">Apoderado Legal (Opcional)</label>
+              <input type="text" id="apoderado" name="apoderado" className="form-control" placeholder="Nombre completo del apoderado" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="objetoSocial">Actividad / Objeto Social (Opcional)</label>
+            <textarea id="objetoSocial" name="objetoSocial" className="form-control" placeholder="Describe la actividad social de la empresa..." rows="3"></textarea>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="actividadEconomica">Actividad Económica (Se actualizará con la CSF automáticamente)</label>
+            <textarea id="actividadEconomica" name="actividadEconomica" className="form-control" placeholder="Se extraerá de la Constancia de Situación Fiscal..." rows="3" disabled style={{ opacity: 0.7 }}></textarea>
           </div>
 
           <div className="form-group">

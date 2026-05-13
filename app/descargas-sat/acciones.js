@@ -2,6 +2,7 @@
 
 import prisma from '../../lib/prisma'
 import { revalidatePath } from 'next/cache'
+import pdfParse from 'pdf-parse'
 
 export async function fetchDocumentosSATHistory(filtros) {
   const { tab, empresaId, fechaInicio, fechaFin } = filtros
@@ -178,6 +179,31 @@ export async function subirOpinionManual(empresaId, fileBase64, tipoDocumento = 
         where: { id: empresaId },
         data: { opinionCumplimiento: 'POSITIVA', ultimaValidacionOpinion: new Date() }
       })
+    }
+
+    // Si es CONSTANCIA, extraemos la actividad económica
+    if (tipoDocumento === 'CONSTANCIA') {
+      try {
+        const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+        const pdfBuffer = Buffer.from(base64Data, 'base64');
+        const pdfData = await pdfParse(pdfBuffer);
+        const text = pdfData.text;
+
+        // Búsqueda simple de Actividades Económicas
+        const keyword = 'Actividades Económicas';
+        const index = text.indexOf(keyword);
+        if (index !== -1) {
+          // Extraemos un bloque razonable de texto donde debería venir la actividad
+          let snippet = text.substring(index, index + 800).trim();
+          
+          await prisma.empresa.update({
+            where: { id: empresaId },
+            data: { actividadEconomica: snippet }
+          });
+        }
+      } catch (pdfErr) {
+        console.error("Error extrayendo texto del PDF CSF:", pdfErr);
+      }
     }
     
     revalidatePath('/descargas-sat')
