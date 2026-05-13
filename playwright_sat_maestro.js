@@ -7,6 +7,7 @@ const fs = require('fs/promises');
 const fsSync = require('fs');
 const { PrismaClient } = require('@prisma/client');
 const { createClient } = require('@supabase/supabase-js');
+const pdfParse = require('pdf-parse');
 
 const prisma = new PrismaClient();
 const supabaseUrl = 'https://nwnakqsxvgltkbqknrlf.supabase.co';
@@ -586,6 +587,24 @@ async function extractAll() {
                     await prisma.documentoSat.create({
                         data: { tipo: 'CONSTANCIA', descripcion: 'Constancia de Situación Fiscal', archivoBase64: 'data:application/pdf;base64,' + buffer.toString('base64'), empresaId: emp.id }
                     });
+                    
+                    // Extraer texto para Actividad Económica
+                    try {
+                        const pdfData = await pdfParse(buffer);
+                        const text = pdfData.text;
+                        const keyword = 'Actividades Económicas';
+                        const index = text.indexOf(keyword);
+                        if (index !== -1) {
+                            let snippet = text.substring(index, index + 800).trim();
+                            await prisma.empresa.update({
+                                where: { id: emp.id },
+                                data: { actividadEconomica: snippet }
+                            });
+                            console.log("   -> Actividad Económica extraída y guardada.");
+                        }
+                    } catch (pdfErr) {
+                        console.error("   -> Error parseando Actividad Económica:", pdfErr.message);
+                    }
                     
                     const { error } = await supabaseClient.storage.from('documentos_sat').upload(`empresa_${emp.rfc || "UNKNOWN"}/${pdfCSFName}`, buffer, { upsert: true, contentType: 'application/pdf' });
                     if (!error) await supabaseClient.from('Organization').update({ updated_at: new Date() }).eq('rfc', emp.rfc);
