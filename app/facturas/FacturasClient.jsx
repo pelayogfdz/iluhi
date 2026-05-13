@@ -8,7 +8,7 @@ import BotonCancelar from './BotonCancelar'
 import BotonCancelarComplemento from './BotonCancelarComplemento'
 import BotonComplemento from './BotonComplemento'
 import BotonNotaCredito from './BotonNotaCredito'
-import { cancelarFactura, emitirComplementoPago, emitirNotaCredito, cancelarComplementoPago } from './acciones'
+import { cancelarFactura, emitirComplementoPago, emitirNotaCredito, cancelarComplementoPago, uploadFacturaPdf } from './acciones'
 
 export default function FacturasClient({ facturasInitial, empresas }) {
   const router = useRouter()
@@ -134,6 +134,25 @@ export default function FacturasClient({ facturasInitial, empresas }) {
      router.refresh();
   }
 
+  const handleUploadPdf = async (facturaId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') return alert("Por favor sube un archivo PDF.");
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+       const base64Str = reader.result;
+       const res = await uploadFacturaPdf(facturaId, base64Str);
+       if(res.success) {
+          alert("PDF subido correctamente.");
+          router.refresh();
+       } else {
+          alert("Error subiendo PDF: " + res.error);
+       }
+    };
+  }
+
   return (
     <div>
       {/* Panel de Filtros Secundarios */}
@@ -236,9 +255,15 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                 </td>
                 <td>
                   {hasUUID ? (
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxWidth: '180px' }}>
                       <button className="btn" style={{padding: '4px 8px', fontSize: '0.8rem'}} onClick={() => openDownload(fac.id, 'pdf')}>📥 PDF</button>
                       <button className="btn" style={{padding: '4px 8px', fontSize: '0.8rem', background: '#eab308'}} onClick={() => openDownload(fac.id, 'xml')}>📥 XML</button>
+                      {(!fac.uuid.includes('req_') && fac.uuid.length === 36) && (
+                         <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block' }}>
+                           <button className="btn" style={{padding: '4px 8px', fontSize: '0.8rem', background: '#64748b'}}>⬆️ Subir PDF</button>
+                           <input type="file" accept=".pdf" onChange={(e) => handleUploadPdf(fac.id, e)} style={{ position: 'absolute', top: 0, right: 0, minWidth: '100%', minHeight: '100%', opacity: 0, cursor: 'pointer' }} />
+                         </div>
+                      )}
                     </div>
                   ) : (
                     <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>No disponible</span>

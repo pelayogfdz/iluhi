@@ -41,6 +41,9 @@ const csfOnly = args.includes('--csf-only');
 // Custom FIEL login helper - Extremely Robust
 async function loginFIEL(page, url, emp, cerPath, keyPath) {
     if (url) {
+        // Ir a la página principal primero para obtener cookies y evadir Cloudflare
+        await page.goto('https://www.sat.gob.mx/home', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(()=>{});
+        await delay(3000); // 3 segundos de espera
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
         await delay(5000);
     }
@@ -50,10 +53,12 @@ async function loginFIEL(page, url, emp, cerPath, keyPath) {
         const btnFiel = page.locator('#buttonFiel, button#btnFiel, a#btnFiel, span:has-text("e.firma")').first();
         const count = await btnFiel.count();
         if (count > 0) {
+            await delay(3000); // Esperar 3 segundos antes del click
             await btnFiel.click({ force: true, timeout: 5000 });
         } else {
             const fallback = page.locator('text="e.firma"').first();
             if (await fallback.count() > 0) {
+                await delay(3000); // Esperar 3 segundos antes del click
                 await fallback.click({ force: true, timeout: 5000 });
             }
         }
@@ -74,8 +79,7 @@ async function loginFIEL(page, url, emp, cerPath, keyPath) {
                 await page.locator('input[type="password"]').last().fill(emp.fielPassword, { timeout: 5000 });
             }
             
-            await delay(1000);
-            
+            await delay(3000); // Esperar 3 segundos antes de enviar
             // Submit without forcing wait for slow SAT navigation
             const submitBtn = page.locator('#submit, input[type="submit"], button#submit').first();
             await submitBtn.click({ force: true, noWaitAfter: true, timeout: 5000 }).catch(() => {});
@@ -157,7 +161,8 @@ async function extractAll() {
         let browser;
         try {
             const launchOptions = {
-                headless: true, // headless para background
+                headless: false, // cambiado a false para evadir Cloudflare
+                executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
                 args: ['--disable-blink-features=AutomationControlled', '--no-sandbox']
             };
             
@@ -241,6 +246,7 @@ async function extractAll() {
                             await pageCfdi.goto("https://portalcfdi.facturaelectronica.sat.gob.mx/ConsultaReceptor.aspx", { waitUntil: 'domcontentloaded', timeout: 30000 });
                             await delay(4000);
                             
+                            await delay(3000);
                             await pageCfdi.click('#ctl00_MainContent_RdoFechas').catch(() => {});
                             await delay(1000);
                             await pageCfdi.selectOption('#ctl00_MainContent_CldFecha_DdlAnio', p.year).catch(() => {});
@@ -248,6 +254,7 @@ async function extractAll() {
                             await pageCfdi.selectOption('#ctl00_MainContent_CldFecha_DdlMes', p.month).catch(() => {});
                             await delay(500);
                             
+                            await delay(3000);
                             await pageCfdi.click('#ctl00_MainContent_BtnBusqueda').catch(() => {});
                             await delay(8000); 
                             
@@ -307,6 +314,7 @@ async function extractAll() {
                                     const btnXml = row.locator('input[id$="BtnDescarga"], img[id$="BtnDescarga"], span[id$="BtnDescarga"]');
                                     if (await btnXml.count() > 0) {
                                         try {
+                                            await delay(3000);
                                             const [download] = await Promise.all([
                                                 pageCfdi.waitForEvent('download', { timeout: 10000 }),
                                                 btnXml.first().click()
@@ -351,6 +359,7 @@ async function extractAll() {
                             await pageCfdi.goto("https://portalcfdi.facturaelectronica.sat.gob.mx/ConsultaEmisor.aspx", { waitUntil: 'domcontentloaded', timeout: 30000 });
                             await delay(4000);
                             
+                            await delay(3000);
                             await pageCfdi.click('#ctl00_MainContent_RdoFechas').catch(() => {});
                             await delay(1000);
                             await pageCfdi.locator('#ctl00_MainContent_CldFechaInicial2_Calendario_text').fill(`01/${p.month.padStart(2,'0')}/${p.year}`).catch(()=>{});
@@ -358,6 +367,7 @@ async function extractAll() {
                             await pageCfdi.locator('#ctl00_MainContent_CldFechaFinal2_Calendario_text').fill(`${dtLimit.getDate()}/${p.month.padStart(2,'0')}/${p.year}`).catch(()=>{});
                             await delay(1000);
                             
+                            await delay(3000);
                             await pageCfdi.click('#ctl00_MainContent_BtnBusqueda').catch(() => {});
                             await delay(8000); 
 
@@ -410,6 +420,7 @@ async function extractAll() {
                                     const btnXml = row.locator('input[id$="BtnDescarga"], img[id$="BtnDescarga"], span[id$="BtnDescarga"]');
                                     if (await btnXml.count() > 0) {
                                         try {
+                                            await delay(3000);
                                             const [download] = await Promise.all([
                                                 pageCfdi.waitForEvent('download', { timeout: 10000 }),
                                                 btnXml.first().click()
@@ -513,8 +524,10 @@ async function extractAll() {
                 
                 const links = await pageFiscal.locator('a[href*="ptsc32"]').all();
                 if (links.length > 0) {
+                    await delay(3000);
                     await links[0].click({ force: true }).catch(()=>{});
                 } else {
+                    await delay(3000);
                     await pageFiscal.locator('text="EJECUTAR EN LÍNEA", text="INICIAR", text="Ejecutar en línea", text="Iniciar"').first().click({ force: true }).catch(()=>{});
                 }
 
@@ -565,6 +578,7 @@ async function extractAll() {
                     try {
                         const count = await tempBtn.count();
                         if (count > 0) {
+                            await delay(3000); // Esperar 3 segundos antes del click final
                             await tempBtn.click({ force: true, timeout: 5000 });
                             console.log("   -> Botón Generar Constancia presionado!");
                             clicked = true;
