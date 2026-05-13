@@ -2,7 +2,7 @@
 
 import prisma from '../../lib/prisma'
 import { revalidatePath } from 'next/cache'
-import pdfParse from 'pdf-parse'
+import * as pdfParse from 'pdf-parse'
 
 export async function fetchDocumentosSATHistory(filtros) {
   const { tab, empresaId, fechaInicio, fechaFin } = filtros

@@ -545,22 +545,6 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
       const payload = { motive: motivo };
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
-export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02') {
-  try {
-    const fac = await prisma.factura.findUnique({ 
-        where: { id: facturaId }, 
-        include: { empresa: true } 
-    });
-    if (!fac || !fac.complementosPago) return { success: false, error: 'Factura o complemento no encontrado.' };
-
-    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
-      ? fac.empresa.facturapiLiveKey 
-      : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
-
-    if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
-      const payload = { motive: motivo };
-      try {
-        const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         await tenantFacturapi.receipts.cancel(receiptId, payload);
       } catch (pacError) {
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
