@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 export async function getUsuarios() {
   return await prisma.usuario.findMany({
     orderBy: { nombre: 'asc' },
-    include: { empresas: true }
+    include: { empresas: true, clientesAsignados: { select: { id: true } } }
   });
 }
 
@@ -17,10 +17,17 @@ export async function getEmpresasResumen() {
   });
 }
 
+export async function getClientesResumen() {
+  return await prisma.cliente.findMany({
+    select: { id: true, razonSocial: true },
+    orderBy: { razonSocial: 'asc' }
+  });
+}
+
 export async function getUsuario(id) {
   return await prisma.usuario.findUnique({
     where: { id },
-    include: { empresas: true }
+    include: { empresas: true, clientesAsignados: true }
   });
 }
 
@@ -46,6 +53,9 @@ export async function crearUsuario(data) {
         permisoOperaciones: !!data.permisoOperaciones,
         empresas: data.empresaIds && data.empresaIds.length > 0 
           ? { connect: data.empresaIds.map(id => ({ id })) } 
+          : undefined,
+        clientesAsignados: data.clienteIds && data.clienteIds.length > 0
+          ? { connect: data.clienteIds.map(id => ({ id })) }
           : undefined
       }
     });
@@ -89,6 +99,10 @@ export async function actualizarUsuario(id, data) {
 
     if (data.empresaIds !== undefined) {
       updateData.empresas = { set: data.empresaIds.map(eId => ({ id: eId })) };
+    }
+
+    if (data.clienteIds !== undefined) {
+      updateData.clientesAsignados = { set: data.clienteIds.map(cId => ({ id: cId })) };
     }
 
     await prisma.usuario.update({

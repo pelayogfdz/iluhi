@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { actualizarUsuario, getEmpresasResumen, getUsuario } from '../../acciones'
+import { actualizarUsuario, getEmpresasResumen, getClientesResumen, getUsuario } from '../../acciones'
 
 export default function EditarUsuarioPage() {
   const router = useRouter()
@@ -25,16 +25,21 @@ export default function EditarUsuarioPage() {
     permisoEliminarEmpresas: false,
     permisoTesoreria: false,
     permisoOperaciones: false,
-    empresaIds: []
+    empresaIds: [],
+    clienteIds: []
   })
 
   const [empresasBase, setEmpresasBase] = useState([])
+  const [clientesBase, setClientesBase] = useState([])
 
   useEffect(() => {
     async function init() {
       // Fetch both companies and the selected user
       const emp = await getEmpresasResumen();
       setEmpresasBase(emp);
+
+      const cli = await getClientesResumen();
+      setClientesBase(cli);
 
       if (params.id) {
         const u = await getUsuario(params.id);
@@ -53,7 +58,8 @@ export default function EditarUsuarioPage() {
             permisoEliminarEmpresas: !!u.permisoEliminarEmpresas,
             permisoTesoreria: !!u.permisoTesoreria,
             permisoOperaciones: !!u.permisoOperaciones,
-            empresaIds: u.empresas ? u.empresas.map(e => e.id) : []
+            empresaIds: u.empresas ? u.empresas.map(e => e.id) : [],
+            clienteIds: u.clientesAsignados ? u.clientesAsignados.map(c => c.id) : []
           })
         }
       }
@@ -156,6 +162,47 @@ export default function EditarUsuarioPage() {
             </label>
           ))}
           {empresasBase.length === 0 && <p style={{ gridColumn: '1 / -1', color: '#666' }}>No hay empresas registradas.</p>}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '1rem' }}>
+          <div>
+            <h3 style={{ color: 'var(--primary)', marginTop: '1rem' }}>Asignación de Clientes (CRM)</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Selecciona los clientes a los que este usuario tendrá acceso:</p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+               type="button" 
+               className="btn btn-secondary" 
+               style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}
+               onClick={() => setFormData(prev => ({ ...prev, clienteIds: clientesBase.map(c => c.id) }))}
+            >
+               Seleccionar Todos
+            </button>
+            <button 
+               type="button" 
+               className="btn btn-secondary" 
+               style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }}
+               onClick={() => setFormData(prev => ({ ...prev, clienteIds: [] }))}
+            >
+               Ninguno
+            </button>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+          {clientesBase.map((cli) => (
+            <label key={cli.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input 
+                 type="checkbox" 
+                 checked={formData.clienteIds.includes(cli.id)}
+                 onChange={(e) => {
+                   if(e.target.checked) setFormData({ ...formData, clienteIds: [...formData.clienteIds, cli.id] });
+                   else setFormData({ ...formData, clienteIds: formData.clienteIds.filter(id => id !== cli.id) });
+                 }}
+              /> 
+              {cli.razonSocial}
+            </label>
+          ))}
+          {clientesBase.length === 0 && <p style={{ gridColumn: '1 / -1', color: '#666' }}>No hay clientes registrados.</p>}
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />

@@ -37,17 +37,30 @@ async function createCliente(formData) {
   const ciudad = formData.get('ciudad')
   const estado = formData.get('estado')
 
-  // Find users with assignment permissions
+  // 1. Find users with assignment permissions (Admin global access)
   const admins = await prisma.usuario.findMany({
     where: { permisoAsignacionClientes: true },
     select: { id: true }
   });
 
-  const idsToConnect = admins.map(a => a.id);
-  // Add the current user if not already in the list
-  if (currentUser && currentUser.id && !idsToConnect.includes(currentUser.id)) {
-    idsToConnect.push(currentUser.id);
+  // 2. Find users who currently have ALL clients assigned to them
+  const totalClientes = await prisma.cliente.count();
+  const allUsersWithCounts = await prisma.usuario.findMany({
+    select: { id: true, _count: { select: { clientesAsignados: true } } }
+  });
+  const usersWithAllClients = allUsersWithCounts.filter(u => u._count.clientesAsignados === totalClientes);
+
+  const idsToConnectSet = new Set([
+    ...admins.map(a => a.id),
+    ...usersWithAllClients.map(u => u.id)
+  ]);
+
+  // 3. Add the current user if not already in the list
+  if (currentUser && currentUser.id) {
+    idsToConnectSet.add(currentUser.id);
   }
+
+  const idsToConnect = Array.from(idsToConnectSet);
 
   let success = false;
   let errorMsg = 'Error_del_servidor';
