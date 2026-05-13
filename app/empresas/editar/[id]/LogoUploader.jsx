@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { subirLogo } from '../../acciones'
 import { useRouter } from 'next/navigation'
 
-export default function LogoUploader({ empresaId }) {
+export default function LogoUploader({ empresaId, logoUrl }) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
@@ -33,7 +33,7 @@ export default function LogoUploader({ empresaId }) {
   }
 
   return (
-    <div className="glass-panel" style={{ marginTop: '2rem', maxWidth: '600px' }}>
+    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
       <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
         🖼️ Logotipo del Emisor
       </h3>
@@ -41,7 +41,14 @@ export default function LogoUploader({ empresaId }) {
         Sube el logotipo de la empresa. Este logotipo se incrustará automáticamente en la cabecera de los archivos PDF (Facturas) generados.
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {logoUrl && (
+        <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+          <img src={logoUrl} alt="Logo Actual en Facturapi" style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'contain', background: '#fff', borderRadius: '4px', padding: '5px' }} />
+          <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '0.5rem' }}>✅ Logo Activo en Facturapi</div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
         <div className="form-group">
           <label htmlFor="logoFile">Archivo de Imagen (PNG, JPG)</label>
           <input type="hidden" name="empresaId" value={empresaId} />
@@ -61,4 +68,5 @@ export default function LogoUploader({ empresaId }) {
     </div>
   )
 }
+
 

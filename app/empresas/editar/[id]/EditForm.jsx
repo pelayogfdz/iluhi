@@ -231,10 +231,10 @@ export default function EditForm({ empresa }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Logotipo de la Empresa</label>
+            <label>Logotipo para Documentos No Fiscales</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {formData.logoBase64 && (
-                <img src={formData.logoBase64} alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '4px', padding: '5px' }} />
+              {(formData.logoBase64 || empresa.logoUrl) && (
+                <img src={formData.logoBase64 || empresa.logoUrl} alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '4px', padding: '5px' }} />
               )}
               <input type="file" accept="image/*" onChange={handleLogoUpload} className="form-control" style={{ flex: 1 }} />
             </div>

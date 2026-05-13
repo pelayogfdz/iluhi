@@ -51,7 +51,7 @@ export default function CsdUploader({ empresa }) {
   }
 
   return (
-    <div className="glass-panel" style={{ marginTop: '2rem', border: '1px solid var(--primary)' }}>
+    <div className="glass-panel" style={{ border: '1px solid var(--primary)', display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '2rem' }}>🛡️</span>
         <div>

@@ -20,7 +20,7 @@ export default async function EditarEmpresaPage({ params }) {
     redirect('/empresas')
   }
 
-  // Fetch Facturapi organization to get certificate expiration dates
+  // Fetch Facturapi organization to get certificate expiration dates & logo
   let facturapiOrg = null;
   try {
     if (empresa.facturapiId) {
@@ -32,6 +32,7 @@ export default async function EditarEmpresaPage({ params }) {
 
   const csdExpiresAt = facturapiOrg?.certificate?.expires_at || null;
   const fielExpiresAt = facturapiOrg?.fiel?.expires_at || null;
+  const logoUrl = facturapiOrg?.logo_url || null;
 
   // Serializar fechas para pasar a client components
   const empresaData = {
@@ -39,7 +40,8 @@ export default async function EditarEmpresaPage({ params }) {
     fielVigencia: fielExpiresAt ? new Date(fielExpiresAt).toISOString() : (empresa.fielVigencia ? empresa.fielVigencia.toISOString() : null),
     csdVigencia: csdExpiresAt ? new Date(csdExpiresAt).toISOString() : null,
     createdAt: empresa.createdAt.toISOString(),
-    updatedAt: empresa.updatedAt.toISOString()
+    updatedAt: empresa.updatedAt.toISOString(),
+    logoUrl
   }
 
   return (
@@ -52,12 +54,20 @@ export default async function EditarEmpresaPage({ params }) {
           </a>
         </div>
       </div>
-      <EditForm empresa={empresa} />
-      <CsdUploader empresa={empresaData} />
-      <FielUploader empresa={empresaData} />
-      <ImssUploader empresa={empresaData} />
-      <LogoUploader empresaId={empresa.id} />
-      <SociosPanel empresaId={empresa.id} />
+      
+      <EditForm empresa={empresaData} />
+      
+      <h3 style={{ marginTop: '3rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>Credenciales, Certificados y Facturapi</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+        <LogoUploader empresaId={empresa.id} logoUrl={empresaData.logoUrl} />
+        <CsdUploader empresa={empresaData} />
+        <FielUploader empresa={empresaData} />
+        <ImssUploader empresa={empresaData} />
+      </div>
+
+      <div style={{ marginTop: '3rem' }}>
+        <SociosPanel empresaId={empresa.id} />
+      </div>
     </div>
   )
 }

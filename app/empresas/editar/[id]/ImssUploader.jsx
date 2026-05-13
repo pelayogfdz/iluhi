@@ -44,7 +44,7 @@ export default function ImssUploader({ empresa }) {
   }
 
   return (
-    <div className="glass-panel card" style={{ marginTop: '2rem' }}>
+    <div className="glass-panel card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
         <span style={{ fontSize: '2rem' }}>🏥</span>
         <div>
