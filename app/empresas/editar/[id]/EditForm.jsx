@@ -14,6 +14,7 @@ export default function EditForm({ empresa }) {
   
   const [formData, setFormData] = useState({
     rfc: empresa.rfc || '',
+    tipoEmpresa: empresa.tipoEmpresa || '',
     razonSocial: empresa.razonSocial || '',
     regimen: empresa.regimen || '',
     codigoPostal: empresa.codigoPostal || '',
@@ -98,6 +99,18 @@ export default function EditForm({ empresa }) {
           <div className="form-group">
             <label>RFC (Identificador Fiscal)</label>
             <input required type="text" name="rfc" value={formData.rfc} onChange={handleChange} className="form-control" />
+          </div>
+          <div className="form-group">
+            <label>Tipo de Empresa</label>
+            <select name="tipoEmpresa" value={formData.tipoEmpresa} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <option value="">-- Seleccionar Tipo --</option>
+              <option value="RECEPTORA">RECEPTORA</option>
+              <option value="INTERMEDIARIA">INTERMEDIARIA</option>
+              <option value="PAGADORA">PAGADORA</option>
+              <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
+              <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
+              <option value="CLIENTE">CLIENTE</option>
+            </select>
           </div>
           <div className="form-group">
             <label>Razón Social Oficial</label>

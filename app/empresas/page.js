@@ -51,6 +51,7 @@ export default async function EmpresasPage({ searchParams }) {
             <tr>
               <th>RFC</th>
               <th>Razón Social</th>
+              <th>Tipo</th>
               <th>Régimen</th>
               <th>CSD Cargado</th>
               <th>FIEL (e.firma)</th>
@@ -70,6 +71,7 @@ export default async function EmpresasPage({ searchParams }) {
               <tr key={emp.id}>
                 <td>{emp.rfc}</td>
                 <td>{emp.razonSocial}</td>
+                <td>{emp.tipoEmpresa || '-'}</td>
                 <td>{emp.regimen}</td>
                 <td>{emp.cerPath ? '✅' : '❌'}</td>
                 <td>{emp.fielCerBase64 ? '✅' : '❌'}</td>

@@ -47,6 +47,7 @@ model Empresa {
   razonSocial  String
   regimen      String
   codigoPostal String
+  tipoEmpresa  String?
 
   calle       String?
   numExterior String?
