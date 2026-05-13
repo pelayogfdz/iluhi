@@ -2,7 +2,6 @@ import prisma from '../../../../lib/prisma';
 import { redirect } from 'next/navigation'
 import EditForm from './EditForm'
 import CsdUploader from './CsdUploader'
-import LogoUploader from './LogoUploader'
 import FielUploader from './FielUploader'
 import ImssUploader from './ImssUploader'
 import SociosPanel from './SociosPanel'
@@ -47,7 +46,12 @@ export default async function EditarEmpresaPage({ params }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
-        <h1>Modificar Empresa Emisora</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          {empresaData.logoUrl && (
+             <img src={empresaData.logoUrl} alt="Logo de Empresa" style={{ height: '60px', width: '60px', objectFit: 'contain', background: 'white', borderRadius: '8px', padding: '4px' }} />
+          )}
+          <h1 style={{ margin: 0 }}>Modificar Empresa Emisora</h1>
+        </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <a href={`/empresas/editar/${id}/expediente`} style={{ textDecoration: 'none' }}>
              <button className="btn" style={{ background: '#10b981' }}>Expediente Corporativo</button>
@@ -59,7 +63,6 @@ export default async function EditarEmpresaPage({ params }) {
       
       <h3 style={{ marginTop: '3rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>Credenciales, Certificados y Facturapi</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
-        <LogoUploader empresaId={empresa.id} logoUrl={empresaData.logoUrl} />
         <CsdUploader empresa={empresaData} />
         <FielUploader empresa={empresaData} />
         <ImssUploader empresa={empresaData} />

@@ -55,16 +55,7 @@ export default function EditForm({ empresa }) {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData({ ...formData, logoBase64: reader.result })
-      }
-      reader.readAsDataURL(file)
-    }
-  }
+
 
   const handlePruebaSmtp = async () => {
     setProbarStatus({ type: 'loading', text: 'Probando conexión...' })
@@ -105,51 +96,52 @@ export default function EditForm({ empresa }) {
             <label>RFC (Identificador Fiscal)</label>
             <input required type="text" name="rfc" value={formData.rfc} onChange={handleChange} className="form-control" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label>Tipo de Empresa</label>
-              <select name="tipoEmpresa" value={formData.tipoEmpresa} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                <option value="">-- Seleccionar Tipo --</option>
-                <option value="RECEPTORA">RECEPTORA</option>
-                <option value="INTERMEDIARIA">INTERMEDIARIA</option>
-                <option value="PAGADORA">PAGADORA</option>
-                <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
-                <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
-                <option value="CLIENTE">CLIENTE</option>
-              </select>
-            </div>
-            
-            <div className="form-group">
-              <label>Nº REPSE (Opcional)</label>
-              <input type="text" name="numeroRepse" value={formData.numeroRepse} onChange={handleChange} className="form-control" placeholder="Ej. AR123456" />
-            </div>
+          <div className="form-group">
+            <label>Tipo de Empresa</label>
+            <select name="tipoEmpresa" value={formData.tipoEmpresa} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <option value="">-- Seleccionar Tipo --</option>
+              <option value="RECEPTORA">RECEPTORA</option>
+              <option value="INTERMEDIARIA">INTERMEDIARIA</option>
+              <option value="PAGADORA">PAGADORA</option>
+              <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
+              <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
+              <option value="CLIENTE">CLIENTE</option>
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label>Nº REPSE (Opcional)</label>
+            <input type="text" name="numeroRepse" value={formData.numeroRepse} onChange={handleChange} className="form-control" placeholder="Ej. AR123456" />
           </div>
           <div className="form-group">
+            <label>Código Postal Fiscal</label>
+            <input required type="text" name="codigoPostal" value={formData.codigoPostal} onChange={handleChange} className="form-control" maxLength="5" />
+          </div>
+
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Razón Social Oficial</label>
             <input required type="text" name="razonSocial" value={formData.razonSocial} onChange={handleChange} className="form-control" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label>Representante Legal</label>
-              <input type="text" name="representanteLegal" value={formData.representanteLegal} onChange={handleChange} className="form-control" />
-            </div>
-            <div className="form-group">
-              <label>Apoderado Legal</label>
-              <input type="text" name="apoderado" value={formData.apoderado} onChange={handleChange} className="form-control" />
-            </div>
+          <div className="form-group">
+            <label>Representante Legal</label>
+            <input type="text" name="representanteLegal" value={formData.representanteLegal} onChange={handleChange} className="form-control" />
+          </div>
+          <div className="form-group">
+            <label>Apoderado Legal</label>
+            <input type="text" name="apoderado" value={formData.apoderado} onChange={handleChange} className="form-control" />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Actividad / Objeto Social</label>
             <textarea name="objetoSocial" value={formData.objetoSocial} onChange={handleChange} className="form-control" rows="3"></textarea>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Actividad Económica (Actualizada por CSF)</label>
             <textarea name="actividadEconomica" value={formData.actividadEconomica} className="form-control" rows="3" disabled style={{ opacity: 0.7 }}></textarea>
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Régimen Fiscal Emisor (Clave SAT)</label>
             <select name="regimen" value={formData.regimen} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                   <option value="">-- Seleccionar Régimen --</option>
@@ -176,10 +168,6 @@ export default function EditForm({ empresa }) {
                   <option value="629">629 - De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales</option>
                   <option value="630">630 - Enajenación de acciones en bolsa de valores</option>
             </select>
-          </div>
-          <div className="form-group">
-            <label>Código Postal Fiscal</label>
-            <input required type="text" name="codigoPostal" value={formData.codigoPostal} onChange={handleChange} className="form-control" maxLength="5" />
           </div>
         </div>
 
@@ -230,15 +218,6 @@ export default function EditForm({ empresa }) {
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-            <label>Logotipo para Documentos No Fiscales</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {(formData.logoBase64 || empresa.logoUrl) && (
-                <img src={formData.logoBase64 || empresa.logoUrl} alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '4px', padding: '5px' }} />
-              )}
-              <input type="file" accept="image/*" onChange={handleLogoUpload} className="form-control" style={{ flex: 1 }} />
-            </div>
-          </div>
           
           <div className="form-group">
             <label>Color Primario</label>
