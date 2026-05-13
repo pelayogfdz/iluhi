@@ -19,6 +19,7 @@ async function createEmpresa(formData) {
   const ciudad = formData.get('ciudad') || ''
   const estado = formData.get('estado') || ''
   const tipoEmpresa = formData.get('tipoEmpresa') || null
+  const numeroRepse = formData.get('numeroRepse') || null
   
   // Create organization in Facturapi using the User Key
   let facturapiId = null;
@@ -93,7 +94,8 @@ async function createEmpresa(formData) {
       facturapiId,
       facturapiLiveKey,
       facturapiTestKey,
-      tipoEmpresa
+      tipoEmpresa,
+      numeroRepse
     }
   })
   
@@ -116,17 +118,24 @@ export default function NuevaEmpresaPage() {
             <input type="text" id="rfc" name="rfc" className="form-control" required placeholder="Ej. ABC123456T8" />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="tipoEmpresa">Tipo de Empresa</label>
-            <select id="tipoEmpresa" name="tipoEmpresa" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <option value="">-- Seleccionar Tipo --</option>
-              <option value="RECEPTORA">RECEPTORA</option>
-              <option value="INTERMEDIARIA">INTERMEDIARIA</option>
-              <option value="PAGADORA">PAGADORA</option>
-              <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
-              <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
-              <option value="CLIENTE">CLIENTE</option>
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="tipoEmpresa">Tipo de Empresa</label>
+              <select id="tipoEmpresa" name="tipoEmpresa" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <option value="">-- Seleccionar Tipo --</option>
+                <option value="RECEPTORA">RECEPTORA</option>
+                <option value="INTERMEDIARIA">INTERMEDIARIA</option>
+                <option value="PAGADORA">PAGADORA</option>
+                <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
+                <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
+                <option value="CLIENTE">CLIENTE</option>
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="numeroRepse">Nº REPSE (Opcional)</label>
+              <input type="text" id="numeroRepse" name="numeroRepse" className="form-control" placeholder="Ej. AR123456" />
+            </div>
           </div>
 
           <div className="form-group">

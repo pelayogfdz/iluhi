@@ -15,6 +15,7 @@ export default function EditForm({ empresa }) {
   const [formData, setFormData] = useState({
     rfc: empresa.rfc || '',
     tipoEmpresa: empresa.tipoEmpresa || '',
+    numeroRepse: empresa.numeroRepse || '',
     razonSocial: empresa.razonSocial || '',
     regimen: empresa.regimen || '',
     codigoPostal: empresa.codigoPostal || '',
@@ -100,17 +101,24 @@ export default function EditForm({ empresa }) {
             <label>RFC (Identificador Fiscal)</label>
             <input required type="text" name="rfc" value={formData.rfc} onChange={handleChange} className="form-control" />
           </div>
-          <div className="form-group">
-            <label>Tipo de Empresa</label>
-            <select name="tipoEmpresa" value={formData.tipoEmpresa} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <option value="">-- Seleccionar Tipo --</option>
-              <option value="RECEPTORA">RECEPTORA</option>
-              <option value="INTERMEDIARIA">INTERMEDIARIA</option>
-              <option value="PAGADORA">PAGADORA</option>
-              <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
-              <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
-              <option value="CLIENTE">CLIENTE</option>
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Tipo de Empresa</label>
+              <select name="tipoEmpresa" value={formData.tipoEmpresa} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                <option value="">-- Seleccionar Tipo --</option>
+                <option value="RECEPTORA">RECEPTORA</option>
+                <option value="INTERMEDIARIA">INTERMEDIARIA</option>
+                <option value="PAGADORA">PAGADORA</option>
+                <option value="RECEPTORA ESPECIAL">RECEPTORA ESPECIAL</option>
+                <option value="INTERMEDIARIA ESPECIAL">INTERMEDIARIA ESPECIAL</option>
+                <option value="CLIENTE">CLIENTE</option>
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label>Nº REPSE (Opcional)</label>
+              <input type="text" name="numeroRepse" value={formData.numeroRepse} onChange={handleChange} className="form-control" placeholder="Ej. AR123456" />
+            </div>
           </div>
           <div className="form-group">
             <label>Razón Social Oficial</label>
