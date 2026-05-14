@@ -166,8 +166,8 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
 
   const totalFinal = totalSub + totalIVA;
 
-  const empresaSeleccionada = empresas.find(e => e.id === empresaId);
-  const clienteSeleccionado = clientesFiltrados.find(c => c.id === clienteId);
+  const empresaSeleccionada = empresas?.find(e => e.id === empresaId);
+  const clienteSeleccionado = clientesFiltrados?.find(c => c.id === clienteId);
 
   return (
     <div className="responsive-columns">
@@ -479,8 +479,8 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
                     <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                       <td style={{ padding: '0.5rem' }}>{it.cantidad}</td>
                       <td style={{ padding: '0.5rem' }}>{it.descripcion} <br/><small style={{color:'var(--text-secondary)'}}>SAT: {it.claveProdServ}</small></td>
-                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>${it.precio.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>${(it.cantidad * it.precio).toFixed(2)}</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>${(it.precio || 0).toFixed(2)}</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>${(it.cantidad * (it.precio || 0)).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -490,15 +490,15 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
                <div style={{ width: '200px', display: 'flex', justifyContent: 'space-between' }}>
                  <span style={{ color: 'var(--text-secondary)' }}>Subtotal:</span>
-                 <span>${totalSub.toFixed(2)}</span>
+                 <span>${(totalSub || 0).toFixed(2)}</span>
                </div>
                <div style={{ width: '200px', display: 'flex', justifyContent: 'space-between' }}>
                  <span style={{ color: 'var(--text-secondary)' }}>IVA:</span>
-                 <span>${totalIVA.toFixed(2)}</span>
+                 <span>${(totalIVA || 0).toFixed(2)}</span>
                </div>
                <div style={{ width: '200px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem', marginTop: '0.5rem' }}>
                  <span>Total:</span>
-                 <span>${totalFinal.toFixed(2)}</span>
+                 <span>${(totalFinal || 0).toFixed(2)}</span>
                </div>
             </div>
 
