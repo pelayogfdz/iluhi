@@ -10,6 +10,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
   const [resultado, setResultado] = useState(null)
+  const [mostrarPrevia, setMostrarPrevia] = useState(false)
   
   // Estado del Formulario Principal
   const [empresaId, setEmpresaId] = useState('')
@@ -164,6 +165,9 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
   }, 0);
 
   const totalFinal = totalSub + totalIVA;
+
+  const empresaSeleccionada = empresas.find(e => e.id === empresaId);
+  const clienteSeleccionado = clientesFiltrados.find(c => c.id === clienteId);
 
   return (
     <div className="responsive-columns">
@@ -381,9 +385,20 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
               />
             </div>
             
-            <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', flex: 2 }}>
-              {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC (FACTURAPI)'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flex: 2 }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setMostrarPrevia(true)}
+                disabled={cargando || !empresaId || !clienteId || items.length === 0}
+                style={{ padding: '1rem', fontSize: '1.2rem', flex: 1 }}
+              >
+                👁️ Mostrar Previa
+              </button>
+              <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', flex: 2 }}>
+                {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC'}
+              </button>
+            </div>
           </div>
 
           {resultado && (
@@ -418,6 +433,82 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos }) {
           Al presionar "Disparar", el esquema JSON será firmado criptográficamente, validado con las reglas LCO del SAT mediante Smart Web (Facturapi) y se expedirá inmediatamente el folio fiscal UUID 4.0.
         </p>
       </div>
+
+      {/* Modal de Previa */}
+      {mostrarPrevia && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+          <div style={{ backgroundColor: '#1e1e1e', padding: '2rem', borderRadius: '12px', maxWidth: '800px', width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+            <h2 style={{ color: 'var(--primary)', marginBottom: '1.5rem', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>Vista Previa de la Factura (Borrador)</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+              <div>
+                <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Emisor</h4>
+                <p><strong>{empresaSeleccionada?.razonSocial}</strong></p>
+                <p>RFC: {empresaSeleccionada?.rfc}</p>
+                <p>C.P.: {empresaSeleccionada?.codigoPostal}</p>
+              </div>
+              <div>
+                <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Receptor</h4>
+                <p><strong>{clienteSeleccionado?.razonSocial}</strong></p>
+                <p>RFC: {clienteSeleccionado?.rfc}</p>
+                <p>C.P.: {clienteSeleccionado?.codigoPostal}</p>
+                <p>Uso CFDI: {usoCfdi}</p>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Detalles de Pago</h4>
+              <p>Método de Pago: {metodoPago} - {metodoPago === 'PUE' ? 'Pago en Una Sola Exhibición' : 'Pago en Parcialidades / Diferido'}</p>
+              <p>Forma de Pago: {formaPago}</p>
+              {notasServicio && <p>Notas: {notasServicio}</p>}
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Conceptos</h4>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Cant</th>
+                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Descripción</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Precio U.</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem' }}>Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((it, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '0.5rem' }}>{it.cantidad}</td>
+                      <td style={{ padding: '0.5rem' }}>{it.descripcion} <br/><small style={{color:'var(--text-secondary)'}}>SAT: {it.claveProdServ}</small></td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>${it.precio.toFixed(2)}</td>
+                      <td style={{ textAlign: 'right', padding: '0.5rem' }}>${(it.cantidad * it.precio).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+               <div style={{ width: '200px', display: 'flex', justifyContent: 'space-between' }}>
+                 <span style={{ color: 'var(--text-secondary)' }}>Subtotal:</span>
+                 <span>${totalSub.toFixed(2)}</span>
+               </div>
+               <div style={{ width: '200px', display: 'flex', justifyContent: 'space-between' }}>
+                 <span style={{ color: 'var(--text-secondary)' }}>IVA:</span>
+                 <span>${totalIVA.toFixed(2)}</span>
+               </div>
+               <div style={{ width: '200px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '1.2rem', marginTop: '0.5rem' }}>
+                 <span>Total:</span>
+                 <span>${totalFinal.toFixed(2)}</span>
+               </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setMostrarPrevia(false)}>Editar Factura</button>
+              <button type="button" className="btn" onClick={(e) => { setMostrarPrevia(false); handleSometerFactura(e); }}>Confirmar y Timbrar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
