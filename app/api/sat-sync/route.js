@@ -26,7 +26,7 @@ export async function GET(request) {
     const fs = require("f" + "s");
     
     // El script vive en la raíz del proyecto
-    const scriptPath = "playwright_sat_maestro.js";
+    const scriptPath = "playwright_sat_maestro" + ".js";
     
     const args = [scriptPath];
     if (mode === 'opinion') {

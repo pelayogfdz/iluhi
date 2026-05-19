@@ -2,12 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { prepararYTimbrarFactura, generarVistaPreviaPDFBase64 } from '../acciones'
-import { guardarCotizacion } from '../../cotizaciones/acciones'
+import { guardarCotizacion, generarVistaPreviaCotizacion } from '../acciones'
 import ProductSelector from '../../components/ProductSelector'
 import SearchableSelect from '../../components/SearchableSelect'
 
-export default function InvoiceForm({ empresas, clientes, catalogoProductos, cotizacionesPendientes = [] }) {
+export default function CotizacionForm({ empresas, clientes, catalogoProductos }) {
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
   const [resultado, setResultado] = useState(null)
@@ -24,16 +23,11 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
   const [formaPago, setFormaPago] = useState('03')
   const [metodoPago, setMetodoPago] = useState('PUE')
   const [notasServicio, setNotasServicio] = useState('')
-  const [fechaTimbrado, setFechaTimbrado] = useState('')
 
   // Estado del carrito de conceptos
   const [items, setItems] = useState([])
   const [tempProductoId, setTempProductoId] = useState('')
   const [tempCantidad, setTempCantidad] = useState(1)
-
-  // Estado Cotizacion Carga
-  const [cotizacionCargaId, setCotizacionCargaId] = useState('')
-  const cotizacionesFiltradas = cotizacionesPendientes.filter(c => c.empresaId === empresaId)
 
   // Clientes globales disponibles independientemente de la empresa emisora
   const clientesFiltrados = clientes
@@ -46,34 +40,10 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
     const prodOrigin = productosFiltrados.find(p => p.id === tempProductoId)
     if (!prodOrigin) return;
 
-    // Agregar al carrito desvinculándolo ligeramente para permitir alteración antes del disparo
     setItems([...items, { ...prodOrigin, cantidad: tempCantidad }])
     
-    // Reset inputs
     setTempProductoId('')
     setTempCantidad(1)
-  }
-
-  const handleCargarCotizacion = (cotId) => {
-    setCotizacionCargaId(cotId);
-    if (!cotId) return;
-
-    const cot = cotizacionesPendientes.find(c => c.id === cotId);
-    if (!cot) return;
-
-    setClienteId(cot.clienteId);
-    setUsoCfdi(cot.usoCfdi || 'G03');
-    setMetodoPago(cot.metodoPago || 'PUE');
-    setFormaPago(cot.formaPago || '03');
-    setNotasServicio(cot.notasServicio || '');
-    
-    // Parse the JSON products back to items array
-    try {
-      const parsedItems = typeof cot.productos === 'string' ? JSON.parse(cot.productos) : cot.productos;
-      setItems(parsedItems || []);
-    } catch(e) {
-      console.error("Error parsing cotizacion items", e);
-    }
   }
 
   const handleMostrarPrevia = async () => {
@@ -85,7 +55,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
     setResultado({ msg: "Generando PDF de Vista Previa...", type: "info" })
     try {
       const payload = { empresaId, clienteId, items, notasServicio };
-      const res = await generarVistaPreviaPDFBase64(payload);
+      const res = await generarVistaPreviaCotizacion(payload);
       if (res.success && res.base64) {
         const byteCharacters = atob(res.base64);
         const byteNumbers = new Array(byteCharacters.length);
@@ -102,40 +72,6 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
       }
     } catch (error) {
       setResultado({ msg: "❌ Falló la generación del PDF.", type: "error" })
-    } finally {
-      setCargando(false)
-    }
-  }
-
-  const handleGuardarComoCotizacion = async () => {
-    if (!empresaId || !clienteId || items.length === 0) {
-      setResultado({ msg: "❗ Faltan datos (Empresa, Cliente o Conceptos) para guardar como cotización.", type: "error" })
-      return;
-    }
-    setCargando(true)
-    setResultado({ msg: "Guardando Cotización...", type: "info" })
-    try {
-      const payload = {
-        empresaId,
-        clienteId,
-        usoCfdi,
-        formaPago,
-        metodoPago,
-        notasServicio,
-        items: items.map(it => ({
-          ...it,
-          productoId: it.id 
-        }))
-      };
-      
-      const res = await guardarCotizacion(payload);
-      if (res.success) {
-        setResultado({ msg: "✅ Cotización guardada exitosamente.", type: "success" })
-      } else {
-        setResultado({ msg: `❌ Error: ${res.error}`, type: "error" })
-      }
-    } catch (error) {
-      setResultado({ msg: "❌ Falló al guardar la cotización.", type: "error" })
     } finally {
       setCargando(false)
     }
@@ -195,7 +131,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
     setItems(newArr);
   }
 
-  const handleSometerFactura = async (e) => {
+  const handleSometerCotizacion = async (e) => {
     e.preventDefault()
     if (!empresaId) {
       setResultado({ msg: "❗ Seleccione una Empresa Emisora.", type: "error" })
@@ -206,12 +142,12 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
       return;
     }
     if (items.length === 0) {
-      setResultado({ msg: "❗ El carrito está vacío. Agregue al menos 1 producto para disparar el timbrado PAC.", type: "error" })
+      setResultado({ msg: "❗ El carrito está vacío.", type: "error" })
       return;
     }
 
     setCargando(true)
-    setResultado({ msg: "Conectando con el motor SAT...", type: "info" })
+    setResultado({ msg: "Guardando Cotización...", type: "info" })
 
     const payload = {
       empresaId,
@@ -220,25 +156,24 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
       formaPago,
       metodoPago,
       notasServicio,
-      fechaTimbrado,
       items: items.map(it => ({
         ...it,
-        productoId: it.id // Mapeo de Producto DB
+        productoId: it.id 
       }))
     };
 
     try {
-      const serverRes = await prepararYTimbrarFactura(payload)
+      const serverRes = await guardarCotizacion(payload)
 
       if (serverRes.success) {
-        setResultado({ msg: `✅ Factura Armada con Estatus: ${serverRes.status}`, type: "success" })
-        setTimeout(() => router.push('/facturas'), 2500)
+        setResultado({ msg: `✅ Cotización Creada Exitosamente`, type: "success" })
+        setTimeout(() => router.push('/cotizaciones'), 2000)
       } else {
         setResultado({ msg: `❌ ${serverRes.error}`, type: "error" })
       }
     } catch (error) {
-      console.error("Error al disparar la accion del servidor:", error);
-      setResultado({ msg: `❌ Error de red o tiempo de espera agotado. Facturapi/SAT tardó demasiado o la conexión falló. Por favor intente nuevamente.`, type: "error" })
+      console.error("Error al guardar cotización:", error);
+      setResultado({ msg: `❌ Error de red o tiempo de espera agotado. Por favor intente nuevamente.`, type: "error" })
     } finally {
       setCargando(false)
     }
@@ -257,44 +192,29 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
 
   const totalFinal = totalSub + totalIVA;
 
-  const empresaSeleccionada = empresas?.find(e => e.id === empresaId);
-  const clienteSeleccionado = clientesFiltrados?.find(c => c.id === clienteId);
-
   return (
-    <form onSubmit={handleSometerFactura} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <form onSubmit={handleSometerCotizacion} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div className="responsive-columns">
         
         {/* Columna Izquierda - Constructor */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-            <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>1. Cabecera (Emisor y Receptor)</h3>
+            <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>1. Cabecera</h3>
             
             <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <label>Empresa Emisora (SaaS Tenant)</label>
+              <label>Empresa Emisora</label>
               <SearchableSelect 
                 value={empresaId}
-                onChange={(val) => { setEmpresaId(val); setClienteId(''); setItems([]); setCotizacionCargaId(''); }}
+                onChange={(val) => { setEmpresaId(val); setClienteId(''); setItems([]); }}
                 options={empresasOptions}
                 placeholder="Selecciona Empresa..."
                 required={true}
               />
             </div>
 
-            {empresaId && cotizacionesFiltradas.length > 0 && (
-               <div className="form-group" style={{ marginBottom: '1rem', background: 'rgba(0,255,136,0.05)', padding: '1rem', borderRadius: '8px', border: '1px dashed var(--accent)' }}>
-                 <label style={{ color: 'var(--accent)' }}>Cargar desde Cotización (Opcional)</label>
-                 <select className="form-control" value={cotizacionCargaId} onChange={e => handleCargarCotizacion(e.target.value)}>
-                   <option value="">-- No cargar cotización (Manual) --</option>
-                   {cotizacionesFiltradas.map(c => (
-                     <option key={c.id} value={c.id}>Folio {c.folio} - {c.cliente.razonSocial} (${c.total})</option>
-                   ))}
-                 </select>
-               </div>
-            )}
-
             <div className="form-group">
-              <label>Paso 2: Cliente Receptor</label>
+              <label>Cliente Receptor</label>
               <SearchableSelect 
                 value={clienteId}
                 onChange={setClienteId}
@@ -306,53 +226,32 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
           </div>
 
           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-             <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>2. Parámetros de Cobro</h3>
+             <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>2. Parámetros Tentativos</h3>
              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label>Uso del CFDI</label>
+                <label>Uso del CFDI Esperado</label>
                 <select className="form-control" value={usoCfdi} onChange={e => setUsoCfdi(e.target.value)} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                  <option value="G01">G01 - Adquisición de mercancías</option>
-                  <option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
                   <option value="G03">G03 - Gastos en general</option>
-                  <option value="I01">I01 - Construcciones</option>
-                  <option value="I02">I02 - Mobiliario y equipo de oficina por inversiones</option>
-                  <option value="I03">I03 - Equipo de transporte</option>
+                  <option value="G01">G01 - Adquisición de mercancías</option>
                   <option value="I04">I04 - Equipo de computo y accesorios</option>
-                  <option value="I05">I05 - Dados, troqueles, moldes, matrices y herramental</option>
-                  <option value="I06">I06 - Comunicaciones telefónicas</option>
-                  <option value="I07">I07 - Comunicaciones satelitales</option>
-                  <option value="I08">I08 - Otra maquinaria y equipo</option>
-                  <option value="D01">D01 - Honorarios médicos, dentales y hospitalarios</option>
-                  <option value="D02">D02 - Gastos médicos por incapacidad o discapacidad</option>
-                  <option value="D03">D03 - Gastos funerales</option>
-                  <option value="D04">D04 - Donativos</option>
-                  <option value="D05">D05 - Intereses reales efectivamente pagados por créditos hipotecarios</option>
-                  <option value="D06">D06 - Aportaciones voluntarias al SAR</option>
-                  <option value="D07">D07 - Primas por seguros de gastos médicos</option>
-                  <option value="D08">D08 - Gastos de transportación escolar obligatoria</option>
-                  <option value="D09">D09 - Depósitos en cuentas para el ahorro, planes de pensiones</option>
-                  <option value="D10">D10 - Pagos por servicios educativos (colegiaturas)</option>
-                  <option value="P01">P01 - Por definir (Solo comprobante de Pagos y Retenciones)</option>
                   <option value="S01">S01 - Sin efectos fiscales</option>
-                  <option value="CP01">CP01 - Pagos</option>
-                  <option value="CN01">CN01 - Nómina</option>
                 </select>
              </div>
              
              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label>Método de Pago</label>
+                  <label>Método de Pago Esperado</label>
                   <select className="form-control" value={metodoPago} onChange={e => {
                     const val = e.target.value;
                     setMetodoPago(val);
                     if (val === 'PPD') setFormaPago('99');
-                    else if (val === 'PUE' && formaPago === '99') setFormaPago('03'); // Fallback to Transferencia si estaba en 99
+                    else if (val === 'PUE' && formaPago === '99') setFormaPago('03'); 
                   }} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <option value="PUE">PUE - Pago en Una Sola Exhibición</option>
                     <option value="PPD">PPD - Pago en Parcialidades / Diferido</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Forma de Pago</label>
+                  <label>Forma de Pago Esperada</label>
                   <select className="form-control" value={formaPago} onChange={e => setFormaPago(e.target.value)} disabled={metodoPago === 'PPD'} style={{ backgroundColor: 'rgba(0,0,0,0.5)', opacity: metodoPago === 'PPD' ? 0.6 : 1 }}>
                     <option value="03">03 - Transferencia Electrónica</option>
                     <option value="01">01 - Efectivo</option>
@@ -362,12 +261,12 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
                 </div>
              </div>
              <div className="form-group" style={{ marginTop: '1rem' }}>
-                <label>Notas del Servicio / Descripción Adicional (Opcional)</label>
+                <label>Notas / Condiciones Adicionales</label>
                 <textarea 
                    className="form-control" 
                    value={notasServicio} 
                    onChange={e => setNotasServicio(e.target.value)} 
-                   placeholder="Escribe aquí las consideraciones, reportes de servicio, garantías, o notas que quieras que aparezcan en los PDFs (Cotización, Orden y Factura Oficial)..."
+                   placeholder="Condiciones de pago, validez de la cotización, garantías, etc."
                    style={{ backgroundColor: 'rgba(0,0,0,0.5)', minHeight: '80px', resize: 'vertical' }}
                 />
              </div>
@@ -377,7 +276,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
 
         {/* Columna Derecha - Resumen Magnético */}
         <div className="glass-panel" style={{ position: 'sticky', top: '2rem', height: 'fit-content' }}>
-          <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>Resumen Premiliminar</h3>
+          <h3 style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>Resumen Cotización</h3>
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                <span style={{ color: 'var(--text-secondary)' }}>Subtotal:</span>
@@ -392,15 +291,12 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
                <span>$ {totalFinal.toFixed(2)}</span>
              </div>
           </div>
-          <p style={{ marginTop: '2rem', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-            Al presionar "Disparar", el esquema JSON será firmado criptográficamente, validado con las reglas LCO del SAT mediante Smart Web (Facturapi) y se expedirá inmediatamente el folio fiscal UUID 4.0.
-          </p>
         </div>
       </div>
 
       {/* Panel Inferior Completo - Conceptos y Botones */}
       <div className="glass-panel" style={{ width: '100%', minHeight: '600px', display: 'flex', flexDirection: 'column' }}>
-        <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>3. Conceptos (El Carrito)</h3>
+        <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>3. Productos o Servicios Cotizados</h3>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)' }}>
             <div className="form-group" style={{ flex: '1 1 300px' }}>
               <label style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Buscar Producto o Servicio</label>
@@ -431,13 +327,13 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
               onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
               onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              + Agregar al Ticket
+              + Agregar Concepto
             </button>
         </div>
         
         {/* Tabla del Carrito */}
         <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '1rem', minHeight: '300px', overflowX: 'auto', flex: 1 }}>
-               {items.length === 0 ? <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '1rem' }}>El carrito está vacío.</p> : 
+               {items.length === 0 ? <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginTop: '1rem' }}>No hay conceptos agregados aún.</p> : 
                items.map((it, idx) => {
                  const subtotal = it.cantidad * it.precio;
                  const iva = it.impuesto === '002' ? subtotal * it.tasaOCuota : 0;
@@ -501,28 +397,8 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', alignItems: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-              Fecha de Timbrado (Opcional - máx. 72hrs previas)
-            </label>
-            <input 
-              type="datetime-local" 
-              className="input" 
-              value={fechaTimbrado}
-              onChange={(e) => setFechaTimbrado(e.target.value)}
-            />
-          </div>
           
-          <div style={{ display: 'flex', gap: '0.5rem', flex: 2 }}>
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={handleGuardarComoCotizacion}
-              disabled={cargando || !empresaId || !clienteId || items.length === 0}
-              style={{ padding: '1rem', fontSize: '1rem', flex: 1, background: 'rgba(255,255,255,0.1)' }}
-            >
-              💾 Guardar Cotización
-            </button>
+          <div style={{ display: 'flex', gap: '0.5rem', flex: 1, justifyContent: 'flex-end' }}>
             <button 
               type="button" 
               className="btn btn-secondary" 
@@ -533,7 +409,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
               👁️ Mostrar Previa (PDF)
             </button>
             <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', flex: 2 }}>
-              {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC'}
+              {cargando ? 'Guardando...' : '💾 GUARDAR COTIZACIÓN'}
             </button>
           </div>
         </div>

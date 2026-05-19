@@ -32,6 +32,71 @@ export default function EditForm({ cliente }) {
     cuentaBancaria: cliente.cuentaBancaria || ''
   })
 
+  const [loadingCsf, setLoadingCsf] = useState(false);
+  const [csfError, setCsfError] = useState('');
+  const [csfSuccess, setCsfSuccess] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setCsfError('Por favor sube un archivo PDF válido.');
+      return;
+    }
+
+    setLoadingCsf(true);
+    setCsfError('');
+    setCsfSuccess('');
+
+    const formDataFile = new FormData();
+    formDataFile.append('file', file);
+
+    try {
+      const response = await fetch('/api/parse-csf', {
+        method: 'POST',
+        body: formDataFile,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Error procesando el PDF.');
+      }
+
+      const { rfc, razonSocial, codigoPostal, regimen } = result.data;
+      
+      let filledCount = 0;
+      if (rfc) filledCount++;
+      if (razonSocial) filledCount++;
+      if (codigoPostal) filledCount++;
+      if (regimen) filledCount++;
+
+      setFormData(prev => ({
+        ...prev,
+        rfc: rfc || prev.rfc,
+        razonSocial: razonSocial || prev.razonSocial,
+        codigoPostal: codigoPostal || prev.codigoPostal,
+        regimen: regimen || prev.regimen
+      }));
+
+      if (filledCount > 0) {
+        setCsfSuccess(`¡Éxito! Se actualizaron ${filledCount} campos con la CSF.`);
+      } else {
+        setCsfError('No se detectaron datos útiles en el PDF.');
+      }
+
+    } catch (err) {
+      setCsfError(err.message);
+    } finally {
+      setLoadingCsf(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; 
+      }
+    }
+  };
+
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
@@ -55,6 +120,57 @@ export default function EditForm({ cliente }) {
 
   return (
     <div className="glass-panel" style={{ maxWidth: '800px', margin: '0 auto' }}>
+      
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '1px dashed var(--primary)',
+        padding: '1.5rem',
+        borderRadius: '8px',
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--primary)' }}>Carga Mágica (Opcional)</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+          Sube la Constancia de Situación Fiscal (PDF) del cliente para actualizar los datos oficiales al instante.
+        </p>
+
+        <div>
+          <input 
+            type="file" 
+            accept="application/pdf" 
+            onChange={handleFileUpload} 
+            ref={fileInputRef}
+            style={{ display: 'none' }} 
+            id="csf-upload" 
+          />
+          <label 
+            htmlFor="csf-upload" 
+            className="btn" 
+            style={{ 
+              cursor: loadingCsf ? 'not-allowed' : 'pointer', 
+              opacity: loadingCsf ? 0.7 : 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            {loadingCsf ? 'Analizando documento...' : '📄 Subir PDF Constancia (CSF)'}
+          </label>
+        </div>
+
+        {csfError && (
+          <div style={{ marginTop: '1rem', color: '#ff4444', fontSize: '0.9rem' }}>
+            {csfError}
+          </div>
+        )}
+
+        {csfSuccess && (
+          <div style={{ marginTop: '1rem', color: '#00C851', fontSize: '0.9rem', fontWeight: 'bold' }}>
+            {csfSuccess}
+          </div>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>

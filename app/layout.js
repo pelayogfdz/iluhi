@@ -17,6 +17,7 @@ import { cookies } from 'next/headers'
 import { decrypt } from '../lib/auth'
 import CronPinger from './components/CronPinger'
 import Sidebar from './components/Sidebar'
+import LogoAlert from './components/LogoAlert'
 
 export default async function RootLayout({ children }) {
   const cookieStore = await cookies()
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }) {
           <div className="layout-wrapper">
             <Sidebar user={user} doLogout={doLogout} />
             <main className="main-content">
+              <LogoAlert />
               {children}
             </main>
           </div>

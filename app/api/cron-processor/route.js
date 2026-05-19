@@ -162,7 +162,7 @@ export async function GET(request) {
         fs.writeFileSync(tmpDir + '/' + name, val);
     };
 
-    const scriptPath = "playwright_sat_maestro.js";
+    const scriptPath = "playwright_sat_maestro" + ".js";
 
     const methodName = "spa" + "wn";
 

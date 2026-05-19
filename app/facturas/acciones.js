@@ -5,8 +5,8 @@ import prisma from '../../lib/prisma';
 
 
 import facturapi from '../../lib/facturapi'
-
-
+import pdfmake from 'pdfmake'
+import { getPdfFonts, buildPdfDocDefinition } from '../../lib/pdfGenerator'
 
 export async function prepararYTimbrarFactura(formDataRaw) {
   try {
@@ -591,5 +591,82 @@ export async function uploadFacturaPdf(facturaId, base64Str) {
   } catch(error) {
     console.error("Error al guardar PDF manual de factura: ", error);
     return { success: false, error: error.message };
+  }
+}
+
+export async function generarVistaPreviaPDFBase64(formDataRaw) {
+  try {
+    const { empresaId, clienteId, items, notasServicio } = formDataRaw;
+
+    if (!items || items.length === 0) {
+      return { success: false, error: 'Agregue al menos un concepto para generar la vista previa.' }
+    }
+
+    const empresa = await prisma.empresa.findUnique({ where: { id: empresaId } })
+    const cliente = await prisma.cliente.findUnique({ where: { id: clienteId } })
+
+    if (!empresa) return { success: false, error: 'Empresa emisora no encontrada.' }
+    if (!cliente) return { success: false, error: 'Cliente receptor no encontrado.' }
+
+    let sumTotal = 0;
+    let totalImpuestosTrasladados = 0;
+    
+    pdfmake.setFonts(getPdfFonts());
+
+    const itemsTable = [
+      [ { text: 'Cant', style: 'th' }, { text: 'U. Medida', style: 'th'}, { text: 'Concepto', style: 'th' }, { text: 'P. Unitario', style: 'th' }, { text: 'Importe', style: 'th' } ]
+    ];
+
+    items.forEach(i => {
+      const cantidad = parseFloat(i.cantidad) || 0;
+      const precio = parseFloat(i.precio) || 0;
+      const lineSub = precio * cantidad;
+      sumTotal += lineSub;
+      
+      const tasa = parseFloat(i.tasaOCuota || 0.16);
+      if (i.impuesto === '002' || !i.impuesto) {
+        totalImpuestosTrasladados += (lineSub * tasa);
+      }
+
+      itemsTable.push([
+        cantidad.toString(),
+        i.claveUnidad || 'H87', // using unit key as fallback since Facturapi hasn't hydrated unit_name yet
+        i.descripcion,
+        `$${precio.toFixed(2)}`,
+        `$${lineSub.toFixed(2)}`
+      ]);
+    });
+
+    const totalCalculado = sumTotal + totalImpuestosTrasladados;
+
+    const dummyFactura = {
+      subTotal: sumTotal,
+      totalImpuestosTrasladados: totalImpuestosTrasladados,
+      total: totalCalculado,
+      moneda: 'MXN',
+      notasServicio: notasServicio,
+      folioInterno: 'VISTA-PREVIA'
+    };
+
+    const totals = [
+        { text: `Subtotal: $${dummyFactura.subTotal.toFixed(2)}`, margin: [0, 5, 0, 5], bold: true },
+        { text: `Total Impuestos: $${dummyFactura.totalImpuestosTrasladados.toFixed(2)}`, margin: [0, 0, 0, 5] },
+        { text: `TOTAL ESTIMADO: $${dummyFactura.total.toFixed(2)} ${dummyFactura.moneda}`, bold: true, fontSize: 14, color: empresa.colorPrimario || '#0054a6' }
+    ];
+
+    const docDefinition = buildPdfDocDefinition(dummyFactura, empresa, cliente, 'COTIZACION', itemsTable, totals, 'VISTA PREVIA - FACTURA');
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      try {
+         const doc = pdfmake.createPdf(docDefinition);
+         doc.getBuffer((buffer) => resolve(buffer));
+      } catch (err) {
+         reject(err);
+      }
+    });
+
+    return { success: true, base64: pdfBuffer.toString('base64') };
+  } catch (error) {
+    console.error("Error generando vista previa PDF: ", error);
+    return { success: false, error: 'Error generando PDF: ' + error.message };
   }
 }

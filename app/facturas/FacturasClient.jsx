@@ -210,6 +210,7 @@ export default function FacturasClient({ facturasInitial, empresas }) {
             </th>
             <th>ID Interno / UUID</th>
             <th>Emisor</th>
+            <th>Cliente Receptor</th>
             <th>Método</th>
             <th>Pago REP</th>
             <th>Fecha</th>
@@ -235,6 +236,10 @@ export default function FacturasClient({ facturasInitial, empresas }) {
                   <div style={{fontFamily: 'monospace', fontWeight: 'bold'}}>{fac.uuid || 'En Proceso...'}</div>
                 </td>
                 <td>{fac.empresa.razonSocial}</td>
+                <td>
+                  <div style={{fontSize: '0.9rem', fontWeight: 'bold'}}>{fac.cliente.razonSocial}</div>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>{fac.cliente.rfc}</div>
+                </td>
                 <td>
                   <span style={{background: 'rgba(255,255,255,0.1)', padding:'2px 6px', borderRadius:'4px', fontSize:'0.8rem'}}>
                     {fac.metodoPago || 'PUE'}
@@ -277,7 +282,7 @@ export default function FacturasClient({ facturasInitial, empresas }) {
               {Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0 && (
                 <tr style={{ background: 'rgba(14, 116, 144, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td colSpan="2"></td>
-                  <td colSpan="8" style={{ padding: '0.5rem 1rem' }}>
+                  <td colSpan="9" style={{ padding: '0.5rem 1rem' }}>
                     <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 'bold', marginBottom: '8px' }}>
                       ↳ Complementos de Pago (REP)
                     </div>

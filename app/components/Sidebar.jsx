@@ -93,6 +93,7 @@ export default function Sidebar({ user, doLogout }) {
           {user.permisoEmpresas && <Link href="/empresas" className="nav-link" onClick={closeMenu}>🏢 Empresas</Link>}
           {user.permisoClientes && <Link href="/clientes" className="nav-link" onClick={closeMenu}>👥 Clientes</Link>}
           {user.permisoProductos && <Link href="/productos" className="nav-link" onClick={closeMenu}>📦 Catálogo de Productos</Link>}
+          {user.permisoFacturas && <Link href="/cotizaciones" className="nav-link" onClick={closeMenu}>📝 Cotizaciones</Link>}
           {user.permisoFacturas && <Link href="/facturas" className="nav-link" onClick={closeMenu}>🧾 Facturas</Link>}
           <Link href="/flujo-trabajo" className="nav-link" onClick={closeMenu}>🔄 Flujo de Trabajo</Link>
           {user.permisoUsuarios && <Link href="/usuarios" className="nav-link" onClick={closeMenu}>🔑 Usuarios</Link>}

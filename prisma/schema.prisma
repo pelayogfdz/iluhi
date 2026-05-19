@@ -34,6 +34,7 @@ model Usuario {
 
   empresas          Empresa[]
   clientesAsignados Cliente[]   @relation("UsuarioClientes")
+  cotizaciones      Cotizacion[]
   pagosFlujoCreados PagoFlujo[] @relation("UsuarioPagoFlujo")
   pagosFacturaAsignada PagoFlujo[] @relation("FacturaAsignadaPor")
   pagosClienteEditado  PagoFlujo[] @relation("ClienteEditadoPor")
@@ -119,6 +120,7 @@ model Empresa {
   usuarios          Usuario[]
   productos         Producto[]
   facturas          Factura[]
+  cotizaciones      Cotizacion[]
   facturasRecibidas FacturaRecibida[]
   facturasEmitidas  FacturaEmitida[]
   socios            Socio[]
@@ -177,6 +179,7 @@ model Cliente {
   correoDestino3 String?
 
   facturas          Factura[]
+  cotizaciones      Cotizacion[]
   usuariosAsignados Usuario[]        @relation("UsuarioClientes")
   archivos          ArchivoCliente[]
   pagosFlujo        PagoFlujo[]
@@ -262,6 +265,44 @@ model Factura {
   pagosFlujo PagoFlujo[] @relation("FacturaPagoFlujo")
 
   createdAt DateTime @default(now())
+}
+
+model Cotizacion {
+  id           String   @id @default(uuid())
+  folio        Int      @default(autoincrement())
+  fechaEmision DateTime @default(now())
+
+  moneda            String  @default("MXN")
+  tipoCambio        Float?
+  usoCfdi           String?
+  formaPago         String? 
+  metodoPago        String? 
+  notasServicio     String?
+
+  subTotal                  Float
+  descuento                 Float @default(0)
+  totalImpuestosTrasladados Float @default(0)
+  totalImpuestosRetenidos   Float @default(0)
+  total                     Float
+
+  estatus String @default("Borrador") // Borrador, Enviada, Aceptada, Rechazada, Facturada
+
+  pdfUrl    String?
+  pdfBase64 String? 
+
+  productos Json // JSON con los productos para la cotizacion
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
+
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  creadorId String?
+  creador   Usuario? @relation(fields: [creadorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
