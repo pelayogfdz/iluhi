@@ -53,8 +53,11 @@ export default async function EditarEmpresaPage({ params }) {
           <h1 style={{ margin: 0 }}>Modificar Empresa Emisora</h1>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <a href={`/api/empresas/${id}/exportar-expediente`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+             <button className="btn" style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>📄 Exportar Info</button>
+          </a>
           <a href={`/empresas/editar/${id}/expediente`} style={{ textDecoration: 'none' }}>
-             <button className="btn" style={{ background: '#10b981' }}>Expediente Corporativo</button>
+             <button className="btn" style={{ background: '#10b981' }}>Anexos Extras</button>
           </a>
         </div>
       </div>
