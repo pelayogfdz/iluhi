@@ -1,7 +1,7 @@
 'use server'
 import prisma from '../../lib/prisma';
-import pdfmake from 'pdfmake'
-import { getPdfFonts, buildPdfDocDefinition } from '../../lib/pdfGenerator'
+
+import { buildPdfDocDefinition, createPdfBuffer } from '../../lib/pdfGenerator'
 
 export async function guardarCotizacion(formDataRaw) {
   try {
@@ -87,8 +87,6 @@ export async function generarVistaPreviaCotizacion(formDataRaw) {
     let sumTotal = 0;
     let totalImpuestosTrasladados = 0;
     
-    pdfmake.setFonts(getPdfFonts());
-
     const itemsTable = [
       [ { text: 'Cant', style: 'th' }, { text: 'U. Medida', style: 'th'}, { text: 'Concepto', style: 'th' }, { text: 'P. Unitario', style: 'th' }, { text: 'Importe', style: 'th' } ]
     ];
@@ -131,14 +129,7 @@ export async function generarVistaPreviaCotizacion(formDataRaw) {
     ];
 
     const docDefinition = buildPdfDocDefinition(dummyFactura, empresa, cliente, 'COTIZACION', itemsTable, totals, 'VISTA PREVIA - COTIZACIÓN');
-    const pdfBuffer = await new Promise((resolve, reject) => {
-      try {
-         const doc = pdfmake.createPdf(docDefinition);
-         doc.getBuffer((buffer) => resolve(buffer));
-      } catch (err) {
-         reject(err);
-      }
-    });
+    const pdfBuffer = await createPdfBuffer(docDefinition);
 
     return { success: true, base64: pdfBuffer.toString('base64') };
   } catch (error) {
