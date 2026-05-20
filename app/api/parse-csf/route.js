@@ -13,16 +13,11 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parsear el PDF usando pdf2json (compatible con Serverless)
-    const PDFParser = require('pdf2json');
-    const text = await new Promise((resolve, reject) => {
-      const pdfParser = new PDFParser(null, 1);
-      pdfParser.on('pdfParser_dataError', errData => reject(errData.parserError));
-      pdfParser.on('pdfParser_dataReady', () => {
-        resolve(pdfParser.getRawTextContent());
-      });
-      pdfParser.parseBuffer(buffer);
-    });
+    // Parsear el PDF usando unpdf (compatible con Serverless/Edge)
+    const { extractText } = require('unpdf');
+    const uint8Array = new Uint8Array(buffer);
+    const { text: pagesText } = await extractText(uint8Array);
+    const text = Array.isArray(pagesText) ? pagesText.join('\n') : pagesText;
 
     // Variables a extraer
     let rfc = '';
