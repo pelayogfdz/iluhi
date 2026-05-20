@@ -14,9 +14,19 @@ export async function POST(request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Parsear el PDF usando unpdf (compatible con Serverless/Edge)
-    const { extractText } = require('unpdf');
+    const { getDocumentProxy, extractText, getResolvedPDFJS } = require('unpdf');
     const uint8Array = new Uint8Array(buffer);
-    const { text: pagesText } = await extractText(uint8Array);
+    
+    const pdfjs = await getResolvedPDFJS();
+    const version = pdfjs.version || '4.0.379'; // Fallback a versión estable si no detecta
+    
+    const pdfDocument = await getDocumentProxy(uint8Array, {
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${version}/cmaps/`,
+      cMapPacked: true,
+      standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${version}/standard_fonts/`,
+    });
+    
+    const { text: pagesText } = await extractText(pdfDocument);
     const text = Array.isArray(pagesText) ? pagesText.join('\n') : pagesText;
 
     // Variables a extraer
