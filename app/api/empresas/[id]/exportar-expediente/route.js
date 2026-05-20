@@ -71,10 +71,9 @@ export async function GET(request, { params }) {
     
     yPos -= 20;
     page.drawText('EXPEDIENTE CORPORATIVO', { x: 50, y: yPos, size: 24, font: helveticaBold, color: primaryColor });
-    yPos -= 18;
-    page.drawText('Documento generado automáticamente por SEIT Facturación', { x: 50, y: yPos, size: 10, font: helvetica, color: grayColor });
-    page.drawLine({ start: { x: 50, y: yPos - 15 }, end: { x: 545, y: yPos - 15 }, thickness: 1, color: lightGray });
-    yPos -= 40;
+    yPos -= 28;
+    page.drawLine({ start: { x: 50, y: yPos }, end: { x: 545, y: yPos }, thickness: 1, color: lightGray });
+    yPos -= 25;
     
     const drawSection = (title) => {
       yPos -= 10;
