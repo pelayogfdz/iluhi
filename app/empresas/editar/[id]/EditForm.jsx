@@ -91,7 +91,7 @@ export default function EditForm({ empresa }) {
     <div className="glass-panel" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>RFC (Identificador Fiscal)</label>
             <input required type="text" name="rfc" value={formData.rfc} onChange={handleChange} className="form-control" />
@@ -175,12 +175,12 @@ export default function EditForm({ empresa }) {
 
         <h3 style={{ color: 'var(--primary)' }}>Datos de Contacto y Domicilio Adicional</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>Calle</label>
             <input type="text" name="calle" value={formData.calle} onChange={handleChange} className="form-control" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+          <div className="form-grid-2">
              <div className="form-group">
                <label>N° Exterior</label>
                <input type="text" name="numExterior" value={formData.numExterior} onChange={handleChange} className="form-control" />
@@ -217,7 +217,7 @@ export default function EditForm({ empresa }) {
           <small><em>Nota: Las facturas utilizarán el Logo y Color configurados directamente en el panel de Facturapi debido a restricciones fiscales.</em></small>
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           
           <div className="form-group">
             <label>Color Primario</label>
@@ -282,7 +282,7 @@ export default function EditForm({ empresa }) {
           )}
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>Servidor SMTP (Host)</label>
             <input type="text" name="smtpHost" value={formData.smtpHost} onChange={handleChange} className="form-control" placeholder="Ej. smtp.gmail.com" />
@@ -320,11 +320,11 @@ export default function EditForm({ empresa }) {
           Configura los accesos para la descarga automatizada (o manual) de opiniones de cumplimiento de estas instituciones.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           {/* INFONAVIT */}
           <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <h4 style={{ margin: '0 0 1rem 0', color: '#fff' }}>Portal Empresarial INFONAVIT</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-grid-2">
               <div className="form-group">
                 <label>Registro Patronal</label>
                 <input type="text" name="infonavitRegistroPatronal" value={formData.infonavitRegistroPatronal} onChange={handleChange} className="form-control" placeholder="Ej. Y0000000000" />
@@ -343,7 +343,7 @@ export default function EditForm({ empresa }) {
           {/* ISN (Recaudanet) */}
           <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <h4 style={{ margin: '0 0 1rem 0', color: '#fff' }}>Portal ISN (Recaudanet)</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-grid-2">
               <div className="form-group">
                 <label>Usuario / RFC</label>
                 <input type="text" name="isnUsuario" value={formData.isnUsuario} onChange={handleChange} className="form-control" placeholder="Ej. EMP000000XXX" />
@@ -378,7 +378,7 @@ export default function EditForm({ empresa }) {
         <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
         <h3 style={{ color: 'var(--primary)' }}>⭐ Sistema Growth: Encuestas Inteligentes (T+24 Hrs)</h3>
         <p style={{ color: 'var(--text-secondary)' }}>Configura aquí la encuesta NPS automática a las 24 hrs. Puedes inyectar en el contenido variables como <strong>{`{{cliente}}`}</strong>.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Asunto del Correo de Encuesta</label>
             <input type="text" name="encuestaAsunto" value={formData.encuestaAsunto} onChange={handleChange} className="form-control" placeholder="Ej. ¿Cómo calificarías tu experiencia reciente?" />

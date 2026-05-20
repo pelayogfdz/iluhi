@@ -141,7 +141,7 @@ export default function ClienteForm({ createClienteAction }) {
           <small style={{ color: 'var(--text-secondary)' }}>Sin régimen societario (S.A. de C.V.) para CFDI 4.0</small>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="form-grid-2">
             <div className="form-group">
               <label htmlFor="regimen">Régimen Fiscal Receptor</label>
               <SearchableSelect 
@@ -219,7 +219,7 @@ export default function ClienteForm({ createClienteAction }) {
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+        <div className="form-grid-3">
           <div className="form-group">
             <label htmlFor="correoDestino">Correo Facturación 1</label>
             <input type="email" id="correoDestino" name="correoDestino" className="form-control" placeholder="admin@empresa.com" />
@@ -238,7 +238,7 @@ export default function ClienteForm({ createClienteAction }) {
 
         <h3 style={{ color: 'var(--primary)' }}>Contacto y Comercial (CRM)</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>Contacto Principal</label>
             <input type="text" name="contactoPrincipal" className="form-control" />
@@ -272,12 +272,12 @@ export default function ClienteForm({ createClienteAction }) {
 
         <h3 style={{ color: 'var(--primary)' }}>Datos Logísticos Adicionales</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>Calle</label>
             <input type="text" name="calle" className="form-control" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+          <div className="form-grid-2">
              <div className="form-group">
                <label>N° Exterior</label>
                <input type="text" name="numExterior" className="form-control" />

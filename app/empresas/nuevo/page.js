@@ -126,7 +126,7 @@ export default function NuevaEmpresaPage() {
             <input type="text" id="rfc" name="rfc" className="form-control" required placeholder="Ej. ABC123456T8" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label htmlFor="tipoEmpresa">Tipo de Empresa</label>
               <select id="tipoEmpresa" name="tipoEmpresa" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -151,7 +151,7 @@ export default function NuevaEmpresaPage() {
             <input type="text" id="razonSocial" name="razonSocial" className="form-control" required placeholder="Ej. Corporativo Ejemplo S.A. de C.V." />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label htmlFor="representanteLegal">Representante Legal (Opcional)</label>
               <input type="text" id="representanteLegal" name="representanteLegal" className="form-control" placeholder="Nombre completo del representante" />
@@ -206,7 +206,7 @@ export default function NuevaEmpresaPage() {
             <input type="text" id="codigoPostal" name="codigoPostal" className="form-control" required placeholder="Ej. 11000" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+          <div className="form-grid-3">
             <div className="form-group">
               <label htmlFor="calle">Calle</label>
               <input type="text" id="calle" name="calle" className="form-control" placeholder="Ej. Av. Reforma" />
@@ -221,7 +221,7 @@ export default function NuevaEmpresaPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label htmlFor="colonia">Colonia</label>
               <input type="text" id="colonia" name="colonia" className="form-control" placeholder="Ej. Juárez" />
@@ -232,7 +232,7 @@ export default function NuevaEmpresaPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label htmlFor="ciudad">Ciudad</label>
               <input type="text" id="ciudad" name="ciudad" className="form-control" placeholder="Ej. Ciudad de México" />

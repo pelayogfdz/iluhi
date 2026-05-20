@@ -237,7 +237,7 @@ export default function CotizacionForm({ empresas, clientes, catalogoProductos }
                 </select>
              </div>
              
-             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+             <div className="form-grid-2">
                 <div className="form-group">
                   <label>Método de Pago Esperado</label>
                   <select className="form-control" value={metodoPago} onChange={e => {

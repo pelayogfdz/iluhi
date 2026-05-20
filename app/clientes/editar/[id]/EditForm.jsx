@@ -173,7 +173,7 @@ export default function EditForm({ cliente }) {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>RFC (Identificador Fiscal)</label>
             <input required type="text" name="rfc" value={formData.rfc} onChange={handleChange} className="form-control" />
@@ -252,7 +252,7 @@ export default function EditForm({ cliente }) {
 
         <h3 style={{ color: 'var(--primary)' }}>Contacto y Comercial (CRM)</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>Contacto Principal</label>
             <input type="text" name="contactoPrincipal" value={formData.contactoPrincipal} onChange={handleChange} className="form-control" />
@@ -279,7 +279,7 @@ export default function EditForm({ cliente }) {
           </div>
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Correos Electrónicos para Facturación y Notificaciones</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap: '1rem' }}>
+            <div className="form-grid-3">
               <input type="email" name="correoDestino" value={formData.correoDestino} onChange={handleChange} className="form-control" placeholder="Correo principal" />
               <input type="email" name="correoDestino2" value={formData.correoDestino2} onChange={handleChange} className="form-control" placeholder="Segundo correo" />
               <input type="email" name="correoDestino3" value={formData.correoDestino3} onChange={handleChange} className="form-control" placeholder="Tercer correo" />
@@ -291,12 +291,12 @@ export default function EditForm({ cliente }) {
 
         <h3 style={{ color: 'var(--primary)' }}>Datos Logísticos Adicionales</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <label>Calle</label>
             <input type="text" name="calle" value={formData.calle} onChange={handleChange} className="form-control" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+          <div className="form-grid-2">
              <div className="form-group">
                <label>N° Exterior</label>
                <input type="text" name="numExterior" value={formData.numExterior} onChange={handleChange} className="form-control" />

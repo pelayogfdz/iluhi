@@ -95,7 +95,7 @@ export default function CsdUploader({ empresa }) {
         </div>
       )}
        
-       <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem', alignItems: 'end' }}>
+       <form onSubmit={handleSubmit} className="form-grid-2" style={{ alignItems: "end" }}>
           
           <div className="form-group">
              <label>Archivo .CER</label>

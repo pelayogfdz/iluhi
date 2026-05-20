@@ -338,7 +338,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
                 </select>
              </div>
              
-             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+             <div className="form-grid-2">
                 <div className="form-group">
                   <label>Método de Pago</label>
                   <select className="form-control" value={metodoPago} onChange={e => {

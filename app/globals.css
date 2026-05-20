@@ -411,3 +411,25 @@ p {
     white-space: nowrap;
   }
 }
+
+/* Responsive Form Grids */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .form-control {
+    width: 100%;
+  }
+}

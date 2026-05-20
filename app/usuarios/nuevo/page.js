@@ -99,7 +99,7 @@ export default function NuevoUsuarioPage() {
              Seleccionar Todas
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
+        <div className="form-grid-2" style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px", maxHeight: "150px", overflowY: "auto" }}>
           {empresasBase.map((emp) => (
             <label key={emp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
               <input 
@@ -140,7 +140,7 @@ export default function NuevoUsuarioPage() {
             </button>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
+        <div className="form-grid-2" style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px", maxHeight: "150px", overflowY: "auto" }}>
           {clientesBase.map((cli) => (
             <label key={cli.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
               <input 
@@ -161,7 +161,7 @@ export default function NuevoUsuarioPage() {
         
         <h3 style={{ color: 'var(--primary)' }}>Permisos de Módulos (Palomitas)</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px' }}>
+        <div className="form-grid-2" style={{ background: "rgba(0,0,0,0.3)", padding: "1.5rem", borderRadius: "8px" }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <input type="checkbox" name="permisoEmpresas" checked={formData.permisoEmpresas} onChange={handleChange} /> 🏢 Empleados / Empresas
           </label>

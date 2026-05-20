@@ -96,7 +96,7 @@ export default function EditProductoForm({ producto, empresas }) {
           </select>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+        <div className="form-grid-2">
             <div className="form-group">
               <label>SKU / No. Ident.</label>
               <input type="text" name="noIdentificacion" value={formData.noIdentificacion} onChange={handleChange} className="form-control" required />
@@ -107,7 +107,7 @@ export default function EditProductoForm({ producto, empresas }) {
             </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="form-grid-2">
             <div className="form-group">
               <label>Clave Prod/Serv (Predictivo SAT)</label>
               <SatAutocomplete 
@@ -131,7 +131,7 @@ export default function EditProductoForm({ producto, empresas }) {
             </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="form-grid-2">
             <div className="form-group">
               <label>Precio Base (MXN)</label>
               <input type="number" step="0.01" name="precio" value={formData.precio} onChange={handleChange} className="form-control" required />
@@ -147,7 +147,7 @@ export default function EditProductoForm({ producto, empresas }) {
             </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+        <div className="form-grid-3">
             <div className="form-group">
               <label>Tipo Impuesto</label>
               <select name="impuesto" value={formData.impuesto} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>

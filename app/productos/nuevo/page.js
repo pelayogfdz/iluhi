@@ -89,7 +89,7 @@ export default async function NuevoProductoPage() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+          <div className="form-grid-2">
               <div className="form-group">
                 <label htmlFor="noIdentificacion">SKU / No. Ident.</label>
                 <input type="text" id="noIdentificacion" name="noIdentificacion" className="form-control" required placeholder="Ej. SER-001" />
@@ -101,7 +101,7 @@ export default async function NuevoProductoPage() {
               </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
               <div className="form-group">
                 <label htmlFor="claveProdServ">Clave Prod/Serv (Predictivo SAT)</label>
                 <SatAutocomplete type="producto" name="claveProdServ" placeholder="Ej. Computadoras..." />
@@ -113,7 +113,7 @@ export default async function NuevoProductoPage() {
               </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
               <div className="form-group">
                 <label htmlFor="precio">Precio Base (MXN)</label>
                 <input type="number" step="0.01" id="precio" name="precio" className="form-control" required placeholder="0.00" />
@@ -129,7 +129,7 @@ export default async function NuevoProductoPage() {
               </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-3">
               <div className="form-group">
                 <label htmlFor="impuesto">Tipo Impuesto</label>
                 <select id="impuesto" name="impuesto" className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
