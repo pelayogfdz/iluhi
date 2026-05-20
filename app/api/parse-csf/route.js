@@ -117,6 +117,9 @@ export async function POST(request) {
 
   } catch (error) {
     console.error("Error al procesar CSF:", error);
-    return NextResponse.json({ success: false, error: 'Ocurrió un error al procesar el archivo PDF.' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Error procesando PDF: ' + (error.message || String(error)) 
+    }, { status: 500 });
   }
 }
