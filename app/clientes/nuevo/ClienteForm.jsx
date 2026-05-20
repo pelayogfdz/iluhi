@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import SearchableSelect from '../../components/SearchableSelect';
 
 export default function ClienteForm({ createClienteAction }) {
-  const [csfData, setCsfData] = useState({ rfc: '', razonSocial: '', codigoPostal: '', regimen: '' });
+  const [csfData, setCsfData] = useState({ rfc: '', razonSocial: '', codigoPostal: '', regimen: '', calle: '', numExterior: '', numInterior: '', colonia: '', municipio: '', estado: '', ciudad: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -38,19 +38,33 @@ export default function ClienteForm({ createClienteAction }) {
         throw new Error(result.error || 'Error procesando el PDF.');
       }
 
-      const { rfc, razonSocial, codigoPostal, regimen } = result.data;
+      const { rfc, razonSocial, codigoPostal, regimen, calle, numExterior, numInterior, colonia, municipio, estado, ciudad } = result.data;
       
       let filledCount = 0;
       if (rfc) filledCount++;
       if (razonSocial) filledCount++;
       if (codigoPostal) filledCount++;
       if (regimen) filledCount++;
+      if (calle) filledCount++;
+      if (numExterior) filledCount++;
+      if (numInterior) filledCount++;
+      if (colonia) filledCount++;
+      if (municipio) filledCount++;
+      if (estado) filledCount++;
+      if (ciudad) filledCount++;
 
       setCsfData({
         rfc: rfc || '',
         razonSocial: razonSocial || '',
         codigoPostal: codigoPostal || '',
-        regimen: regimen || ''
+        regimen: regimen || '',
+        calle: calle || '',
+        numExterior: numExterior || '',
+        numInterior: numInterior || '',
+        colonia: colonia || '',
+        municipio: municipio || '',
+        estado: estado || '',
+        ciudad: ciudad || ''
       });
 
       if (filledCount > 0) {
@@ -275,35 +289,35 @@ export default function ClienteForm({ createClienteAction }) {
         <div className="form-grid-2">
           <div className="form-group">
             <label>Calle</label>
-            <input type="text" name="calle" className="form-control" />
+            <input type="text" name="calle" className="form-control" defaultValue={csfData.calle} key={`calle-${csfData.calle}`} />
           </div>
           <div className="form-grid-2">
              <div className="form-group">
                <label>N° Exterior</label>
-               <input type="text" name="numExterior" className="form-control" />
+               <input type="text" name="numExterior" className="form-control" defaultValue={csfData.numExterior} key={`ext-${csfData.numExterior}`} />
              </div>
              <div className="form-group">
                <label>N° Interior</label>
-               <input type="text" name="numInterior" className="form-control" />
+               <input type="text" name="numInterior" className="form-control" defaultValue={csfData.numInterior} key={`int-${csfData.numInterior}`} />
              </div>
           </div>
           
           <div className="form-group">
             <label>Colonia / Asentamiento</label>
-            <input type="text" name="colonia" className="form-control" />
+            <input type="text" name="colonia" className="form-control" defaultValue={csfData.colonia} key={`col-${csfData.colonia}`} />
           </div>
           <div className="form-group">
             <label>Municipio / Alcaldía</label>
-            <input type="text" name="municipio" className="form-control" />
+            <input type="text" name="municipio" className="form-control" defaultValue={csfData.municipio} key={`mun-${csfData.municipio}`} />
           </div>
           
           <div className="form-group">
             <label>Ciudad</label>
-            <input type="text" name="ciudad" className="form-control" />
+            <input type="text" name="ciudad" className="form-control" defaultValue={csfData.ciudad} key={`ciu-${csfData.ciudad}`} />
           </div>
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label>Estado</label>
-            <input type="text" name="estado" className="form-control" />
+            <input type="text" name="estado" className="form-control" defaultValue={csfData.estado} key={`est-${csfData.estado}`} />
           </div>
         </div>
 

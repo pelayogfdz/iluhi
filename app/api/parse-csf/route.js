@@ -124,6 +124,30 @@ export async function POST(request) {
       }
     }
 
+    // 5. Extraer Datos de Domicilio
+    let calle = '', numExterior = '', numInterior = '', colonia = '', municipio = '', estado = '', ciudad = '';
+    
+    const calleMatch = cleanText.match(/Nombre de Vialidad:\s*(.*?)\s*N(?:ú|u)mero Exterior:/i);
+    if(calleMatch) calle = calleMatch[1].trim();
+    
+    const extMatch = cleanText.match(/N(?:ú|u)mero Exterior:\s*(.*?)\s*(?:N(?:ú|u)mero Interior:|Nombre de la Colonia:)/i);
+    if(extMatch) numExterior = extMatch[1].trim();
+    
+    const intMatch = cleanText.match(/N(?:ú|u)mero Interior:\s*(.*?)\s*Nombre de la Colonia:/i);
+    if(intMatch) numInterior = intMatch[1].trim();
+    
+    const colMatch = cleanText.match(/Nombre de la Colonia:\s*(.*?)\s*Nombre de la Localidad:/i);
+    if(colMatch) colonia = colMatch[1].trim();
+    
+    const munMatch = cleanText.match(/Nombre del Municipio o Demarcaci(?:ó|o)n Territorial:\s*(.*?)\s*Nombre de la Entidad Federativa:/i);
+    if(munMatch) {
+      municipio = munMatch[1].trim();
+      ciudad = municipio; // Usar municipio como ciudad por defecto
+    }
+    
+    const estMatch = cleanText.match(/Nombre de la Entidad Federativa:\s*(.*?)\s*(?:Entre Calle:|Y Calle:|Actividades)/i);
+    if(estMatch) estado = estMatch[1].trim();
+
     if (!rfc && !razonSocial && !codigoPostal) {
        return NextResponse.json({
          success: false,
@@ -137,7 +161,14 @@ export async function POST(request) {
         rfc,
         razonSocial,
         codigoPostal,
-        regimen
+        regimen,
+        calle,
+        numExterior,
+        numInterior,
+        colonia,
+        municipio,
+        estado,
+        ciudad
       }
     });
 
