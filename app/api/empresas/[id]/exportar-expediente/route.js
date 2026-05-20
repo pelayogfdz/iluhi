@@ -10,10 +10,7 @@ export async function GET(request, { params }) {
 
   try {
     const empresa = await prisma.empresa.findUnique({
-      where: { id },
-      include: {
-        archivos: true,
-      }
+      where: { id }
     });
 
     if (!empresa) {
