@@ -24,6 +24,14 @@ async function createEmpresa(formData) {
   const apoderado = formData.get('apoderado') || null
   const objetoSocial = formData.get('objetoSocial') || null
   const actividadEconomica = formData.get('actividadEconomica') || null
+
+  const telefono = formData.get('telefono') || null
+  const paginaWeb = formData.get('paginaWeb') || null
+  const redSocialFacebook = formData.get('redSocialFacebook') || null
+  const redSocialInstagram = formData.get('redSocialInstagram') || null
+  const redSocialLinkedin = formData.get('redSocialLinkedin') || null
+  const redSocialX = formData.get('redSocialX') || null
+  const googleMapsUrl = formData.get('googleMapsUrl') || null
   
   // Create organization in Facturapi using the User Key
   let facturapiId = null;
@@ -103,7 +111,14 @@ async function createEmpresa(formData) {
       representanteLegal,
       apoderado,
       objetoSocial,
-      actividadEconomica
+      actividadEconomica,
+      telefono,
+      paginaWeb,
+      redSocialFacebook,
+      redSocialInstagram,
+      redSocialLinkedin,
+      redSocialX,
+      googleMapsUrl
     }
   })
   
@@ -242,6 +257,44 @@ export default function NuevaEmpresaPage() {
               <input type="text" id="estado" name="estado" className="form-control" placeholder="Ej. Ciudad de México" />
             </div>
           </div>
+
+        <div className="card" style={{ marginBottom: '2rem' }}>
+          <div className="card-header">
+            <h3>Redes Sociales, Contacto y Presencia Digital</h3>
+          </div>
+          <div className="card-body">
+            <div className="grid-2">
+              <div className="form-group">
+                <label htmlFor="telefono">Teléfono Principal</label>
+                <input type="text" id="telefono" name="telefono" className="form-control" placeholder="Ej. 55 1234 5678" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="paginaWeb">Página Web</label>
+                <input type="url" id="paginaWeb" name="paginaWeb" className="form-control" placeholder="Ej. https://www.miempresa.com" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="googleMapsUrl">Google Maps (URL Perfil)</label>
+                <input type="url" id="googleMapsUrl" name="googleMapsUrl" className="form-control" placeholder="Link de Google Maps" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="redSocialFacebook">Facebook (Usuario o URL)</label>
+                <input type="text" id="redSocialFacebook" name="redSocialFacebook" className="form-control" placeholder="Ej. miempresa.oficial" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="redSocialInstagram">Instagram (Usuario)</label>
+                <input type="text" id="redSocialInstagram" name="redSocialInstagram" className="form-control" placeholder="Ej. @miempresa" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="redSocialLinkedin">LinkedIn (Usuario o URL)</label>
+                <input type="text" id="redSocialLinkedin" name="redSocialLinkedin" className="form-control" placeholder="Ej. miempresa" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="redSocialX">X / Twitter (Usuario)</label>
+                <input type="text" id="redSocialX" name="redSocialX" className="form-control" placeholder="Ej. @miempresa" />
+              </div>
+            </div>
+          </div>
+        </div>
 
           <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', marginTop: '1rem' }}>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>

@@ -31,6 +31,13 @@ export default function EditForm({ empresa }) {
     municipio: empresa.municipio || '',
     ciudad: empresa.ciudad || '',
     estado: empresa.estado || '',
+    telefono: empresa.telefono || '',
+    paginaWeb: empresa.paginaWeb || '',
+    redSocialFacebook: empresa.redSocialFacebook || '',
+    redSocialInstagram: empresa.redSocialInstagram || '',
+    redSocialLinkedin: empresa.redSocialLinkedin || '',
+    redSocialX: empresa.redSocialX || '',
+    googleMapsUrl: empresa.googleMapsUrl || '',
     smtpHost: empresa.smtpHost || '',
     smtpPort: empresa.smtpPort || '',
     smtpUser: empresa.smtpUser || '',
@@ -397,8 +404,39 @@ export default function EditForm({ empresa }) {
           </div>
         </div>
 
+        <h3 style={{ marginTop: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Redes Sociales, Contacto y Presencia Digital</h3>
+        <div className="form-grid-2">
+          <div className="form-group">
+            <label htmlFor="telefono">Teléfono Principal</label>
+            <input type="text" id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} className="form-control" placeholder="Ej. 55 1234 5678" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="paginaWeb">Página Web</label>
+            <input type="url" id="paginaWeb" name="paginaWeb" value={formData.paginaWeb} onChange={handleChange} className="form-control" placeholder="Ej. https://www.miempresa.com" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="googleMapsUrl">Google Maps (URL Perfil)</label>
+            <input type="url" id="googleMapsUrl" name="googleMapsUrl" value={formData.googleMapsUrl} onChange={handleChange} className="form-control" placeholder="Link de Google Maps" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="redSocialFacebook">Facebook (Usuario o URL)</label>
+            <input type="text" id="redSocialFacebook" name="redSocialFacebook" value={formData.redSocialFacebook} onChange={handleChange} className="form-control" placeholder="Ej. miempresa.oficial" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="redSocialInstagram">Instagram (Usuario)</label>
+            <input type="text" id="redSocialInstagram" name="redSocialInstagram" value={formData.redSocialInstagram} onChange={handleChange} className="form-control" placeholder="Ej. @miempresa" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="redSocialLinkedin">LinkedIn (Usuario o URL)</label>
+            <input type="text" id="redSocialLinkedin" name="redSocialLinkedin" value={formData.redSocialLinkedin} onChange={handleChange} className="form-control" placeholder="Ej. miempresa" />
+          </div>
+          <div className="form-group">
+            <label htmlFor="redSocialX">X / Twitter (Usuario)</label>
+            <input type="text" id="redSocialX" name="redSocialX" value={formData.redSocialX} onChange={handleChange} className="form-control" placeholder="Ej. @miempresa" />
+          </div>
+        </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
            <button type="submit" disabled={cargando} className="btn" style={{ flex: 1 }}>
              {cargando ? 'Salvando...' : 'Guardar Cambios'}
            </button>

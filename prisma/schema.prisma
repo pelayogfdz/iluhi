@@ -61,6 +61,15 @@ model Empresa {
   ciudad      String?
   estado      String?
   correo      String?
+  telefono    String?
+  paginaWeb   String?
+
+  // Redes Sociales y Ubicación
+  redSocialFacebook  String?
+  redSocialInstagram String?
+  redSocialLinkedin  String?
+  redSocialX         String?
+  googleMapsUrl      String?
 
   facturapiId      String? @unique
   facturapiLiveKey String?

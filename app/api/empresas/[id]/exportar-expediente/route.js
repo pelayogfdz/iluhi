@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../../lib/prisma';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PDFString, PDFName } from 'pdf-lib';
 
 export const runtime = 'nodejs';
 
@@ -105,6 +105,37 @@ export async function GET(request, { params }) {
       yPos -= 18;
     };
     
+    const drawLinkRow = (label, textVal, url) => {
+      if (!textVal || !url) return;
+      checkPageBreak(20);
+      const displayVal = String(textVal).substring(0, 80);
+      page.drawText(label, { x: 50, y: yPos, size: 10, font: fontBold, color: darkColor });
+      
+      const textWidth = fontNormal.widthOfTextAtSize(displayVal, 10);
+      page.drawText(displayVal, { x: 220, y: yPos, size: 10, font: fontNormal, color: primaryColor });
+      
+      const link = mainPdf.context.obj({
+        Type: 'Annot',
+        Subtype: 'Link',
+        Rect: [220, yPos - 2, 220 + textWidth, yPos + 10],
+        Border: [0, 0, 0],
+        A: {
+          Type: 'Action',
+          S: 'URI',
+          URI: PDFString.of(url)
+        }
+      });
+      
+      let annots = page.node.lookup(PDFName.of('Annots'));
+      if (!annots) {
+        annots = mainPdf.context.obj([]);
+        page.node.set(PDFName.of('Annots'), annots);
+      }
+      annots.push(link);
+      
+      yPos -= 18;
+    };
+    
     drawSection('Información Corporativa y Fiscal');
     drawRow('Razón Social:', empresa.razonSocial);
     drawRow('RFC:', empresa.rfc);
@@ -115,11 +146,21 @@ export async function GET(request, { params }) {
     
     yPos -= 10;
     drawSection('Datos de Contacto y Ubicación');
-    drawRow('Correo Electrónico:', empresa.correo);
+    if (empresa.telefono) drawRow('Teléfono Principal:', empresa.telefono);
+    if (empresa.correo) drawRow('Correo Electrónico:', empresa.correo);
     const direccion = `${empresa.calle || ''} ${empresa.numExterior || ''} ${empresa.colonia || ''}`.trim();
     if(direccion) drawRow('Dirección:', direccion);
     if(empresa.municipio) drawRow('Municipio:', empresa.municipio);
     if(empresa.ciudad) drawRow('Ciudad y CP:', `${empresa.ciudad || ''}, ${empresa.estado || ''} C.P. ${empresa.codigoPostal}`);
+    if (empresa.googleMapsUrl) drawLinkRow('Google Maps:', 'Abrir Ubicación en Maps', empresa.googleMapsUrl);
+    
+    yPos -= 10;
+    drawSection('Presencia Digital y Redes Sociales');
+    if (empresa.paginaWeb) drawLinkRow('Página Web:', empresa.paginaWeb, empresa.paginaWeb);
+    if (empresa.redSocialFacebook) drawLinkRow('Facebook:', empresa.redSocialFacebook, empresa.redSocialFacebook.startsWith('http') ? empresa.redSocialFacebook : `https://facebook.com/${empresa.redSocialFacebook.replace('@','')}`);
+    if (empresa.redSocialInstagram) drawLinkRow('Instagram:', empresa.redSocialInstagram, empresa.redSocialInstagram.startsWith('http') ? empresa.redSocialInstagram : `https://instagram.com/${empresa.redSocialInstagram.replace('@','')}`);
+    if (empresa.redSocialLinkedin) drawLinkRow('LinkedIn:', empresa.redSocialLinkedin, empresa.redSocialLinkedin.startsWith('http') ? empresa.redSocialLinkedin : `https://linkedin.com/company/${empresa.redSocialLinkedin.replace('@','')}`);
+    if (empresa.redSocialX) drawLinkRow('X / Twitter:', empresa.redSocialX, empresa.redSocialX.startsWith('http') ? empresa.redSocialX : `https://x.com/${empresa.redSocialX.replace('@','')}`);
     
     yPos -= 10;
     drawSection('Actividad y Registros');
