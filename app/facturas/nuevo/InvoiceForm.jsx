@@ -393,7 +393,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
              </div>
           </div>
           <p style={{ marginTop: '2rem', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-            Al presionar "Disparar", el esquema JSON será firmado criptográficamente, validado con las reglas LCO del SAT mediante Smart Web (Facturapi) y se expedirá inmediatamente el folio fiscal UUID 4.0.
+            Al presionar &quot;Disparar&quot;, el esquema JSON será firmado criptográficamente, validado con las reglas LCO del SAT mediante Smart Web (Facturapi) y se expedirá inmediatamente el folio fiscal UUID 4.0.
           </p>
         </div>
       </div>
