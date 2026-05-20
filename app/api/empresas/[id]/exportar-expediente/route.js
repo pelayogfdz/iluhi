@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../../lib/prisma';
-import PdfPrinter from 'pdfmake';
 import { PDFDocument } from 'pdf-lib';
+const PdfPrinter = require('pdfmake');
 
 export const runtime = 'nodejs';
 
