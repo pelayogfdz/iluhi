@@ -13,11 +13,16 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parsear el PDF
-    const { PDFParse } = require('pdf-parse');
-    const parser = new PDFParse({ data: buffer });
-    await parser.load();
-    const text = await parser.getText();
+    // Parsear el PDF usando pdf2json (compatible con Serverless)
+    const PDFParser = require('pdf2json');
+    const text = await new Promise((resolve, reject) => {
+      const pdfParser = new PDFParser(null, 1);
+      pdfParser.on('pdfParser_dataError', errData => reject(errData.parserError));
+      pdfParser.on('pdfParser_dataReady', () => {
+        resolve(pdfParser.getRawTextContent());
+      });
+      pdfParser.parseBuffer(buffer);
+    });
 
     // Variables a extraer
     let rfc = '';
