@@ -25,26 +25,32 @@ export async function POST(request) {
     let codigoPostal = '';
     let regimen = '';
 
+    // Limpiar texto para facilitar regex (quitar espacios múltiples)
+    const cleanText = text.replace(/\s+/g, ' ');
+
     // 1. Extraer RFC
-    const rfcMatch = text.match(/([A-Z&Ñ]{3,4}\d{6}[A-V1-9][A-Z1-9][0-9A])/i);
+    const rfcMatch = cleanText.match(/([A-Z&Ñ]{3,4}\s*\d{6}\s*[A-Z0-9]{3})/i);
     if (rfcMatch) {
-      rfc = rfcMatch[1].toUpperCase();
+      rfc = rfcMatch[1].replace(/\s+/g, '').toUpperCase();
     }
 
     // 2. Extraer Razón Social o Nombre
     // Intentar persona moral primero
-    const denomMatch = text.match(/Denominaci(?:ó|o)n\/Raz(?:ó|o)n Social:\s*([\s\S]*?)(?:R(?:é|e)gimen Capital:|Capital Social:|Fecha de inicio de operaciones:|\n\n)/i);
+    const denomMatch = text.match(/Denominaci(?:ó|o)n\/Raz(?:ó|o)n Social:\s*([\s\S]*?)(?:R(?:é|e)gimen Capital:|Capital Social:|Fecha de inicio de operaciones:|\n\n)/i) 
+      || cleanText.match(/Denominaci(?:ó|o)n\/Raz(?:ó|o)n Social:\s*(.*?)(?:R(?:é|e)gimen Capital|Capital Social|Fecha de inicio)/i);
+      
     if (denomMatch && denomMatch[1].trim()) {
       razonSocial = denomMatch[1].replace(/\n/g, ' ').trim();
     } else {
       // Intentar persona física
-      const nameMatch = text.match(/Nombre\s*\(s\),\s*primer\s*apellido,\s*segundo\s*apellido:\s*([\s\S]*?)(?:CURP:|Fecha de inicio de operaciones:|\n\n)/i);
+      const nameMatch = text.match(/Nombre\s*\(s\),\s*primer\s*apellido,\s*segundo\s*apellido:\s*([\s\S]*?)(?:CURP:|Fecha de inicio de operaciones:|\n\n)/i)
+        || cleanText.match(/Nombre\s*\(s\),\s*primer\s*apellido,\s*segundo\s*apellido:\s*(.*?)(?:CURP:|Fecha de inicio)/i);
       if (nameMatch && nameMatch[1].trim()) {
         razonSocial = nameMatch[1].replace(/\n/g, ' ').trim();
       }
     }
 
-    // Limpiar régimen capital de la razón social (SAT CFDI 4.0 lo requiere sin esto)
+    // Limpiar régimen capital de la razón social
     razonSocial = razonSocial
       .replace(/,\s*S\.A\.\s+DE\s+C\.V\./i, '')
       .replace(/\s+S\.A\.\s+DE\s+C\.V\./i, '')
@@ -61,15 +67,11 @@ export async function POST(request) {
       .trim();
 
     // 3. Extraer Código Postal
-    const cpRegex = /(?:C(?:ó|o)digo Postal|C\.P\.)\s*:?\s*(\d{5})/i;
-    const cpMatch = text.match(cpRegex);
+    const cpMatch = cleanText.match(/(?:C(?:ó|o)digo Postal|C\.P\.)\s*:?\s*(\d{5})/i)
+      || cleanText.match(/Datos del domicilio registrado[\s\S]*?\b(\d{5})\b/i)
+      || cleanText.match(/C\.?P\.?\s*(\d{5})/i);
     if (cpMatch) {
       codigoPostal = cpMatch[1];
-    } else {
-      const addrMatch = text.match(/Datos del domicilio registrado[\s\S]*?\b(\d{5})\b/i);
-      if (addrMatch) {
-        codigoPostal = addrMatch[1];
-      }
     }
 
     // 4. Extraer Régimen Fiscal
@@ -97,12 +99,17 @@ export async function POST(request) {
     };
 
     for (const [code, regex] of Object.entries(regimensMap)) {
-      if (regex.test(text)) {
+      if (regex.test(text) || regex.test(cleanText)) {
         regimen = code;
-        // Tomamos el primero que haga match. Para físicos con varios, 
-        // normalmente RESICO o Empresarial son los primarios.
         break; 
       }
+    }
+
+    if (!rfc && !razonSocial && !codigoPostal) {
+       return NextResponse.json({
+         success: false,
+         error: "No se encontraron datos en el texto extraído: " + text.substring(0, 300)
+       });
     }
 
     return NextResponse.json({
