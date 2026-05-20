@@ -1,7 +1,6 @@
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
-import * as pdfParseModule from 'pdf-parse';
-const pdfParse = pdfParseModule.default || pdfParseModule;
+const pdfParse = require('pdf-parse');
 
 export async function POST(request) {
   try {
