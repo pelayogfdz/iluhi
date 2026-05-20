@@ -127,26 +127,40 @@ export async function POST(request) {
     // 5. Extraer Datos de Domicilio
     let calle = '', numExterior = '', numInterior = '', colonia = '', municipio = '', estado = '', ciudad = '';
     
-    const calleMatch = cleanText.match(/Nombre de Vialidad:\s*(.*?)\s*N(?:ú|u)mero Exterior:/i);
-    if(calleMatch) calle = calleMatch[1].trim();
+    // Aislar la sección de domicilio
+    const addressBlockMatch = cleanText.match(/Datos del domicilio registrado([\s\S]*?)(?:Actividades Econ(?:ó|o)micas|Sus datos personales|Cadena Original|Reg(?:í|i)menes)/i);
+    let addressText = addressBlockMatch ? addressBlockMatch[1] : cleanText;
     
-    const extMatch = cleanText.match(/N(?:ú|u)mero Exterior:\s*(.*?)\s*(?:N(?:ú|u)mero Interior:|Nombre de la Colonia:)/i);
-    if(extMatch) numExterior = extMatch[1].trim();
-    
-    const intMatch = cleanText.match(/N(?:ú|u)mero Interior:\s*(.*?)\s*Nombre de la Colonia:/i);
-    if(intMatch) numInterior = intMatch[1].trim();
-    
-    const colMatch = cleanText.match(/Nombre de la Colonia:\s*(.*?)\s*Nombre de la Localidad:/i);
-    if(colMatch) colonia = colMatch[1].trim();
-    
-    const munMatch = cleanText.match(/Nombre del Municipio o Demarcaci(?:ó|o)n Territorial:\s*(.*?)\s*Nombre de la Entidad Federativa:/i);
-    if(munMatch) {
-      municipio = munMatch[1].trim();
+    const mCalle = addressText.match(/(?:Nombre de Vialidad|Calle)\s*:?\s*(.*?)\s*(?:N(?:ú|u)mero Exterior|N(?:ú|u)m\.? Ext|N\.? Ext)/i);
+    if(mCalle) calle = mCalle[1].trim();
+
+    const mExt = addressText.match(/(?:N(?:ú|u)mero Exterior|N(?:ú|u)m\.? Ext|N\.? Ext)\s*:?\s*(.*?)\s*(?:N(?:ú|u)mero Interior|N(?:ú|u)m\.? Int|N\.? Int|Nombre de la Colonia|Colonia)/i);
+    if(mExt) numExterior = mExt[1].trim();
+
+    const mInt = addressText.match(/(?:N(?:ú|u)mero Interior|N(?:ú|u)m\.? Int|N\.? Int)\s*:?\s*(.*?)\s*(?:Nombre de la Colonia|Colonia)/i);
+    if(mInt) numInterior = mInt[1].trim();
+
+    const mCol = addressText.match(/(?:Nombre de la Colonia|Colonia)\s*:?\s*(.*?)\s*(?:Nombre de la Localidad|Localidad|Nombre del Municipio|Municipio|C\.?P\.?|Delegaci(?:ó|o)n)/i);
+    if(mCol) colonia = mCol[1].trim();
+
+    const mMun = addressText.match(/(?:Nombre del Municipio o Demarcaci(?:ó|o)n Territorial|Municipio o Delegaci(?:ó|o)n|Municipio)\s*:?\s*(.*?)\s*(?:Nombre de la Entidad Federativa|Entidad Federativa|Estado)/i);
+    if(mMun) {
+      municipio = mMun[1].trim();
       ciudad = municipio; // Usar municipio como ciudad por defecto
     }
-    
-    const estMatch = cleanText.match(/Nombre de la Entidad Federativa:\s*(.*?)\s*(?:Entre Calle:|Y Calle:|Actividades)/i);
-    if(estMatch) estado = estMatch[1].trim();
+
+    const mEst = addressText.match(/(?:Nombre de la Entidad Federativa|Entidad Federativa|Estado)\s*:?\s*(.*?)\s*(?:Entre Calle|Y Calle|Actividades|Sus datos|C\.?P\.?|Reg(?:í|i)menes)/i);
+    if(mEst) estado = mEst[1].trim();
+
+    // Fallbacks si aún no los encuentra: intentar variaciones más sencillas
+    if (!calle) {
+        const altCalle = addressText.match(/Vialidad\s*:?\s*(.*?)\s*(?:Exterior|Ext)/i);
+        if (altCalle) calle = altCalle[1].trim();
+    }
+    if (!colonia) {
+        const altCol = addressText.match(/Colonia\s*:?\s*(.*?)\s*(?:Municipio|Delegaci(?:ó|o)n|Localidad)/i);
+        if (altCol) colonia = altCol[1].trim();
+    }
 
     if (!rfc && !razonSocial && !codigoPostal) {
        return NextResponse.json({
