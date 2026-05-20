@@ -1,6 +1,5 @@
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
-const pdfParse = require('pdf-parse');
 
 export async function POST(request) {
   try {
@@ -15,8 +14,10 @@ export async function POST(request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Parsear el PDF
-    const pdfData = await pdfParse(buffer);
-    const text = pdfData.text;
+    const { PDFParse } = require('pdf-parse');
+    const parser = new PDFParse({ data: buffer });
+    await parser.load();
+    const text = await parser.getText();
 
     // Variables a extraer
     let rfc = '';
