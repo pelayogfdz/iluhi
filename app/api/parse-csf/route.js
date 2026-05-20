@@ -13,21 +13,30 @@ export async function POST(request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parsear el PDF usando unpdf (compatible con Serverless/Edge)
-    const { getDocumentProxy, extractText, getResolvedPDFJS } = require('unpdf');
-    const uint8Array = new Uint8Array(buffer);
+    // Parsear el PDF usando pdf-parse (versión pura JS interna para evitar fs.readFile de index.js)
+    const pdfParse = require('pdf-parse/lib/pdf-parse.js');
     
-    const pdfjs = await getResolvedPDFJS();
-    const version = pdfjs.version || '4.0.379'; // Fallback a versión estable si no detecta
-    
-    const pdfDocument = await getDocumentProxy(uint8Array, {
-      cMapUrl: `https://unpkg.com/pdfjs-dist@${version}/cmaps/`,
-      cMapPacked: true,
-      standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${version}/standard_fonts/`,
-    });
-    
-    const { text: pagesText } = await extractText(pdfDocument);
-    const text = Array.isArray(pagesText) ? pagesText.join('\n') : pagesText;
+    // Función custom para preservar espacios que pdf-parse omite por defecto
+    function custom_render(pageData) {
+      return pageData.getTextContent().then(function(textContent) {
+        let lastY, lastX = 0, lastWidth = 0, text = '';
+        for (let item of textContent.items) {
+          if (lastY == item.transform[5] || !lastY) {
+            if (lastX > 0 && item.transform[4] > lastX + lastWidth + 1) text += ' ';
+            text += item.str;
+          } else {
+            text += '\n' + item.str;
+          }
+          lastY = item.transform[5];
+          lastX = item.transform[4];
+          lastWidth = item.width;
+        }
+        return text;
+      });
+    }
+
+    const data = await pdfParse(buffer, { pagerender: custom_render });
+    const text = data.text;
 
     // Variables a extraer
     let rfc = '';
