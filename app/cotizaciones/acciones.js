@@ -1,4 +1,5 @@
 'use server'
+export const maxDuration = 60;
 import prisma from '../../lib/prisma';
 
 import { buildPdfDocDefinition, createPdfBuffer } from '../../lib/pdfGenerator'
