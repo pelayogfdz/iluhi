@@ -28,3 +28,4 @@ export default async function NuevaCotizacionPage() {
     </div>
   )
 }
+export const maxDuration = 60; 

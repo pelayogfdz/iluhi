@@ -36,3 +36,4 @@ export default async function NuevaFacturaPage() {
     </div>
   )
 }
+export const maxDuration = 60; 

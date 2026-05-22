@@ -1,5 +1,4 @@
 'use server'
-export const maxDuration = 60;
 import prisma from '../../lib/prisma';
 
 
@@ -597,7 +596,7 @@ export async function uploadFacturaPdf(facturaId, base64Str) {
 
 export async function generarVistaPreviaPDFBase64(formDataRaw) {
   try {
-    const { empresaId, clienteId, items, notasServicio } = formDataRaw;
+    const { empresaId, clienteId, items, notasServicio, usoCfdi, formaPago, metodoPago } = formDataRaw;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'Agregue al menos un concepto para generar la vista previa.' }
@@ -644,7 +643,10 @@ export async function generarVistaPreviaPDFBase64(formDataRaw) {
       total: totalCalculado,
       moneda: 'MXN',
       notasServicio: notasServicio,
-      folioInterno: 'VISTA-PREVIA'
+      folioInterno: 'VISTA-PREVIA',
+      usoCfdi,
+      formaPago,
+      metodoPago
     };
 
     const totals = [

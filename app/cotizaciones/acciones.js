@@ -1,5 +1,4 @@
 'use server'
-export const maxDuration = 60;
 import prisma from '../../lib/prisma';
 
 import { buildPdfDocDefinition, createPdfBuffer } from '../../lib/pdfGenerator'
@@ -73,7 +72,7 @@ export async function obtenerCotizacionesPendientes(empresaId) {
 
 export async function generarVistaPreviaCotizacion(formDataRaw) {
   try {
-    const { empresaId, clienteId, items, notasServicio } = formDataRaw;
+    const { empresaId, clienteId, items, notasServicio, usoCfdi, formaPago, metodoPago } = formDataRaw;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'Agregue al menos un concepto para generar la vista previa.' }
@@ -120,7 +119,10 @@ export async function generarVistaPreviaCotizacion(formDataRaw) {
       total: totalCalculado,
       moneda: 'MXN',
       notasServicio: notasServicio,
-      folioInterno: 'VISTA-PREVIA'
+      folioInterno: 'VISTA-PREVIA',
+      usoCfdi,
+      formaPago,
+      metodoPago
     };
 
     const totals = [
