@@ -84,7 +84,7 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
     setCargando(true)
     setResultado({ msg: "Generando PDF de Vista Previa...", type: "info" })
     try {
-      const payload = { empresaId, clienteId, items, notasServicio };
+      const payload = { empresaId, clienteId, items, notasServicio, usoCfdi, formaPago, metodoPago };
       const res = await generarVistaPreviaPDFBase64(payload);
       if (res.success && res.base64) {
         const byteCharacters = atob(res.base64);

@@ -54,7 +54,7 @@ export default function CotizacionForm({ empresas, clientes, catalogoProductos }
     setCargando(true)
     setResultado({ msg: "Generando PDF de Vista Previa...", type: "info" })
     try {
-      const payload = { empresaId, clienteId, items, notasServicio };
+      const payload = { empresaId, clienteId, items, notasServicio, usoCfdi, formaPago, metodoPago };
       const res = await generarVistaPreviaCotizacion(payload);
       if (res.success && res.base64) {
         const byteCharacters = atob(res.base64);
