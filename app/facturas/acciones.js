@@ -67,42 +67,83 @@ export async function prepararYTimbrarFactura(formDataRaw) {
           state: cliente.estado || undefined
         }
       },
-      items: items.map((i) => {
-        const itemPayload = {
-          product: {
-            description: i.descripcion,
-            product_key: i.claveProdServ,
-            price: parseFloat(i.precio),
-            tax_included: false,
-            taxability: i.objetoImp || '02',
-            unit_key: i.claveUnidad || 'H87'
-          },
-          quantity: parseInt(i.cantidad)
-        };
+      items: (() => {
+        const mappedItems = [];
+        for (const i of items) {
+          const priceVal = parseFloat(i.precio);
+          const qtyVal = parseInt(i.cantidad);
+          const rateVal = parseFloat(i.tasaOCuota || 0);
 
-        // Reglas de Impuestos (Solo aplica si es objeto de impuesto 02 o 03)
-        if (i.objetoImp === '02' || i.objetoImp === '03') {
-          if (i.tipoFactor === 'Exento') {
-            itemPayload.product.taxes = [
-              {
-                type: i.impuesto === '003' ? 'IEPS' : 'IVA',
-                factor: 'Exento'
+          if (i.impuesto === '002' && rateVal === 0.04) {
+            // Automatically split international flight / 4% IVA into 25% gravado (at 16%) and 75% no objeto de impuesto
+            mappedItems.push({
+              product: {
+                description: `${i.descripcion} (Parte Gravada 25%)`,
+                product_key: i.claveProdServ,
+                price: parseFloat((priceVal * 0.25).toFixed(4)),
+                tax_included: false,
+                taxability: '02',
+                unit_key: i.claveUnidad || 'H87',
+                taxes: [
+                  {
+                    type: 'IVA',
+                    factor: 'Tasa',
+                    rate: 0.16
+                  }
+                ]
+              },
+              quantity: qtyVal
+            });
+
+            mappedItems.push({
+              product: {
+                description: `${i.descripcion} (Parte No Gravada 75%)`,
+                product_key: i.claveProdServ,
+                price: parseFloat((priceVal * 0.75).toFixed(4)),
+                tax_included: false,
+                taxability: '01', // No objeto de impuesto
+                unit_key: i.claveUnidad || 'H87'
+              },
+              quantity: qtyVal
+            });
+          } else {
+            const itemPayload = {
+              product: {
+                description: i.descripcion,
+                product_key: i.claveProdServ,
+                price: priceVal,
+                tax_included: false,
+                taxability: i.objetoImp || '02',
+                unit_key: i.claveUnidad || 'H87'
+              },
+              quantity: qtyVal
+            };
+
+            if (i.objetoImp === '02' || i.objetoImp === '03') {
+              if (i.tipoFactor === 'Exento') {
+                itemPayload.product.taxes = [
+                  {
+                    type: i.impuesto === '003' ? 'IEPS' : 'IVA',
+                    factor: 'Exento'
+                  }
+                ];
+              } else if (i.impuesto && (i.tipoFactor === 'Tasa' || i.tipoFactor === 'Cuota')) {
+                const isRetencion = i.impuesto === '001';
+                itemPayload.product.taxes = [
+                  {
+                    type: i.impuesto === '003' ? 'IEPS' : (i.impuesto === '001' ? 'ISR' : 'IVA'),
+                    factor: i.tipoFactor,
+                    rate: rateVal,
+                    ...(isRetencion ? { withholding: true } : {})
+                  }
+                ];
               }
-            ];
-          } else if (i.impuesto && (i.tipoFactor === 'Tasa' || i.tipoFactor === 'Cuota')) {
-            const isRetencion = i.impuesto === '001'; // ISR suele ser retención
-            itemPayload.product.taxes = [
-              {
-                type: i.impuesto === '003' ? 'IEPS' : (i.impuesto === '001' ? 'ISR' : 'IVA'),
-                factor: i.tipoFactor,
-                rate: parseFloat(i.tasaOCuota || 0),
-                ...(isRetencion ? { withholding: true } : {})
-              }
-            ];
+            }
+            mappedItems.push(itemPayload);
           }
         }
-        return itemPayload;
-      }),
+        return mappedItems;
+      })(),
       use: usoCfdi,
       payment_form: formaPago,
       payment_method: metodoPago
@@ -619,20 +660,46 @@ export async function generarVistaPreviaPDFBase64(formDataRaw) {
       const cantidad = parseFloat(i.cantidad) || 0;
       const precio = parseFloat(i.precio) || 0;
       const lineSub = precio * cantidad;
-      sumTotal += lineSub;
-      
-      const tasa = parseFloat(i.tasaOCuota || 0.16);
-      if (i.impuesto === '002' || !i.impuesto) {
-        totalImpuestosTrasladados += (lineSub * tasa);
-      }
+      const rateVal = parseFloat(i.tasaOCuota || 0);
 
-      itemsTable.push([
-        cantidad.toString(),
-        i.claveUnidad || 'H87', // using unit key as fallback since Facturapi hasn't hydrated unit_name yet
-        i.descripcion,
-        `$${precio.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `$${lineSub.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      ]);
+      if (i.impuesto === '002' && rateVal === 0.04) {
+        // Splitting international flight in the PDF preview too
+        const subGravado = lineSub * 0.25;
+        const subNoGravado = lineSub * 0.75;
+        sumTotal += lineSub;
+        totalImpuestosTrasladados += (subGravado * 0.16);
+
+        itemsTable.push([
+          cantidad.toString(),
+          i.claveUnidad || 'H87',
+          `${i.descripcion} (Parte Gravada 25%)`,
+          `$${(precio * 0.25).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `$${subGravado.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ]);
+
+        itemsTable.push([
+          cantidad.toString(),
+          i.claveUnidad || 'H87',
+          `${i.descripcion} (Parte No Gravada 75%)`,
+          `$${(precio * 0.75).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `$${subNoGravado.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ]);
+      } else {
+        sumTotal += lineSub;
+        
+        const tasa = parseFloat(i.tasaOCuota || 0.16);
+        if (i.impuesto === '002' || !i.impuesto) {
+          totalImpuestosTrasladados += (lineSub * tasa);
+        }
+
+        itemsTable.push([
+          cantidad.toString(),
+          i.claveUnidad || 'H87',
+          i.descripcion,
+          `$${precio.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `$${lineSub.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ]);
+      }
     });
 
     const totalCalculado = sumTotal + totalImpuestosTrasladados;
