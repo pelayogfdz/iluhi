@@ -302,7 +302,7 @@ export default function DescargasSatClient({ empresas }) {
                         <td><span style={{fontSize: '0.85rem', color: '#333', fontFamily: 'monospace'}}>{f.uuid}</span></td>
                         <td>{f.receptorNombre || 'N/A'}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.receptorRfc}</span></td>
                         <td>{f.empresa?.razonSocial}</td>
-                        <td style={{ fontWeight: 'bold' }}>${f.total?.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>${f.total?.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td>
                            <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', background: f.estatus==='Vigente'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)', color: f.estatus==='Vigente'?'#10b981':'#ef4444' }}>
                              {f.estatus}
@@ -340,7 +340,7 @@ export default function DescargasSatClient({ empresas }) {
                         <td><span style={{fontSize: '0.85rem', color: '#333', fontFamily: 'monospace'}}>{f.uuid}</span></td>
                         <td>{f.emisorNombre}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.emisorRfc}</span></td>
                         <td>{f.empresa?.razonSocial}</td>
-                        <td style={{ fontWeight: 'bold' }}>${f.total?.toFixed(2)}</td>
+                        <td style={{ fontWeight: 'bold' }}>${f.total?.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td>
                            <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '12px', background: f.estatus==='Vigente'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)', color: f.estatus==='Vigente'?'#10b981':'#ef4444' }}>
                              {f.estatus}

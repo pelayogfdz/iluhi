@@ -262,7 +262,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                   <BotonNotaCredito factura={fac} onEmit={handleNotaCredito} />
                 </td>
                 <td>{new Date(fac.fechaEmision).toLocaleDateString()}</td>
-                <td>${fac.total.toFixed(2)}</td>
+                <td>${fac.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>
                   <span style={{ 
                      padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
@@ -301,7 +301,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                     {fac.complementosPago.map(comp => (
                       <div key={comp.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '4px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '6px' }}>
                         <span style={{ fontFamily: 'monospace', color: '#ccc', width: '280px', fontSize: '0.85rem' }}>{comp.uuid || comp.id}</span>
-                        <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toFixed(2)}</span>
+                        <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{new Date(comp.date).toLocaleDateString()}</span>
                         <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                           <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>

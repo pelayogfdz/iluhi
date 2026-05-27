@@ -71,7 +71,7 @@ export default async function ProductosPage({ searchParams }) {
                 <td>{p.descripcion}</td>
                 <td>{p.claveProdServ}</td>
                 <td>{p.claveUnidad}</td>
-                <td>${p.precio.toFixed(2)}</td>
+                <td>${p.precio.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'stretch' }}>
                   <Link href={`/productos/editar/${p.id}`} style={{ width: '100%' }}>
                     <button className="btn" style={{ width: '100%', padding: '0.4rem 1rem'}}>Editar</button>

@@ -106,8 +106,8 @@ export async function generarVistaPreviaCotizacion(formDataRaw) {
         cantidad.toString(),
         i.claveUnidad || 'H87',
         i.descripcion,
-        `$${precio.toFixed(2)}`,
-        `$${lineSub.toFixed(2)}`
+        `$${precio.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `$${lineSub.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       ]);
     });
 
@@ -126,9 +126,9 @@ export async function generarVistaPreviaCotizacion(formDataRaw) {
     };
 
     const totals = [
-        { text: `Subtotal: $${dummyFactura.subTotal.toFixed(2)}`, margin: [0, 5, 0, 5], bold: true },
-        { text: `Total Impuestos: $${dummyFactura.totalImpuestosTrasladados.toFixed(2)}`, margin: [0, 0, 0, 5] },
-        { text: `TOTAL ESTIMADO: $${dummyFactura.total.toFixed(2)} ${dummyFactura.moneda}`, bold: true, fontSize: 14, color: empresa.colorPrimario || '#0054a6' }
+        { text: `Subtotal: $${dummyFactura.subTotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin: [0, 5, 0, 5], bold: true },
+        { text: `Total Impuestos: $${dummyFactura.totalImpuestosTrasladados.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, margin: [0, 0, 0, 5] },
+        { text: `TOTAL ESTIMADO: $${dummyFactura.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${dummyFactura.moneda}`, bold: true, fontSize: 14, color: empresa.colorPrimario || '#0054a6' }
     ];
 
     const docDefinition = buildPdfDocDefinition(dummyFactura, empresa, cliente, 'COTIZACION', itemsTable, totals, 'VISTA PREVIA - COTIZACIÓN');

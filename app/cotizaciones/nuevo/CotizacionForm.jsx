@@ -280,15 +280,15 @@ export default function CotizacionForm({ empresas, clientes, catalogoProductos }
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                <span style={{ color: 'var(--text-secondary)' }}>Subtotal:</span>
-               <span>$ {totalSub.toFixed(2)}</span>
+               <span>$ {totalSub.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
              </div>
              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                <span style={{ color: 'var(--text-secondary)' }}>IVA Aprox:</span>
-               <span style={{ color: 'var(--accent)' }}>$ {totalIVA.toFixed(2)}</span>
+               <span style={{ color: 'var(--accent)' }}>$ {totalIVA.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
              </div>
              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', fontWeight: 'bold', fontSize: '1.2rem' }}>
                <span>Total Estimado:</span>
-               <span>$ {totalFinal.toFixed(2)}</span>
+               <span>$ {totalFinal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
              </div>
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function CotizacionForm({ empresas, clientes, catalogoProductos }
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.9rem' }}>
                       <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', color: 'var(--text-secondary)' }}>
-                         <span>{it.cantidad} x ${it.precio.toFixed(2)}</span>
+                         <span>{it.cantidad} x ${it.precio.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
@@ -373,7 +373,7 @@ export default function CotizacionForm({ empresas, clientes, catalogoProductos }
                              style={{ width: '80px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '2px 4px', fontSize: '0.8rem', borderRadius: '4px', textAlign: 'right' }} 
                            />
                          </div>
-                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>IVA: ${iva.toFixed(2)}</span>
+                         <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>IVA: ${iva.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                            <span style={{ fontWeight: 'bold', fontSize: '1rem', color: 'white' }}>Total: $</span>
                            <input 

@@ -129,7 +129,7 @@ export default function CotizacionesClient({ cotizacionesInitial, empresas }) {
                   <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>{cot.cliente.rfc}</div>
                 </td>
                 <td>{new Date(cot.fechaEmision).toLocaleDateString()}</td>
-                <td>${cot.total.toFixed(2)}</td>
+                <td>${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>
                   <span style={{ 
                      padding: '4px 8px', borderRadius: '4px', fontSize: '12px',

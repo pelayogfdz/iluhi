@@ -77,7 +77,7 @@ export default function BotonComplemento({ factura, onComplement }) {
                  value={monto} 
                  onChange={(e) => setMonto(e.target.value)} 
                />
-               <small style={{ color: 'var(--text-secondary)' }}>Monto total CFDI: ${factura.total.toFixed(2)}</small>
+               <small style={{ color: 'var(--text-secondary)' }}>Monto total CFDI: ${factura.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</small>
              </div>
 
              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
