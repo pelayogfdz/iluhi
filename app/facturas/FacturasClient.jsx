@@ -10,7 +10,7 @@ import BotonComplemento from './BotonComplemento'
 import BotonNotaCredito from './BotonNotaCredito'
 import { cancelarFactura, emitirComplementoPago, emitirNotaCredito, cancelarComplementoPago, uploadFacturaPdf } from './acciones'
 
-export default function FacturasClient({ facturasInitial, empresas, page = 1, totalPages = 1, totalCount = 0 }) {
+export default function FacturasClient({ facturasInitial, empresas, clientes = [], page = 1, totalPages = 1, totalCount = 0 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [selectedDocs, setSelectedDocs] = useState([])
@@ -20,6 +20,7 @@ export default function FacturasClient({ facturasInitial, empresas, page = 1, to
   const [fechaInicio, setFechaInicio] = useState(searchParams.get('fechaInicio') || '')
   const [fechaFin, setFechaFin] = useState(searchParams.get('fechaFin') || '')
   const [empresaFiltro, setEmpresaFiltro] = useState(searchParams.get('empresa') || '')
+  const [clienteFiltro, setClienteFiltro] = useState(searchParams.get('cliente') || '')
   const [orden, setOrden] = useState(searchParams.get('orden') || 'desc')
   const q = searchParams.get('q') || ''
 
@@ -45,6 +46,7 @@ export default function FacturasClient({ facturasInitial, empresas, page = 1, to
     if (fechaInicio) params.set('fechaInicio', fechaInicio)
     if (fechaFin) params.set('fechaFin', fechaFin)
     if (empresaFiltro) params.set('empresa', empresaFiltro)
+    if (clienteFiltro) params.set('cliente', clienteFiltro)
     if (orden) params.set('orden', orden)
     
     router.push(`?${params.toString()}`)
@@ -54,6 +56,7 @@ export default function FacturasClient({ facturasInitial, empresas, page = 1, to
     setFechaInicio('')
     setFechaFin('')
     setEmpresaFiltro('')
+    setClienteFiltro('')
     setOrden('desc')
     router.push(q ? `?q=${q}` : '?')
   }
@@ -167,6 +170,15 @@ export default function FacturasClient({ facturasInitial, empresas, page = 1, to
           </select>
         </div>
         <div>
+          <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '4px'}}>Cliente Receptor</label>
+          <select className="input" value={clienteFiltro} onChange={e => setClienteFiltro(e.target.value)} style={{minWidth: '200px'}}>
+            <option value="">Todos los Clientes</option>
+            {clientes.map(cli => (
+              <option key={cli.id} value={cli.id}>{cli.razonSocial}</option>
+            ))}
+          </select>
+        </div>
+        <div>
           <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '4px'}}>Fecha Inicio</label>
           <input type="date" className="input" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
         </div>
@@ -183,7 +195,7 @@ export default function FacturasClient({ facturasInitial, empresas, page = 1, to
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
            <button className="btn" onClick={applyFilters}>Aplicar Filtros</button>
-           {(fechaInicio || fechaFin || empresaFiltro || orden !== 'desc') && (
+           {(fechaInicio || fechaFin || empresaFiltro || clienteFiltro || orden !== 'desc') && (
              <button className="btn" style={{background: 'rgba(255,255,255,0.1)'}} onClick={clearFilters}>Limpiar</button>
            )}
         </div>

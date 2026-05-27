@@ -13,6 +13,7 @@ export default async function FacturaHubPage({ searchParams }) {
   const resolvedParams = await searchParams
   const q = resolvedParams?.q || ""
   const empresaId = resolvedParams?.empresa || ""
+  const clienteId = resolvedParams?.cliente || ""
   const fechaInicio = resolvedParams?.fechaInicio || ""
   const fechaFin = resolvedParams?.fechaFin || ""
   const orden = resolvedParams?.orden || "desc"
@@ -48,6 +49,10 @@ export default async function FacturaHubPage({ searchParams }) {
     andClauses.push({ empresaId: { in: user.empresasIds } });
   }
 
+  if (clienteId) {
+    andClauses.push({ clienteId: clienteId });
+  }
+
   if (fechaInicio || fechaFin) {
     const dates = {}
     if (fechaInicio) dates.gte = new Date(`${fechaInicio}T00:00:00.000Z`)
@@ -57,7 +62,9 @@ export default async function FacturaHubPage({ searchParams }) {
 
   const whereClause = andClauses.length > 0 ? { AND: andClauses } : {}
 
-  const [facturas, totalCount, empresas] = await Promise.all([
+  const rpClientes = (user?.permisoAsignacionClientes) ? {} : { usuariosAsignados: { some: { id: user?.id } } };
+
+  const [facturas, totalCount, empresas, clientes] = await Promise.all([
     prisma.factura.findMany({
       select: {
         id: true,
@@ -100,6 +107,11 @@ export default async function FacturaHubPage({ searchParams }) {
       where: user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {},
       select: { id: true, razonSocial: true },
       orderBy: { razonSocial: 'asc' }
+    }),
+    prisma.cliente.findMany({
+      where: rpClientes,
+      select: { id: true, razonSocial: true },
+      orderBy: { razonSocial: 'asc' }
     })
   ])
 
@@ -120,6 +132,7 @@ export default async function FacturaHubPage({ searchParams }) {
       <FacturasClient 
         facturasInitial={facturas} 
         empresas={empresas} 
+        clientes={clientes}
         page={page} 
         totalPages={totalPages} 
         totalCount={totalCount} 
