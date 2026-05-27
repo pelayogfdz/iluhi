@@ -171,6 +171,7 @@ export default function EditProductoForm({ producto, empresas }) {
               <select name="tasaOCuota" value={formData.tasaOCuota} onChange={handleChange} className="form-control" required style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                 <option value="0.16">16% (0.16) - IVA Estándar</option>
                 <option value="0.08">8% (0.08) - IVA Fronterizo / IEPS 8%</option>
+                <option value="0.04">4% (0.04) - IVA 4%</option>
                 <option value="0">0% (0.00) - Tasa Cero / Exento</option>
                 <option value="0.3">30% (0.30) - IEPS</option>
                 <option value="0.53">53% (0.53) - IEPS</option>
