@@ -21,8 +21,28 @@ export default async function FlujoTrabajoPage() {
         not: "Cancelada"
       }
     },
-    include: {
-      cliente: true
+    select: {
+      id: true,
+      uuid: true,
+      serie: true,
+      folio: true,
+      fechaEmision: true,
+      moneda: true,
+      tipoComprobante: true,
+      formaPago: true,
+      metodoPago: true,
+      subTotal: true,
+      total: true,
+      estatus: true,
+      complementosPago: true,
+      createdAt: true,
+      cliente: {
+        select: {
+          id: true,
+          razonSocial: true,
+          rfc: true
+        }
+      }
     },
     orderBy: {
       createdAt: 'desc'

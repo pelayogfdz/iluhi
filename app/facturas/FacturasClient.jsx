@@ -10,7 +10,7 @@ import BotonComplemento from './BotonComplemento'
 import BotonNotaCredito from './BotonNotaCredito'
 import { cancelarFactura, emitirComplementoPago, emitirNotaCredito, cancelarComplementoPago, uploadFacturaPdf } from './acciones'
 
-export default function FacturasClient({ facturasInitial, empresas }) {
+export default function FacturasClient({ facturasInitial, empresas, page = 1, totalPages = 1, totalCount = 0 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [selectedDocs, setSelectedDocs] = useState([])
@@ -306,6 +306,44 @@ export default function FacturasClient({ facturasInitial, empresas }) {
           })}
         </tbody>
       </table>
+
+      {/* Control de paginación */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            Mostrando <strong>{(page - 1) * 50 + 1}</strong> - <strong>{Math.min(page * 50, totalCount)}</strong> de <strong>{totalCount}</strong> facturas
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button 
+              className="btn" 
+              disabled={page <= 1} 
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search)
+                params.set('page', (page - 1).toString())
+                router.push(`?${params.toString()}`)
+              }}
+              style={{ padding: '0.4rem 0.8rem', background: page <= 1 ? 'rgba(255,255,255,0.05)' : 'var(--primary)', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+            >
+              ◀ Anterior
+            </button>
+            <span style={{ padding: '0 0.5rem' }}>
+              Página <strong>{page}</strong> de <strong>{totalPages}</strong>
+            </span>
+            <button 
+              className="btn" 
+              disabled={page >= totalPages} 
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search)
+                params.set('page', (page + 1).toString())
+                router.push(`?${params.toString()}`)
+              }}
+              style={{ padding: '0.4rem 0.8rem', background: page >= totalPages ? 'rgba(255,255,255,0.05)' : 'var(--primary)', cursor: page >= totalPages ? 'not-allowed' : 'pointer' }}
+            >
+              Siguiente ▶
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

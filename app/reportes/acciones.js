@@ -52,7 +52,17 @@ export async function obtenerReporteFacturas(filtros = {}) {
 
     const facturasRaw = await prisma.factura.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        uuid: true,
+        serie: true,
+        folio: true,
+        fechaEmision: true,
+        metodoPago: true,
+        estatus: true,
+        subTotal: true,
+        total: true,
+        complementosPago: true,
         empresa: { select: { razonSocial: true } },
         cliente: { select: { razonSocial: true } }
       },

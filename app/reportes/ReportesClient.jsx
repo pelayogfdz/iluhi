@@ -316,7 +316,7 @@ export default function ReportesClient({ empresas, clientes }) {
               </tr>
             </thead>
             <tbody>
-              {facturas.map(f => (
+              {facturas.slice(0, 100).map(f => (
                 <tr key={f.id}>
                   <td>
                     {f.uuid !== 'N/A' ? (
@@ -352,6 +352,11 @@ export default function ReportesClient({ empresas, clientes }) {
               ))}
             </tbody>
           </table>
+        )}
+        {facturas.length > 100 && !cargando && (
+          <div style={{ textAlign: 'center', marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', opacity: 0.8, fontSize: '0.9rem' }}>
+            Mostrando los últimos <strong>100</strong> documentos de un total de <strong>{facturas.length}</strong> facturas encontradas. Descarga el reporte en Excel para ver la lista completa.
+          </div>
         )}
       </div>
 

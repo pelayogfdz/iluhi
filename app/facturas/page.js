@@ -16,6 +16,9 @@ export default async function FacturaHubPage({ searchParams }) {
   const fechaInicio = resolvedParams?.fechaInicio || ""
   const fechaFin = resolvedParams?.fechaFin || ""
   const orden = resolvedParams?.orden || "desc"
+  const page = parseInt(resolvedParams?.page || "1", 10)
+  const limit = 50
+  const skip = (page - 1) * limit
 
   const user = await getSessionUser();
 
@@ -54,21 +57,53 @@ export default async function FacturaHubPage({ searchParams }) {
 
   const whereClause = andClauses.length > 0 ? { AND: andClauses } : {}
 
-  const [facturas, empresas] = await Promise.all([
+  const [facturas, totalCount, empresas] = await Promise.all([
     prisma.factura.findMany({
-      include: {
-         empresa: true,
-         cliente: true
+      select: {
+        id: true,
+        uuid: true,
+        serie: true,
+        folio: true,
+        fechaEmision: true,
+        moneda: true,
+        tipoCambio: true,
+        tipoComprobante: true,
+        formaPago: true,
+        metodoPago: true,
+        subTotal: true,
+        total: true,
+        estatus: true,
+        complementosPago: true,
+        createdAt: true,
+        empresa: {
+          select: {
+            id: true,
+            razonSocial: true,
+            rfc: true
+          }
+        },
+        cliente: {
+          select: {
+            id: true,
+            razonSocial: true,
+            rfc: true
+          }
+        }
       },
       where: whereClause,
-      orderBy: { fechaEmision: orden === 'asc' ? 'asc' : 'desc' }
+      orderBy: { fechaEmision: orden === 'asc' ? 'asc' : 'desc' },
+      skip: skip,
+      take: limit
     }),
+    prisma.factura.count({ where: whereClause }),
     prisma.empresa.findMany({
       where: user?.empresasIds?.length > 0 ? { id: { in: user.empresasIds } } : {},
       select: { id: true, razonSocial: true },
       orderBy: { razonSocial: 'asc' }
     })
   ])
+
+  const totalPages = Math.ceil(totalCount / limit)
 
   return (
     <div>
@@ -81,8 +116,14 @@ export default async function FacturaHubPage({ searchParams }) {
       
       <SearchBar placeholder="Búsqueda libre por Factura, UUID o Nombre de Empresa..." />
       <br/>
-
-      <FacturasClient facturasInitial={facturas} empresas={empresas} />
+ 
+      <FacturasClient 
+        facturasInitial={facturas} 
+        empresas={empresas} 
+        page={page} 
+        totalPages={totalPages} 
+        totalCount={totalCount} 
+      />
     </div>
   )
 }
