@@ -274,6 +274,11 @@ model Factura {
   pagosFlujo PagoFlujo[] @relation("FacturaPagoFlujo")
 
   createdAt DateTime @default(now())
+
+  @@index([fechaEmision])
+  @@index([empresaId])
+  @@index([clienteId])
+  @@index([estatus])
 }
 
 model Cotizacion {
@@ -382,6 +387,9 @@ model FacturaRecibida {
   empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([fechaEmision])
+  @@index([empresaId])
 }
 
 model FacturaEmitida {
@@ -404,6 +412,9 @@ model FacturaEmitida {
   empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@index([fechaEmision])
+  @@index([empresaId])
 }
 
 model ArchivoEmpresa {

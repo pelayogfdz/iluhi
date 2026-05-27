@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
-import { obtenerReporteFacturas } from './acciones';
+import { useState, useEffect } from 'react';
+import { obtenerReporteFacturas, obtenerReporteExcelData } from './acciones';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 import Select from 'react-select';
@@ -65,6 +65,8 @@ export default function ReportesClient({ empresas, clientes }) {
   const [facturas, setFacturas] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [kpis, setKpis] = useState({ totalMonto: 0, totalFacturas: 0, totalPPD: 0, totalPUE: 0 });
+  const [chartData, setChartData] = useState([]);
 
   const fetchReport = async (filtersToUse = filtros) => {
     setCargando(true);
@@ -72,7 +74,9 @@ export default function ReportesClient({ empresas, clientes }) {
     try {
       const res = await obtenerReporteFacturas(filtersToUse);
       if (res.success) {
-        setFacturas(res.facturas);
+        setFacturas(res.facturas || []);
+        setKpis(res.kpis || { totalMonto: 0, totalFacturas: 0, totalPPD: 0, totalPUE: 0 });
+        setChartData(res.chartData || []);
       } else {
         setError(res.error || 'Error al cargar los reportes');
       }
@@ -97,53 +101,24 @@ export default function ReportesClient({ empresas, clientes }) {
     setFiltros({ ...filtros, [name]: selectedOption ? selectedOption.value : '' });
   };
 
-  const handleExportExcel = () => {
-    if (facturas.length === 0) return;
-    
-    // Map to friendly format for Excel
-    const dataToExport = facturas.map(f => ({
-      'UUID': f.uuid,
-      'Folio Interno': f.folioInterno,
-      'Fecha Emisión': new Date(f.fecha).toLocaleDateString(),
-      'Empresa Emisora': f.empresa,
-      'Cliente Receptor': f.cliente,
-      'SubTotal': f.subTotal,
-      'Total': f.total,
-      'Estatus': f.estatus,
-      'Método de Pago': f.metodoPago,
-      'Complementos': f.complementos > 0 ? 'Con Complemento' : (f.metodoPago === 'PPD' ? 'Pendiente' : 'N/A')
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Facturas");
-    
-    XLSX.writeFile(workbook, `Reporte_Facturas_${new Date().toISOString().slice(0,10)}.xlsx`);
-  };
-
-  // Group data for the chart
-  const chartData = useMemo(() => {
-    const counts = {};
-    const amounts = {};
-
-    facturas.forEach(f => {
-       const label = f.estatus || 'Desconocido';
-       counts[label] = (counts[label] || 0) + 1;
-       amounts[label] = (amounts[label] || 0) + f.total;
-    });
-
-    return Object.keys(amounts).map(key => ({
-      name: key,
-      cantidad: counts[key],
-      montoTotal: amounts[key]
-    }));
-  }, [facturas]);
-
-  const kpis = {
-    totalMonto: facturas.reduce((acc, curr) => acc + curr.total, 0),
-    totalFacturas: facturas.length,
-    totalPPD: facturas.filter(f => f.metodoPago === 'PPD').length,
-    totalPUE: facturas.filter(f => f.metodoPago === 'PUE').length,
+  const handleExportExcel = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await obtenerReporteExcelData(filtros);
+      if (res.success && res.data && res.data.length > 0) {
+        const worksheet = XLSX.utils.json_to_sheet(res.data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Facturas");
+        XLSX.writeFile(workbook, `Reporte_Facturas_${new Date().toISOString().slice(0,10)}.xlsx`);
+      } else {
+        alert(res.error || 'No hay datos para exportar con los filtros actuales.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
