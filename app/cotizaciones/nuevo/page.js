@@ -3,6 +3,7 @@ import Link from 'next/link'
 import CotizacionForm from './CotizacionForm'
 import { getSessionUser } from '../../../lib/auth'
 
+export const dynamic = 'force-dynamic'
 
 export default async function NuevaCotizacionPage() {
   const user = await getSessionUser();

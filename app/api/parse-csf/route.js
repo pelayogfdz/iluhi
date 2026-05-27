@@ -38,11 +38,12 @@ export async function POST(request) {
     const data = await pdfParse(buffer, { pagerender: custom_render });
     const text = data.text;
 
-    // Variables a extraer
     let rfc = '';
     let razonSocial = '';
     let codigoPostal = '';
     let regimen = '';
+    let addressBlockMatch = null;
+    let addressText = '';
 
     // Limpiar texto para facilitar regex (quitar espacios múltiples)
     const cleanText = text.replace(/\s+/g, ' ');
@@ -86,9 +87,25 @@ export async function POST(request) {
       .trim();
 
     // 3. Extraer Código Postal
-    const cpMatch = cleanText.match(/(?:C(?:ó|o)digo Postal|C\.P\.)\s*:?\s*(\d{5})/i)
-      || cleanText.match(/Datos del domicilio registrado[\s\S]*?\b(\d{5})\b/i)
-      || cleanText.match(/C\.?P\.?\s*(\d{5})/i);
+    // Buscar primero dentro del bloque de domicilio para evitar capturar el C.P. de la administración de la ADSC en la primera página
+    let cpMatch = null;
+    
+    // Aislar la sección de domicilio
+    addressBlockMatch = cleanText.match(/Datos del domicilio registrado([\s\S]*?)(?:Actividades Econ(?:ó|o)micas|Sus datos personales|Cadena Original|Reg(?:í|i)menes)/i);
+    addressText = addressBlockMatch ? addressBlockMatch[1] : cleanText;
+
+    if (addressBlockMatch) {
+      cpMatch = addressText.match(/(?:C(?:ó|o)digo Postal|C\.P\.)\s*:?\s*(\d{5})/i)
+        || addressText.match(/\b(\d{5})\b/i);
+    }
+    
+    if (!cpMatch) {
+      // Fallback global si no se aisló el bloque de domicilio
+      cpMatch = cleanText.match(/(?:C(?:ó|o)digo Postal|C\.P\.)\s*:?\s*(\d{5})/i)
+        || cleanText.match(/Datos del domicilio registrado[\s\S]*?\b(\d{5})\b/i)
+        || cleanText.match(/C\.?P\.?\s*(\d{5})/i);
+    }
+
     if (cpMatch) {
       codigoPostal = cpMatch[1];
     }
@@ -128,8 +145,8 @@ export async function POST(request) {
     let calle = '', numExterior = '', numInterior = '', colonia = '', municipio = '', estado = '', ciudad = '';
     
     // Aislar la sección de domicilio
-    const addressBlockMatch = cleanText.match(/Datos del domicilio registrado([\s\S]*?)(?:Actividades Econ(?:ó|o)micas|Sus datos personales|Cadena Original|Reg(?:í|i)menes)/i);
-    let addressText = addressBlockMatch ? addressBlockMatch[1] : cleanText;
+    addressBlockMatch = cleanText.match(/Datos del domicilio registrado([\s\S]*?)(?:Actividades Econ(?:ó|o)micas|Sus datos personales|Cadena Original|Reg(?:í|i)menes)/i);
+    addressText = addressBlockMatch ? addressBlockMatch[1] : cleanText;
     
     const mCalle = addressText.match(/(?:Nombre de Vialidad|Calle)\s*:?\s*(.*?)\s*(?:N(?:ú|u)mero Exterior|N(?:ú|u)m\.? Ext|N\.? Ext)/i);
     if(mCalle) calle = mCalle[1].trim();

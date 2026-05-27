@@ -3,6 +3,7 @@ import Link from 'next/link'
 import InvoiceForm from './InvoiceForm'
 import { getSessionUser } from '../../../lib/auth'
 
+export const dynamic = 'force-dynamic'
 
 export default async function NuevaFacturaPage() {
   const user = await getSessionUser();
