@@ -65,35 +65,70 @@ async function createCliente(formData) {
   let success = false;
   let errorMsg = 'Error_del_servidor';
   try {
-    await prisma.cliente.create({
-      data: {
-        rfc,
-        razonSocial,
-        regimen,
-        codigoPostal,
-        usoCfdi,
-        correoDestino,
-        correoDestino2,
-        correoDestino3,
-        contactoPrincipal,
-        telefono,
-        condicionesPago,
-        cuentaBancaria,
-        calle,
-        numExterior,
-        numInterior,
-        colonia,
-        municipio,
-        ciudad,
-        estado,
-        usuariosAsignados: idsToConnect.length > 0 
-          ? { connect: idsToConnect.map(id => ({ id })) } 
-          : undefined
-      }
+    const existing = await prisma.cliente.findUnique({
+      where: { rfc }
     });
+
+    if (existing) {
+      // If client exists (e.g., imported from invoices), update details and connect current user
+      await prisma.cliente.update({
+        where: { id: existing.id },
+        data: {
+          razonSocial,
+          regimen,
+          codigoPostal,
+          usoCfdi,
+          correoDestino,
+          correoDestino2,
+          correoDestino3,
+          contactoPrincipal,
+          telefono,
+          condicionesPago,
+          cuentaBancaria,
+          calle,
+          numExterior,
+          numInterior,
+          colonia,
+          municipio,
+          ciudad,
+          estado,
+          usuariosAsignados: idsToConnect.length > 0 
+            ? { connect: idsToConnect.map(id => ({ id })) } 
+            : undefined
+        }
+      });
+    } else {
+      // Otherwise, create a new one normally
+      await prisma.cliente.create({
+        data: {
+          rfc,
+          razonSocial,
+          regimen,
+          codigoPostal,
+          usoCfdi,
+          correoDestino,
+          correoDestino2,
+          correoDestino3,
+          contactoPrincipal,
+          telefono,
+          condicionesPago,
+          cuentaBancaria,
+          calle,
+          numExterior,
+          numInterior,
+          colonia,
+          municipio,
+          ciudad,
+          estado,
+          usuariosAsignados: idsToConnect.length > 0 
+            ? { connect: idsToConnect.map(id => ({ id })) } 
+            : undefined
+        }
+      });
+    }
     success = true;
   } catch (error) {
-    console.error("Error creating client:", error);
+    console.error("Error creating/updating client:", error);
     if (error.code === 'P2002') errorMsg = 'RFC_Duplicado';
   }
   
