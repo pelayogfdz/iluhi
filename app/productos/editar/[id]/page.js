@@ -2,8 +2,9 @@ import prisma from '../../../../lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import EditProductoForm from './EditProductoForm'
-
 import { getSessionUser } from '../../../../lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditarProductoPage({ params }) {
   const resolvedParams = await params

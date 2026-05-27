@@ -1,10 +1,9 @@
 import prisma from '../../../../lib/prisma';
 import { redirect } from 'next/navigation'
 import EditForm from './EditForm'
-
-
-
 import MaterialidadPanel from './MaterialidadPanel'
+
+export const dynamic = 'force-dynamic'
 
 export default async function EditarClientePage({ params }) {
   const { id } = await params

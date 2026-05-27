@@ -7,6 +7,8 @@ import ImssUploader from './ImssUploader'
 import SociosPanel from './SociosPanel'
 import Facturapi from 'facturapi'
 
+export const dynamic = 'force-dynamic'
+
 const facturapiAdmin = new Facturapi(process.env.FACTURAPI_USER_KEY)
 
 export default async function EditarEmpresaPage({ params }) {
