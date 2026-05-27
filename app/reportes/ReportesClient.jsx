@@ -66,26 +66,28 @@ export default function ReportesClient({ empresas, clientes }) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
-  // Auto-fetch data on filter change
-  useEffect(() => {
-    const fetchReport = async () => {
-      setCargando(true);
-      setError('');
-      try {
-        const res = await obtenerReporteFacturas(filtros);
-        if (res.success) {
-          setFacturas(res.facturas);
-        } else {
-          setError(res.error || 'Error al cargar los reportes');
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setCargando(false);
+  const fetchReport = async (filtersToUse = filtros) => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await obtenerReporteFacturas(filtersToUse);
+      if (res.success) {
+        setFacturas(res.facturas);
+      } else {
+        setError(res.error || 'Error al cargar los reportes');
       }
-    };
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  // Fetch initial data once on startup
+  useEffect(() => {
     fetchReport();
-  }, [filtros]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     setFiltros({ ...filtros, [e.target.name]: e.target.value });
@@ -245,6 +247,16 @@ export default function ReportesClient({ empresas, clientes }) {
           <div className="form-group">
             <label>Fecha Fin</label>
             <input type="date" name="fechaFin" className="form-control" value={filtros.fechaFin} onChange={handleChange} />
+          </div>
+          <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button 
+              className="btn" 
+              onClick={() => fetchReport(filtros)} 
+              disabled={cargando}
+              style={{ width: '100%', height: '40px', backgroundColor: 'var(--accent, #0054a6)', color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              {cargando ? '⏳ Buscando...' : '🔍 Búsqueda'}
+            </button>
           </div>
         </div>
       </div>
