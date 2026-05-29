@@ -4,7 +4,12 @@ import { useState } from 'react'
 
 export default function BotonComplemento({ factura, onComplement }) {
   const [open, setOpen] = useState(false)
-  const [monto, setMonto] = useState(factura.total)
+
+  const complements = Array.isArray(factura.complementosPago) ? factura.complementosPago : []
+  const previousPayments = complements.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0)
+  const remainingBalance = Math.max(0, factura.total - previousPayments)
+
+  const [monto, setMonto] = useState(remainingBalance)
   const [formaPago, setFormaPago] = useState('03') // 03 Transferencia by default
   const [fechaPago, setFechaPago] = useState('')
   const [moneda, setMoneda] = useState('MXN')
@@ -14,7 +19,7 @@ export default function BotonComplemento({ factura, onComplement }) {
 
   // Solo mostrar para PPD y q tenga ID (esta timbrada), si es PUE no lleva complemento.
   // o tmb si no está cancelada.
-  if (factura.metodoPago !== 'PPD' || !factura.uuid || factura.estatus.includes('Cancelada') || factura.estatus.includes('Complementado')) {
+  if (factura.metodoPago !== 'PPD' || !factura.uuid || factura.estatus.includes('Cancelada')) {
     return <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>N/A</span>;
   }
 

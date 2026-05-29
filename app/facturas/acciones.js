@@ -747,10 +747,14 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
     }
 
     const updatedComplements = fac.complementosPago.filter(c => c.id !== receiptId && c.receipt_id !== receiptId);
+    const newStatus = updatedComplements.length === 0 ? 'Timbrada' : 'Timbrada - Complementado Local';
 
     await prisma.factura.update({
       where: { id: facturaId },
-      data: { complementosPago: updatedComplements }
+      data: { 
+        complementosPago: updatedComplements,
+        estatus: newStatus
+      }
     });
 
     return { success: true };
