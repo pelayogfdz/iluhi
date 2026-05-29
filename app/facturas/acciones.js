@@ -721,13 +721,13 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
       const payload = { motive: motivo };
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
-        await tenantFacturapi.receipts.cancel(receiptId, payload);
+        await tenantFacturapi.invoices.cancel(receiptId, payload);
       } catch (pacError) {
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
           console.log("Facturapi rechazó Live por falta de CSD real. Cancelando complemento con Test Key...");
           const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
           const testFacturapi = new facturapi.constructor(fallbackKey);
-          await testFacturapi.receipts.cancel(receiptId, payload);
+          await testFacturapi.invoices.cancel(receiptId, payload);
         } else {
           // Si dice que ya está en proceso de cancelación, lo ignoramos y lo borramos localmente
           const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
