@@ -122,7 +122,7 @@ export default function BotonComplemento({ factura, onComplement }) {
              <div style={{ marginBottom: '1rem' }}>
                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Fecha de Pago (Opcional)</label>
                <input 
-                 type="datetime-local" 
+                 type="date" 
                  className="input" 
                  value={fechaPago} 
                  onChange={(e) => setFechaPago(e.target.value)} 

@@ -542,9 +542,13 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
             data: [
               {
                 payment_form: formaPago,
-                payment_date: fechaPago 
-                   ? (fechaPago.includes('T') && fechaPago.split(':').length === 2 ? `${fechaPago}:00` : fechaPago)
-                   : new Date().toISOString(),
+                date: (() => {
+                  if (!fechaPago) return new Date().toISOString();
+                  if (fechaPago.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    return `${fechaPago}T12:00:00`;
+                  }
+                  return fechaPago;
+                })(),
                 currency: moneda || 'MXN',
                 exchange: parseFloat(tipoCambio) || 1,
                 numOperacion: numOperacion || undefined,
