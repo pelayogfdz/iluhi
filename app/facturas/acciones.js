@@ -284,7 +284,14 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
           await testFacturapi.invoices.cancel(fac.uuid, payload);
         } else {
           const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
-          throw new Error(errorMsg);
+          const isSubscriptionError = errorMsg.toLowerCase().includes('suscrip') || 
+                                     errorMsg.toLowerCase().includes('plan') || 
+                                     errorMsg.toLowerCase().includes('suscripcion');
+          if (isSubscriptionError) {
+            console.log("Error de suscripción en Facturapi al cancelar factura. Cancelando localmente en la base de datos.");
+          } else {
+            throw new Error(errorMsg);
+          }
         }
       }
     } else {
@@ -301,6 +308,89 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
     console.error("Error al cancelar factura: ", error);
     return { success: false, error: error.message };
   }
+}
+
+function extractTaxesFromXml(xmlText) {
+  const taxes = [];
+  const seen = new Set();
+  
+  // 1. Parse Traslados
+  const trasladoRegex = /<[^>]*Traslado\s+([^>]*)\/?>/gi;
+  let match;
+  while ((match = trasladoRegex.exec(xmlText)) !== null) {
+    const attrsStr = match[1];
+    const baseAttr = attrsStr.match(/Base\s*=\s*["']([^"']*)["']/i);
+    const impuestoAttr = attrsStr.match(/Impuesto\s*=\s*["']([^"']*)["']/i);
+    const tasaAttr = attrsStr.match(/TasaOCuota\s*=\s*["']([^"']*)["']/i);
+    const importeAttr = attrsStr.match(/Importe\s*=\s*["']([^"']*)["']/i);
+    
+    if (impuestoAttr && tasaAttr) {
+      const base = baseAttr ? parseFloat(baseAttr[1]) : 0;
+      const impuestoCode = impuestoAttr[1];
+      const rate = parseFloat(tasaAttr[1]);
+      const importe = importeAttr ? parseFloat(importeAttr[1]) : 0;
+      
+      let type = "IVA";
+      if (impuestoCode === "001") type = "ISR";
+      if (impuestoCode === "002") type = "IVA";
+      if (impuestoCode === "003") type = "IEPS";
+      
+      const key = `${type}_${rate}_T`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        taxes.push({
+          type,
+          rate,
+          withholding: false,
+          originalBaseSum: base || (importe / (rate || 1))
+        });
+      } else {
+        const existing = taxes.find(t => t.type === type && t.rate === rate && !t.withholding);
+        if (existing) {
+          existing.originalBaseSum += (base || (importe / (rate || 1)));
+        }
+      }
+    }
+  }
+
+  // 2. Parse Retenciones
+  const retencionRegex = /<[^>]*Retencion\s+([^>]*)\/?>/gi;
+  while ((match = retencionRegex.exec(xmlText)) !== null) {
+    const attrsStr = match[1];
+    const baseAttr = attrsStr.match(/Base\s*=\s*["']([^"']*)["']/i);
+    const impuestoAttr = attrsStr.match(/Impuesto\s*=\s*["']([^"']*)["']/i);
+    const tasaAttr = attrsStr.match(/TasaOCuota\s*=\s*["']([^"']*)["']/i);
+    const importeAttr = attrsStr.match(/Importe\s*=\s*["']([^"']*)["']/i);
+    
+    if (impuestoAttr && tasaAttr) {
+      const base = baseAttr ? parseFloat(baseAttr[1]) : 0;
+      const impuestoCode = impuestoAttr[1];
+      const rate = parseFloat(tasaAttr[1]);
+      const importe = importeAttr ? parseFloat(importeAttr[1]) : 0;
+      
+      let type = "IVA";
+      if (impuestoCode === "001") type = "ISR";
+      if (impuestoCode === "002") type = "IVA";
+      if (impuestoCode === "003") type = "IEPS";
+      
+      const key = `${type}_${rate}_W`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        taxes.push({
+          type,
+          rate,
+          withholding: true,
+          originalBaseSum: base || (importe / (rate || 1))
+        });
+      } else {
+        const existing = taxes.find(t => t.type === type && t.rate === rate && t.withholding);
+        if (existing) {
+          existing.originalBaseSum += (base || (importe / (rate || 1)));
+        }
+      }
+    }
+  }
+  return taxes;
 }
 
 export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago, moneda = 'MXN', tipoCambio = 1, numOperacion = '') {
@@ -320,20 +410,29 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       const tenantFacturapi = new facturapi.constructor(activeTenantKey);
       
-      // fac.uuid stores the Facturapi Internal ID in our DB. We need the real SAT UUID.
-      const originalInvoice = await tenantFacturapi.invoices.retrieve(fac.uuid).catch(() => null);
-      if (!originalInvoice || !originalInvoice.uuid) {
-        return { success: false, error: 'No se pudo obtener el UUID del SAT para esta factura. Es posible que aún no esté timbrada.' };
+      let originalInvoice = null;
+      let realSatUuid = null;
+      const isSatUuid = fac.uuid && fac.uuid.length === 36 && fac.uuid.includes('-');
+      
+      if (!isSatUuid) {
+        originalInvoice = await tenantFacturapi.invoices.retrieve(fac.uuid).catch(() => null);
+        if (originalInvoice) {
+          realSatUuid = originalInvoice.uuid;
+        }
+      } else {
+        realSatUuid = fac.uuid;
       }
       
-      const realSatUuid = originalInvoice.uuid;
+      if (!realSatUuid) {
+        return { success: false, error: 'No se pudo obtener el UUID del SAT para esta factura. Es posible que aún no esté timbrada.' };
+      }
 
       // Calcular impuestos proporcionales (Requerido por SAT CFDI 4.0 al usar uuid directamente)
       const montoAbonadoFloat = parseFloat(montoAbonado);
       let taxObjectToSet = "01"; // 01 - No objeto de impuesto
       const relatedTaxes = [];
       
-      if (originalInvoice.items && originalInvoice.items.length > 0) {
+      if (originalInvoice && originalInvoice.items && originalInvoice.items.length > 0) {
         const invoiceTaxesMap = {};
         let totalBaseOriginal = 0;
         
@@ -369,13 +468,50 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
                base: parseFloat((t.originalBaseSum * propFactor).toFixed(6))
            });
         });
+      } else {
+        // Fallback para facturas importadas/locales (cuando originalInvoice es null en Facturapi)
+        let parsedTaxes = [];
+        if (fac.xmlBase64) {
+          try {
+            const xmlText = Buffer.from(fac.xmlBase64, 'base64').toString('utf8');
+            parsedTaxes = extractTaxesFromXml(xmlText);
+          } catch (xmlError) {
+            console.error("Error parsing xmlBase64: ", xmlError);
+          }
+        }
+        
+        if (parsedTaxes.length > 0) {
+          taxObjectToSet = "02";
+          const propFactor = fac.total > 0 ? (montoAbonadoFloat / fac.total) : 0;
+          parsedTaxes.forEach(t => {
+            relatedTaxes.push({
+              type: t.type,
+              rate: t.rate,
+              withholding: t.withholding,
+              base: parseFloat((t.originalBaseSum * propFactor).toFixed(6))
+            });
+          });
+        } else if (fac.totalImpuestosTrasladados > 0) {
+          taxObjectToSet = "02";
+          const propFactor = fac.total > 0 ? (montoAbonadoFloat / fac.total) : 0;
+          relatedTaxes.push({
+            type: "IVA",
+            rate: 0.16,
+            withholding: false,
+            base: parseFloat((fac.subTotal * propFactor).toFixed(6))
+          });
+        }
       }
+
+      const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
+      const previousPaymentsSum = existingComplements.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0);
+      const computedLastBalance = fac.total - previousPaymentsSum;
 
       const relatedDocPayload = {
         uuid: realSatUuid,
         amount: montoAbonadoFloat,
-        installment: 1,
-        last_balance: originalInvoice.amount_due || originalInvoice.total || montoAbonadoFloat
+        installment: existingComplements.length + 1,
+        last_balance: originalInvoice ? (originalInvoice.amount_due || originalInvoice.total || montoAbonadoFloat) : computedLastBalance
       };
       
       // Facturapi requiere declarar los impuestos desglosados (pero no el tax_object manualmente)
@@ -434,7 +570,6 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         }
       }
 
-      const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
       if (newReceipt) {
         existingComplements.push({
           id: newReceipt.id,
@@ -596,7 +731,12 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
         } else {
           // Si dice que ya está en proceso de cancelación, lo ignoramos y lo borramos localmente
           const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
-          if (!errorMsg.toLowerCase().includes('pending cancellation')) {
+          const isSubscriptionError = errorMsg.toLowerCase().includes('suscrip') || 
+                                     errorMsg.toLowerCase().includes('plan') || 
+                                     errorMsg.toLowerCase().includes('suscripcion');
+          if (isSubscriptionError) {
+            console.log("Error de suscripción en Facturapi al cancelar complemento. Cancelando localmente en la base de datos.");
+          } else if (!errorMsg.toLowerCase().includes('pending cancellation')) {
             throw new Error(errorMsg);
           }
         }
