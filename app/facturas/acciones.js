@@ -276,22 +276,21 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         await tenantFacturapi.invoices.cancel(fac.uuid, payload);
-        } catch (pacError) {
+      } catch (pacError) {
+        const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+        console.error("Facturapi cancel error for invoice, proceeding locally:", errorMsg);
+        
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
           console.log("Facturapi rechazó Live por falta de CSD real. Cancelando con Test Key...");
-          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
-          const testFacturapi = new facturapi.constructor(fallbackKey);
-          await testFacturapi.invoices.cancel(fac.uuid, payload);
-        } else {
-          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
-          const isSubscriptionError = errorMsg.toLowerCase().includes('suscrip') || 
-                                     errorMsg.toLowerCase().includes('plan') || 
-                                     errorMsg.toLowerCase().includes('suscripcion');
-          if (isSubscriptionError) {
-            console.log("Error de suscripción en Facturapi al cancelar factura. Cancelando localmente en la base de datos.");
-          } else {
-            throw new Error(errorMsg);
+          try {
+            const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+            const testFacturapi = new facturapi.constructor(fallbackKey);
+            await testFacturapi.invoices.cancel(fac.uuid, payload);
+          } catch (testError) {
+            console.error("Test Key cancel failed as well, proceeding locally:", testError.message);
           }
+        } else {
+          console.log("Ignorando error de cancelación de Facturapi para permitir cancelación local.");
         }
       }
     } else {
@@ -543,7 +542,9 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
             data: [
               {
                 payment_form: formaPago,
-                date: fechaPago ? new Date(fechaPago).toISOString() : new Date().toISOString(),
+                payment_date: fechaPago 
+                   ? (fechaPago.includes('T') && fechaPago.split(':').length === 2 ? `${fechaPago}:00` : fechaPago)
+                   : new Date().toISOString(),
                 currency: moneda || 'MXN',
                 exchange: parseFloat(tipoCambio) || 1,
                 numOperacion: numOperacion || undefined,
@@ -723,22 +724,22 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         await tenantFacturapi.invoices.cancel(receiptId, payload);
       } catch (pacError) {
+        const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+        console.error("Facturapi cancel error for complement, proceeding locally:", errorMsg);
+        
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
           console.log("Facturapi rechazó Live por falta de CSD real. Cancelando complemento con Test Key...");
-          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
-          const testFacturapi = new facturapi.constructor(fallbackKey);
-          await testFacturapi.invoices.cancel(receiptId, payload);
-        } else {
-          // Si dice que ya está en proceso de cancelación, lo ignoramos y lo borramos localmente
-          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
-          const isSubscriptionError = errorMsg.toLowerCase().includes('suscrip') || 
-                                     errorMsg.toLowerCase().includes('plan') || 
-                                     errorMsg.toLowerCase().includes('suscripcion');
-          if (isSubscriptionError) {
-            console.log("Error de suscripción en Facturapi al cancelar complemento. Cancelando localmente en la base de datos.");
-          } else if (!errorMsg.toLowerCase().includes('pending cancellation')) {
-            throw new Error(errorMsg);
+          try {
+            const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
+            const testFacturapi = new facturapi.constructor(fallbackKey);
+            await testFacturapi.invoices.cancel(receiptId, payload);
+          } catch (testError) {
+            console.error("Test Key cancel failed as well, proceeding locally:", testError.message);
           }
+        } else {
+          // Si es cualquier otro error (como servicio de cancelación no disponible, plan, etc.),
+          // lo ignoramos para no bloquear al usuario y permitir la cancelación local.
+          console.log("Ignorando error de cancelación de Facturapi para permitir eliminación local.");
         }
       }
     } else {
