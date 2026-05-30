@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import prisma from "../../lib/prisma";
 import FlujoTrabajoClient from "./FlujoTrabajoClient";
 import { getSessionUser } from "../../lib/auth";
