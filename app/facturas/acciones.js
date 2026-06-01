@@ -229,7 +229,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         notasServicio: notasServicio || null,
         uuid: receipt.id || null,
         serie: receipt.series || null,
-        folio: receipt.folio ? parseInt(receipt.folio, 10) : null
+        folio: receipt.folio_number ? parseInt(receipt.folio_number, 10) : null
       }
     });
 
