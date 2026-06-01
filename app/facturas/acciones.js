@@ -182,22 +182,15 @@ export async function prepararYTimbrarFactura(formDataRaw) {
         receipt = await tenantFacturapi.invoices.create(facturaPayload);
         fallbackStatus = 'Timbrada';
       } catch (pacError) {
+        const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
-          console.log("Facturapi rechazó Live por falta de CSD real. Intentando con Test Key...");
-          const fallbackKey = empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
-          const testFacturapi = new facturapi.constructor(fallbackKey);
-          try {
-            receipt = await testFacturapi.invoices.create(facturaPayload);
-            fallbackStatus = 'Timbrada (Test Fallback)';
-          } catch(fallbackErr) {
-             const errorMsg = fallbackErr.response?.data?.message || fallbackErr.message || "Error desconocido";
-             console.error("Fallo de API del PAC (Fallback Test): ", errorMsg);
-             return { success: false, error: 'Error del SAT/PAC: ' + errorMsg }
-          }
+          const detailedMsg = "No se pudo timbrar en producción porque no se han configurado correctamente los Sellos Digitales (CSD) en Facturapi. " + 
+            "Por favor, ingrese al panel de control de Facturapi, cargue sus archivos .CER y .KEY vigentes del CSD (no e.firma) y configure su contraseña. Detalle técnico: " + errorMsg;
+          console.error("Fallo de CSD en PAC: ", detailedMsg);
+          return { success: false, error: detailedMsg };
         } else {
-          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
           console.error("Fallo de API del PAC: ", errorMsg);
-          return { success: false, error: 'Error del SAT/PAC: ' + errorMsg }
+          return { success: false, error: 'Error del SAT/PAC: ' + errorMsg };
         }
       }
     } else {
@@ -564,13 +557,12 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         newReceipt = await tenantFacturapi.invoices.create(payload);
       } catch (pacError) {
+        const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
-          console.log("Facturapi rechazó Live por falta de CSD real. Emitiendo Complemento con Test Key...");
-          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
-          const testFacturapi = new facturapi.constructor(fallbackKey);
-          newReceipt = await testFacturapi.invoices.create(payload);
+          const detailedMsg = "No se pudo timbrar el complemento de pago en producción porque no se han configurado correctamente los Sellos Digitales (CSD) en Facturapi. " + 
+            "Por favor, cargue sus archivos .CER y .KEY del CSD vigentes en su panel de Facturapi. Detalle técnico: " + errorMsg;
+          throw new Error(detailedMsg);
         } else {
-          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
           throw new Error(errorMsg);
         }
       }
@@ -680,14 +672,12 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
         receipt = await tenantFacturapi.invoices.create(payload);
         fallbackStatus = 'Nota de Crédito Generada';
       } catch (pacError) {
+        const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
         if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
-          console.log("Facturapi rechazó Live por falta de CSD real. Emitiendo Nota de Crédito con Test Key...");
-          const fallbackKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
-          const testFacturapi = new facturapi.constructor(fallbackKey);
-          receipt = await testFacturapi.invoices.create(payload);
-          fallbackStatus = 'Nota de Crédito Generada (Test Fallback)';
+          const detailedMsg = "No se pudo timbrar la nota de crédito en producción porque no se han configurado correctamente los Sellos Digitales (CSD) en Facturapi. " + 
+            "Por favor, cargue sus archivos .CER y .KEY del CSD vigentes en su panel de Facturapi. Detalle técnico: " + errorMsg;
+          throw new Error(detailedMsg);
         } else {
-          const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
           throw new Error(errorMsg);
         }
       }
