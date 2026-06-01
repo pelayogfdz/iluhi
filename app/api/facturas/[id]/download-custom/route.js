@@ -25,8 +25,6 @@ export async function GET(request, { params }) {
     let targetKey = fac.empresa.facturapiLiveKey || process.env.FACTURAPI_LIVE_KEY;
     if (fac.estatus && fac.estatus.includes('Test Fallback')) {
       targetKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
-    } else if (!fac.empresa.cerPath) {
-      targetKey = fac.empresa.facturapiTestKey || process.env.FACTURAPI_TEST_KEY || process.env.FACTURAPI_LIVE_KEY;
     }
 
     if (!targetKey || targetKey.includes('PENDING_KEY')) {

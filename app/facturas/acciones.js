@@ -172,7 +172,7 @@ export async function prepararYTimbrarFactura(formDataRaw) {
 
     // 3. Ejecutar Disparo al PAC (Multi-Tenant Facturapi engine)
     // Si no hay CSD cargado, Facturapi rechazará el timbrado Live. Hacemos fallback automático a Test Mode.
-    const activeTenantKey = (empresa.cerPath && empresa.facturapiLiveKey) 
+    const activeTenantKey = empresa.facturapiLiveKey 
       ? empresa.facturapiLiveKey 
       : (empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
     
@@ -265,7 +265,7 @@ export async function cancelarFactura(facturaId, motivo = '02', uuidSustitucion 
     });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
 
-    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+    const activeTenantKey = fac.empresa.facturapiLiveKey
       ? fac.empresa.facturapiLiveKey 
       : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
@@ -402,7 +402,7 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
     
     if (fac.metodoPago !== 'PPD') return { success: false, error: 'Solo facturas PPD admiten complementos.' }
 
-    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+    const activeTenantKey = fac.empresa.facturapiLiveKey
       ? fac.empresa.facturapiLiveKey 
       : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
@@ -627,7 +627,7 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
     });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
 
-    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+    const activeTenantKey = fac.empresa.facturapiLiveKey
       ? fac.empresa.facturapiLiveKey 
       : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
@@ -718,7 +718,7 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
     });
     if (!fac || !fac.complementosPago) return { success: false, error: 'Factura o complemento no encontrado.' };
 
-    const activeTenantKey = (fac.empresa.cerPath && fac.empresa.facturapiLiveKey)
+    const activeTenantKey = fac.empresa.facturapiLiveKey
       ? fac.empresa.facturapiLiveKey 
       : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
 
