@@ -21,6 +21,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
   const [fechaFin, setFechaFin] = useState(searchParams.get('fechaFin') || '')
   const [empresaFiltro, setEmpresaFiltro] = useState(searchParams.get('empresa') || '')
   const [clienteFiltro, setClienteFiltro] = useState(searchParams.get('cliente') || '')
+  const [folioFiltro, setFolioFiltro] = useState(searchParams.get('folio') || '')
   const [orden, setOrden] = useState(searchParams.get('orden') || 'desc')
   const q = searchParams.get('q') || ''
 
@@ -43,6 +44,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
   const applyFilters = () => {
     const params = new URLSearchParams()
     if (q) params.set('q', q)
+    if (folioFiltro) params.set('folio', folioFiltro)
     if (fechaInicio) params.set('fechaInicio', fechaInicio)
     if (fechaFin) params.set('fechaFin', fechaFin)
     if (empresaFiltro) params.set('empresa', empresaFiltro)
@@ -53,6 +55,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
   }
 
   const clearFilters = () => {
+    setFolioFiltro('')
     setFechaInicio('')
     setFechaFin('')
     setEmpresaFiltro('')
@@ -161,6 +164,17 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
       {/* Panel de Filtros Secundarios */}
       <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
+          <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '4px'}}>Buscar Folio</label>
+          <input 
+            type="text" 
+            placeholder="Ej. F1 o 5001" 
+            className="input" 
+            value={folioFiltro} 
+            onChange={e => setFolioFiltro(e.target.value)} 
+            style={{maxWidth: '130px'}} 
+          />
+        </div>
+        <div>
           <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '4px'}}>Empresa Emisora</label>
           <select className="input" value={empresaFiltro} onChange={e => setEmpresaFiltro(e.target.value)} style={{minWidth: '200px'}}>
             <option value="">Todas las Empresas</option>
@@ -195,7 +209,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
            <button className="btn" onClick={applyFilters}>Aplicar Filtros</button>
-           {(fechaInicio || fechaFin || empresaFiltro || clienteFiltro || orden !== 'desc') && (
+           {(fechaInicio || fechaFin || empresaFiltro || clienteFiltro || folioFiltro || orden !== 'desc') && (
              <button className="btn" style={{background: 'rgba(255,255,255,0.1)'}} onClick={clearFilters}>Limpiar</button>
            )}
         </div>
@@ -220,7 +234,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                      onChange={selectAll} 
                      checked={selectedDocs.length === facturasInitial.filter(f => f.uuid).length && facturasInitial.length > 0} />
             </th>
-            <th>ID Interno / UUID</th>
+            <th>Folio / UUID</th>
             <th>Emisor</th>
             <th>Cliente Receptor</th>
             <th>Método</th>
@@ -245,7 +259,10 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                 </td>
                 <td>
                   <div style={{fontSize: '0.85rem', opacity: 0.7}}>{new Date(fac.createdAt).toLocaleTimeString()} {fac.id.substring(0,8)}...</div>
-                  <div style={{fontFamily: 'monospace', fontWeight: 'bold'}}>{fac.uuid || 'En Proceso...'}</div>
+                  <div style={{fontWeight: 'bold', color: 'var(--primary)', fontSize: '1rem'}}>
+                    {fac.serie || ''}{fac.folio || 'Sin Folio'}
+                  </div>
+                  <div style={{fontFamily: 'monospace', fontSize: '0.8rem', opacity: 0.5}}>{fac.uuid || 'En Proceso...'}</div>
                 </td>
                 <td>{fac.empresa.razonSocial}</td>
                 <td>

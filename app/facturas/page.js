@@ -12,6 +12,7 @@ import { getSessionUser } from '../../lib/auth';
 export default async function FacturaHubPage({ searchParams }) {
   const resolvedParams = await searchParams
   const q = resolvedParams?.q || ""
+  const folioQuery = resolvedParams?.folio || ""
   const empresaId = resolvedParams?.empresa || ""
   const clienteId = resolvedParams?.cliente || ""
   const fechaInicio = resolvedParams?.fechaInicio || ""
@@ -27,14 +28,36 @@ export default async function FacturaHubPage({ searchParams }) {
   const andClauses = []
   
   if (q) {
+    const qNum = parseInt(q, 10);
+    const folioFilter = !isNaN(qNum) ? { folio: qNum } : null;
     andClauses.push({
       OR: [
         { uuid: { contains: q, mode: 'insensitive' } },
         { estatus: { contains: q, mode: 'insensitive' } },
+        { serie: { contains: q, mode: 'insensitive' } },
         { empresa: { razonSocial: { contains: q, mode: 'insensitive' } } },
-        { cliente: { razonSocial: { contains: q, mode: 'insensitive' } } }
+        { cliente: { razonSocial: { contains: q, mode: 'insensitive' } } },
+        ...(folioFilter ? [folioFilter] : [])
       ]
     })
+  }
+
+  if (folioQuery) {
+    const match = folioQuery.match(/^([A-Za-z]+)?\s*(\d+)?$/);
+    if (match) {
+      const parsedSerie = match[1];
+      const parsedFolioStr = match[2];
+      const folioClause = [];
+      if (parsedSerie) {
+        folioClause.push({ serie: { contains: parsedSerie, mode: 'insensitive' } });
+      }
+      if (parsedFolioStr) {
+        folioClause.push({ folio: parseInt(parsedFolioStr, 10) });
+      }
+      if (folioClause.length > 0) {
+        andClauses.push({ AND: folioClause });
+      }
+    }
   }
 
   if (empresaId) {
