@@ -315,18 +315,24 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                     <div style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 'bold', marginBottom: '8px' }}>
                       ↳ Complementos de Pago (REP)
                     </div>
-                    {fac.complementosPago.map(comp => (
-                      <div key={comp.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '4px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '6px' }}>
-                        <span style={{ fontFamily: 'monospace', color: '#ccc', width: '280px', fontSize: '0.85rem' }}>{comp.uuid || comp.id}</span>
-                        <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{new Date(comp.date).toLocaleDateString()}</span>
-                        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
-                          <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>
-                          <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#eab308'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'xml')}>📥 XML REP</button>
-                          <BotonCancelarComplemento facturaId={fac.id} complemento={comp} onCancel={handleCancelComplement} />
+                    {fac.complementosPago.map(comp => {
+                      const compFolio = comp.serie || comp.folio ? `${comp.serie || ''}${comp.folio || ''}` : 'Sin Folio';
+                      return (
+                        <div key={comp.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '4px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '6px' }}>
+                          <span style={{ fontWeight: 'bold', color: 'var(--primary)', minWidth: '70px', fontSize: '0.85rem' }}>
+                            {compFolio}
+                          </span>
+                          <span style={{ fontFamily: 'monospace', color: '#ccc', width: '280px', fontSize: '0.85rem' }}>{comp.uuid || comp.id}</span>
+                          <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{new Date(comp.date).toLocaleDateString()}</span>
+                          <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                            <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>
+                            <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#eab308'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'xml')}>📥 XML REP</button>
+                            <BotonCancelarComplemento facturaId={fac.id} complemento={comp} onCancel={handleCancelComplement} />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </td>
                 </tr>
               )}

@@ -573,6 +573,8 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         existingComplements.push({
           id: newReceipt.id,
           uuid: newReceipt.uuid,
+          serie: newReceipt.series || '',
+          folio: newReceipt.folio_number ? parseInt(newReceipt.folio_number, 10) : null,
           amount: parseFloat(montoAbonado),
           date: new Date().toISOString()
         });
@@ -592,6 +594,8 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
        existingComplements.push({
          id: `sim_comp_${Date.now()}`,
          uuid: `sim_uuid_${Date.now()}`,
+         serie: 'P',
+         folio: Math.floor(Math.random() * 1000) + 1,
          amount: parseFloat(montoAbonado),
          date: new Date().toISOString(),
          simulated: true

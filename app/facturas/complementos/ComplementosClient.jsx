@@ -311,7 +311,10 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
                       <small style={{ color: 'var(--text-secondary)' }}>{comp.cliente.rfc}</small>
                     </td>
                     <td>
-                      <div style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.85rem' }}>{comp.uuid || 'En Proceso (Test)'}</div>
+                      <div style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '1rem' }}>
+                        {comp.serie || comp.folio ? `${comp.serie || ''}${comp.folio || ''}` : 'Sin Folio'}
+                      </div>
+                      <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', opacity: 0.5 }}>{comp.uuid || 'En Proceso (Test)'}</div>
                       <small style={{ opacity: 0.5 }}>ID: {comp.id}</small>
                     </td>
                     <td>{new Date(comp.date).toLocaleDateString()}</td>
