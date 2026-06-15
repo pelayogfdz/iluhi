@@ -15,6 +15,7 @@ export default async function FacturaHubPage({ searchParams }) {
   const folioQuery = resolvedParams?.folio || ""
   const empresaId = resolvedParams?.empresa || ""
   const clienteId = resolvedParams?.cliente || ""
+  const metodoPago = resolvedParams?.metodoPago || ""
   const fechaInicio = resolvedParams?.fechaInicio || ""
   const fechaFin = resolvedParams?.fechaFin || ""
   const orden = resolvedParams?.orden || "desc"
@@ -74,6 +75,10 @@ export default async function FacturaHubPage({ searchParams }) {
 
   if (clienteId) {
     andClauses.push({ clienteId: clienteId });
+  }
+
+  if (metodoPago) {
+    andClauses.push({ metodoPago: metodoPago });
   }
 
   if (fechaInicio || fechaFin) {

@@ -21,6 +21,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
   const [fechaFin, setFechaFin] = useState(searchParams.get('fechaFin') || '')
   const [empresaFiltro, setEmpresaFiltro] = useState(searchParams.get('empresa') || '')
   const [clienteFiltro, setClienteFiltro] = useState(searchParams.get('cliente') || '')
+  const [metodoPagoFiltro, setMetodoPagoFiltro] = useState(searchParams.get('metodoPago') || '')
   const [folioFiltro, setFolioFiltro] = useState(searchParams.get('folio') || '')
   const [orden, setOrden] = useState(searchParams.get('orden') || 'desc')
   const q = searchParams.get('q') || ''
@@ -49,6 +50,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
     if (fechaFin) params.set('fechaFin', fechaFin)
     if (empresaFiltro) params.set('empresa', empresaFiltro)
     if (clienteFiltro) params.set('cliente', clienteFiltro)
+    if (metodoPagoFiltro) params.set('metodoPago', metodoPagoFiltro)
     if (orden) params.set('orden', orden)
     
     router.push(`?${params.toString()}`)
@@ -60,6 +62,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
     setFechaFin('')
     setEmpresaFiltro('')
     setClienteFiltro('')
+    setMetodoPagoFiltro('')
     setOrden('desc')
     router.push(q ? `?q=${q}` : '?')
   }
@@ -193,6 +196,14 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
           </select>
         </div>
         <div>
+          <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '4px'}}>Método de Pago</label>
+          <select className="input" value={metodoPagoFiltro} onChange={e => setMetodoPagoFiltro(e.target.value)} style={{minWidth: '150px'}}>
+            <option value="">Todos</option>
+            <option value="PUE">PUE (Una exhibición)</option>
+            <option value="PPD">PPD (Diferido/Parcialidades)</option>
+          </select>
+        </div>
+        <div>
           <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '4px'}}>Fecha Inicio</label>
           <input type="date" className="input" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
         </div>
@@ -209,7 +220,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
            <button className="btn" onClick={applyFilters}>Aplicar Filtros</button>
-           {(fechaInicio || fechaFin || empresaFiltro || clienteFiltro || folioFiltro || orden !== 'desc') && (
+           {(fechaInicio || fechaFin || empresaFiltro || clienteFiltro || folioFiltro || metodoPagoFiltro || orden !== 'desc') && (
              <button className="btn" style={{background: 'rgba(255,255,255,0.1)'}} onClick={clearFilters}>Limpiar</button>
            )}
         </div>
@@ -281,11 +292,24 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                 <td>{new Date(fac.fechaEmision).toLocaleDateString()}</td>
                 <td>${fac.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>
-                  <span style={{ 
-                     padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
-                     background: fac.estatus.includes('Cancelada') ? 'rgba(225,29,72,0.2)' : fac.estatus.includes('Timbrada') ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,0,0.2)',
-                     color: fac.estatus.includes('Cancelada') ? '#f43f5e' : fac.estatus.includes('Timbrada') ? 'lightgreen' : 'var(--warning-color, yellow)'
-                  }}>{fac.estatus}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ 
+                       padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
+                       background: fac.estatus.includes('Cancelada') ? 'rgba(225,29,72,0.2)' : fac.estatus.includes('Timbrada') ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,0,0.2)',
+                       color: fac.estatus.includes('Cancelada') ? '#f43f5e' : fac.estatus.includes('Timbrada') ? 'lightgreen' : 'var(--warning-color, yellow)',
+                       textAlign: 'center', display: 'inline-block'
+                    }}>{fac.estatus}</span>
+                    {fac.metodoPago === 'PPD' && !fac.estatus.includes('Cancelada') && (
+                      <span style={{
+                        padding: '2px 6px', borderRadius: '4px', fontSize: '11px',
+                        background: (Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0) ? 'rgba(14, 116, 144, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                        color: (Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0) ? '#38bdf8' : '#eab308',
+                        textAlign: 'center', display: 'inline-block'
+                      }}>
+                        {(Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0) ? 'Con Pago REP' : '⏳ Espera de Pago'}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td>
                   {hasUUID ? (
