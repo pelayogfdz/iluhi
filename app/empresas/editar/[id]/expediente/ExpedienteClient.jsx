@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { subirArchivoExpediente, eliminarArchivoExpediente, guardarTextosPlaneacion } from './acciones'
+import { formatDateDDMMYYYY } from '../../../../../lib/date'
 
 export default function ExpedienteClient({ empresaId, objetoSocial, actividadEconomica, archivos }) {
   const [tab, setTab] = useState('EXPEDIENTE')
@@ -71,7 +72,7 @@ export default function ExpedienteClient({ empresaId, objetoSocial, actividadEco
                     {doc.nombreArchivo}
                   </a>
                 </td>
-                <td>{new Date(doc.fechaSubida).toLocaleDateString()}</td>
+                <td>{formatDateDDMMYYYY(doc.fechaSubida)}</td>
                 <td style={{ width: '100px'}}>
                   <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', color: '#ef4444' }} onClick={() => handleEliminar(doc.id)}>Eliminar</button>
                 </td>

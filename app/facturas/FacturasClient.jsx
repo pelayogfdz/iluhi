@@ -9,6 +9,7 @@ import BotonCancelarComplemento from './BotonCancelarComplemento'
 import BotonComplemento from './BotonComplemento'
 import BotonNotaCredito from './BotonNotaCredito'
 import { cancelarFactura, emitirComplementoPago, emitirNotaCredito, cancelarComplementoPago, uploadFacturaPdf } from './acciones'
+import { formatDateDDMMYYYY } from '../../lib/date'
 
 export default function FacturasClient({ facturasInitial, empresas, clientes = [], page = 1, totalPages = 1, totalCount = 0 }) {
   const router = useRouter()
@@ -289,7 +290,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                   <BotonComplemento factura={fac} onComplement={handleComplement} />
                   <BotonNotaCredito factura={fac} onEmit={handleNotaCredito} />
                 </td>
-                <td>{new Date(fac.fechaEmision).toLocaleDateString()}</td>
+                <td>{formatDateDDMMYYYY(fac.fechaEmision)}</td>
                 <td>${fac.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -348,7 +349,7 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                           </span>
                           <span style={{ fontFamily: 'monospace', color: '#ccc', width: '280px', fontSize: '0.85rem' }}>{comp.uuid || comp.id}</span>
                           <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{new Date(comp.date).toLocaleDateString()}</span>
+                          <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{formatDateDDMMYYYY(comp.date)}</span>
                           <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                             <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>
                             <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#eab308'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'xml')}>📥 XML REP</button>

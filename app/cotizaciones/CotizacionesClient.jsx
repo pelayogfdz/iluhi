@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { generarVistaPreviaCotizacion } from './acciones' // We can reuse the action for downloading directly if needed, or create an API route. 
-// Actually, since PDF is generated on the fly, it's better to trigger it via an action or similar, or I can make an API endpoint for it. Let's just create an API endpoint or use a client-side conversion logic.
+import { generarVistaPreviaCotizacion } from './acciones' 
+import { formatDateDDMMYYYY } from '../../lib/date'
 
 export default function CotizacionesClient({ cotizacionesInitial, empresas }) {
   const router = useRouter()
@@ -128,7 +128,7 @@ export default function CotizacionesClient({ cotizacionesInitial, empresas }) {
                   <div style={{fontSize: '0.9rem', fontWeight: 'bold'}}>{cot.cliente.razonSocial}</div>
                   <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>{cot.cliente.rfc}</div>
                 </td>
-                <td>{new Date(cot.fechaEmision).toLocaleDateString()}</td>
+                <td>{formatDateDDMMYYYY(cot.fechaEmision)}</td>
                 <td>${cot.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>
                   <span style={{ 

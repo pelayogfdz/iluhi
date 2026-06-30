@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { emitirComplementoPago, cancelarComplementoPago } from '../acciones'
 import BotonCancelarComplemento from '../BotonCancelarComplemento'
+import { formatDateDDMMYYYY } from '../../../lib/date'
 
 export default function ComplementosClient({ ppdFacturas, empresas, clientes }) {
   const router = useRouter()
@@ -317,7 +318,7 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
                       <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', opacity: 0.5 }}>{comp.uuid || 'En Proceso (Test)'}</div>
                       <small style={{ opacity: 0.5 }}>ID: {comp.id}</small>
                     </td>
-                    <td>{new Date(comp.date).toLocaleDateString()}</td>
+                    <td>{formatDateDDMMYYYY(comp.date)}</td>
                     <td style={{ fontWeight: 'bold', color: 'lightgreen' }}>
                       ${comp.amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>

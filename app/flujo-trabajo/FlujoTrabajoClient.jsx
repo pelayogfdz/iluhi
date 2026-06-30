@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { registrarPagoFlujo, asignarFacturaAPago, editarEmpresaClientePago, eliminarPago } from "./acciones";
+import { formatDateDDMMYYYY } from "../../lib/date";
 
 export default function FlujoTrabajoClient({ 
   facturasDisponibles, 
@@ -207,7 +208,7 @@ export default function FlujoTrabajoClient({
           <span className="bg-gray-100 p-1 rounded">🏦</span> {pago.banco}
         </div>
         <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
-          <span className="bg-gray-100 p-1 rounded">📅</span> {new Date(pago.fechaPago).toLocaleDateString("es-MX")}
+           <span className="bg-gray-100 p-1 rounded">📅</span> {formatDateDDMMYYYY(pago.fechaPago)}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 'use server'
 import prisma from '../../lib/prisma';
 import { getSessionUser } from '../../lib/auth';
+import { formatDateDDMMYYYY } from '../../lib/date';
 
 export async function obtenerReporteFacturas(filtros = {}) {
   try {
@@ -231,7 +232,7 @@ export async function obtenerReporteExcelData(filtros = {}) {
     const data = facturasRaw.map(f => ({
       'UUID': f.uuid || 'N/A',
       'Folio Interno': f.folio ? `${f.serie || ''}${f.folio}` : 'N/A',
-      'Fecha Emisión': f.fechaEmision.toLocaleDateString(),
+      'Fecha Emisión': formatDateDDMMYYYY(f.fechaEmision),
       'Empresa Emisora': f.empresa?.razonSocial || 'Desconocida',
       'Cliente Receptor': f.cliente?.razonSocial || 'Desconocido',
       'SubTotal': f.subTotal,

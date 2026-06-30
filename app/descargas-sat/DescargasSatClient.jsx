@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { fetchDocumentosSATHistory, getEmpresasSelector, fetchBase64Documento, subirOpinionManual } from './acciones'
 import SearchableSelect from '../components/SearchableSelect'
+import { formatDateDDMMYYYY } from '../../lib/date'
 
 export default function DescargasSatClient({ empresas }) {
   // === Sync Controls ===
@@ -298,7 +299,7 @@ export default function DescargasSatClient({ empresas }) {
                   <tbody>
                     {items.length === 0 ? <tr><td colSpan="6" style={{ textAlign: 'center' }}>No existen facturas XML descargadas para los criterios seleccionados.</td></tr> : items.map((f) => (
                       <tr key={f.id}>
-                        <td>{new Date(f.fechaEmision).toLocaleDateString()}</td>
+                        <td>{formatDateDDMMYYYY(f.fechaEmision)}</td>
                         <td><span style={{fontSize: '0.85rem', color: '#333', fontFamily: 'monospace'}}>{f.uuid}</span></td>
                         <td>{f.receptorNombre || 'N/A'}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.receptorRfc}</span></td>
                         <td>{f.empresa?.razonSocial}</td>
@@ -336,7 +337,7 @@ export default function DescargasSatClient({ empresas }) {
                   <tbody>
                     {items.length === 0 ? <tr><td colSpan="7" style={{ textAlign: 'center' }}>No existen facturas de proveedores descargadas para los criterios seleccionados.</td></tr> : items.map((f) => (
                       <tr key={f.id}>
-                        <td>{new Date(f.fechaEmision).toLocaleDateString()}</td>
+                        <td>{formatDateDDMMYYYY(f.fechaEmision)}</td>
                         <td><span style={{fontSize: '0.85rem', color: '#333', fontFamily: 'monospace'}}>{f.uuid}</span></td>
                         <td>{f.emisorNombre}<br/><span style={{fontSize: '0.75rem', color: '#666'}}>{f.emisorRfc}</span></td>
                         <td>{f.empresa?.razonSocial}</td>

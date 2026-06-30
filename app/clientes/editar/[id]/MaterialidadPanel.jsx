@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { subirEvidenciaCliente, eliminarEvidenciaCliente } from '../../acciones'
+import { formatDateDDMMYYYY } from '../../../../lib/date'
 
 export default function MaterialidadPanel({ clienteId, archivos = [] }) {
   const [uploading, setUploading] = useState(false)
@@ -64,7 +65,7 @@ export default function MaterialidadPanel({ clienteId, archivos = [] }) {
                      {doc.nombreArchivo}
                    </a>
                  </td>
-                 <td>{new Date(doc.fechaSubida).toLocaleDateString()}</td>
+                 <td>{formatDateDDMMYYYY(doc.fechaSubida)}</td>
                  <td style={{ width: '100px'}}>
                    <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', color: '#ef4444' }} onClick={() => handleEliminar(doc.id)}>Eliminar</button>
                  </td>

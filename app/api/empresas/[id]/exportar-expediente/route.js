@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../../lib/prisma';
 import { PDFDocument, StandardFonts, rgb, PDFString, PDFName } from 'pdf-lib';
+import { formatDateDDMMYYYY } from '../../../../../lib/date';
 
 export const runtime = 'nodejs';
 
@@ -48,7 +49,7 @@ export async function GET(request, { params }) {
         // Footer line
         page.drawLine({ start: { x: 50, y: 40 }, end: { x: 545, y: 40 }, thickness: 1, color: lightGray });
         page.drawText('Expediente Corporativo Confidencial - ' + (empresa.razonSocial || empresa.rfc), { x: 50, y: 25, size: 8, font: fontNormal, color: lightGray });
-        page.drawText(new Date().toLocaleDateString(), { x: 500, y: 25, size: 8, font: fontNormal, color: lightGray });
+        page.drawText(formatDateDDMMYYYY(new Date()), { x: 500, y: 25, size: 8, font: fontNormal, color: lightGray });
     };
 
     let page = mainPdf.addPage([595.28, 841.89]); // A4 size
@@ -180,7 +181,7 @@ export async function GET(request, { params }) {
       yPos -= 18;
     };
     
-    const formatDate = (date) => date ? new Date(date).toLocaleDateString('es-MX') : '';
+    const formatDate = (date) => formatDateDDMMYYYY(date);
 
     drawItem(`Opinión de Cumplimiento SAT (32-D) - ${opinionSat ? 'Corte: ' + formatDate(opinionSat.fechaDocumento) : 'NO DISPONIBLE'}`, !!opinionSat);
     drawItem(`Constancia de Situación Fiscal (CSF) - ${constancia ? 'Corte: ' + formatDate(constancia.fechaDocumento) : 'NO DISPONIBLE'}`, !!constancia);

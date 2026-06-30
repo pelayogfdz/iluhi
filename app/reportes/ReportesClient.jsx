@@ -5,6 +5,7 @@ import { obtenerReporteFacturas, obtenerReporteExcelData } from './acciones';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import * as XLSX from 'xlsx';
 import Select from 'react-select';
+import { formatDateDDMMYYYY } from '../../lib/date';
 
 const customSelectStyles = {
   control: (base) => ({
@@ -314,7 +315,7 @@ export default function ReportesClient({ empresas, clientes }) {
                       <span style={{ color: 'var(--text-secondary)' }}>Sin Folio</span>
                     )}
                   </td>
-                  <td>{new Date(f.fecha).toLocaleDateString()}</td>
+                  <td>{formatDateDDMMYYYY(f.fecha)}</td>
                   <td>{f.empresa}</td>
                   <td>{f.cliente}</td>
                   <td style={{ fontWeight: 'bold' }}>${f.total.toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
