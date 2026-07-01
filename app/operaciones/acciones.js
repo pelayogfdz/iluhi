@@ -20,7 +20,7 @@ export async function obtenerOperaciones() {
   }
 }
 
-async function realizarValidacionCEP(operacionId, datos) {
+export async function realizarValidacionCEP(operacionId, datos) {
   const { fechaOperacion, claveRastreo, bancoEmisor, bancoReceptor, cuentaBeneficiario, monto } = datos;
   
   let formattedDate = fechaOperacion;
@@ -49,7 +49,8 @@ async function realizarValidacionCEP(operacionId, datos) {
       data: {
         estatus: 'Confirmado CEP',
         cepPdfBase64: pdfBuffer.toString('base64'),
-        cepXmlBase64: xmlBuffer.toString('base64')
+        cepXmlBase64: xmlBuffer.toString('base64'),
+        ultimoIntentoCEP: new Date()
       }
     });
 
@@ -89,7 +90,10 @@ async function realizarValidacionCEP(operacionId, datos) {
 
     return await prisma.operacion.update({
       where: { id: operacionId },
-      data: { estatus }
+      data: { 
+        estatus,
+        ultimoIntentoCEP: new Date()
+      }
     });
   }
 }

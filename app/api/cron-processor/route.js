@@ -296,5 +296,52 @@ export async function GET(request) {
       console.error("Error global procesando encuestas:", err);
   }
 
-  return NextResponse.json({ success: true, processed: procesadas, encuestasProcesadas });
+  // === BACKGROUND SPEI CEP VERIFICATION RETRIES ===
+  let cepsReintentados = 0;
+  try {
+    const doceHorasAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    
+    const operationsToRetry = await prisma.operacion.findMany({
+      where: {
+        createdAt: { gte: doceHorasAgo },
+        estatus: { in: ['Pendiente', 'CEP No Encontrado', 'Error CEP'] },
+        fechaOperacion: { not: null },
+        claveRastreo: { not: null },
+        bancoEmisor: { not: null },
+        bancoReceptor: { not: null },
+        cuentaBeneficiario: { not: null },
+        monto: { gt: 0 },
+        OR: [
+          { ultimoIntentoCEP: null },
+          { ultimoIntentoCEP: { lte: tenMinutesAgo } }
+        ]
+      },
+      take: 5
+    });
+
+    if (operationsToRetry.length > 0) {
+      const { realizarValidacionCEP } = await import('../../operaciones/acciones');
+      for (const op of operationsToRetry) {
+        try {
+          console.log(`[CRON] Reintentando validación CEP para operación ${op.id} (${op.claveRastreo})`);
+          await realizarValidacionCEP(op.id, {
+            fechaOperacion: op.fechaOperacion,
+            claveRastreo: op.claveRastreo,
+            bancoEmisor: op.bancoEmisor,
+            bancoReceptor: op.bancoReceptor,
+            cuentaBeneficiario: op.cuentaBeneficiario,
+            monto: op.monto
+          });
+          cepsReintentados++;
+        } catch (opErr) {
+          console.error(`[CRON] Error validando CEP para operación ${op.id}:`, opErr.message);
+        }
+      }
+    }
+  } catch (cepCronErr) {
+    console.error("Error global en reintento CEP:", cepCronErr);
+  }
+
+  return NextResponse.json({ success: true, processed: procesadas, encuestasProcesadas, cepsReintentados });
 }

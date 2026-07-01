@@ -487,6 +487,8 @@ model Operacion {
   creadorId           String?
   creador             Usuario? @relation("UsuarioOperaciones", fields: [creadorId], references: [id])
   
+  ultimoIntentoCEP    DateTime?
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
