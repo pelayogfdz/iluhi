@@ -118,10 +118,18 @@ export default function OperacionesClient({ user, operacionesIniciales }) {
   const [parsingMsg, setParsingMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [verifyingCepId, setVerifyingCepId] = useState(null);
+  const [showManualFields, setShowManualFields] = useState(false);
 
   const handleParseReceipt = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    
+    // Check if it's an image
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setParsingMsg('Comprobante de imagen detectado. Ingrese los detalles de pago manualmente.');
+      setShowManualFields(true);
+      return;
+    }
     
     setParsingReceipt(true);
     setParsingMsg('Analizando comprobante...');
@@ -144,12 +152,21 @@ export default function OperacionesClient({ user, operacionesIniciales }) {
         if (d.cuentaBeneficiario) setCuentaBeneficiario(d.cuentaBeneficiario);
         if (d.bancoEmisor) setBancoEmisor(d.bancoEmisor);
         if (d.bancoReceptor) setBancoReceptor(d.bancoReceptor);
-        setParsingMsg('¡Datos extraídos! Favor de revisarlos.');
+        
+        const hasAll = d.fecha && d.claveRastreo && d.monto && d.cuentaBeneficiario && d.bancoEmisor && d.bancoReceptor;
+        if (hasAll) {
+          setParsingMsg('¡Datos extraídos con éxito! Confirme los campos a continuación.');
+        } else {
+          setParsingMsg('⚠️ Algunos campos requeridos no pudieron ser detectados. Complete los campos vacíos manualmente.');
+        }
+        setShowManualFields(true);
       } else {
         setParsingMsg('No se pudieron extraer datos del archivo. Ingréselos manualmente.');
+        setShowManualFields(true);
       }
     } catch (err) {
       setParsingMsg('Error leyendo archivo. Ingréselos manualmente.');
+      setShowManualFields(true);
     } finally {
       setParsingReceipt(false);
     }
@@ -177,6 +194,7 @@ export default function OperacionesClient({ user, operacionesIniciales }) {
         setBancoReceptor('');
         setRequiereDispersion(false);
         setParsingMsg('');
+        setShowManualFields(false);
       } else {
         alert(res.error || 'Error al guardar la operación');
       }
@@ -261,7 +279,7 @@ export default function OperacionesClient({ user, operacionesIniciales }) {
                 <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', color: '#cbd5e1' }}>1. Subir Comprobante de Pago (Opcional - Extrae datos)</label>
                 <input 
                   type="file" 
-                  accept=".pdf" 
+                  accept=".pdf, .png, .jpg, .jpeg" 
                   onChange={handleParseReceipt}
                   className="form-control"
                   style={{ width: '100%', padding: '0.6rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
@@ -286,98 +304,109 @@ export default function OperacionesClient({ user, operacionesIniciales }) {
               </div>
             </div>
 
-            <div style={{ borderTop: '1px solid #334155', padding: '1.5rem 0' }}>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#94a3b8' }}>Datos del CEP para Validación Automática</h3>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
-                <div>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Clave de Rastreo</label>
-                  <input 
-                    type="text" 
-                    name="claveRastreo" 
-                    value={claveRastreo}
-                    onChange={(e) => setClaveRastreo(e.target.value)}
-                    placeholder="Ej. BBVA123456789"
-                    className="form-control"
-                    style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
-                  />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowManualFields(!showManualFields)}
+              style={{ marginBottom: '1.5rem', width: '100%', display: 'block', background: '#334155', border: '1px solid #475569' }}
+            >
+              {showManualFields ? '🙈 Ocultar campos de captura manual' : '⌨️ Llenar datos manualmente'}
+            </button>
+
+            {showManualFields && (
+              <div style={{ borderTop: '1px solid #334155', padding: '1.5rem 0', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', paddingInline: '1rem', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#94a3b8' }}>Datos del CEP para Validación Automática</h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
+                  <div>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Clave de Rastreo</label>
+                    <input 
+                      type="text" 
+                      name="claveRastreo" 
+                      value={claveRastreo}
+                      onChange={(e) => setClaveRastreo(e.target.value)}
+                      placeholder="Ej. BBVA123456789"
+                      className="form-control"
+                      style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Fecha de Operación</label>
+                    <input 
+                      type="text" 
+                      name="fechaOperacion" 
+                      value={fechaOperacion}
+                      onChange={(e) => setFechaOperacion(e.target.value)}
+                      placeholder="DD-MM-YYYY"
+                      className="form-control"
+                      style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Monto ($)</label>
+                    <input 
+                      type="text" 
+                      name="monto" 
+                      value={monto}
+                      onChange={(e) => setMonto(e.target.value)}
+                      placeholder="Ej. 77963.78"
+                      className="form-control"
+                      style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Fecha de Operación</label>
-                  <input 
-                    type="text" 
-                    name="fechaOperacion" 
-                    value={fechaOperacion}
-                    onChange={(e) => setFechaOperacion(e.target.value)}
-                    placeholder="DD-MM-YYYY"
-                    className="form-control"
-                    style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
+                  <div>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Banco Emisor</label>
+                    <select 
+                      name="bancoEmisor"
+                      value={bancoEmisor}
+                      onChange={(e) => setBancoEmisor(e.target.value)}
+                      className="form-control"
+                      style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                    >
+                      <option value="">Seleccione Banco Emisor</option>
+                      {Object.entries(BANCOS_SAT).map(([code, name]) => (
+                        <option key={code} value={code}>{code} - {name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Monto ($)</label>
-                  <input 
-                    type="text" 
-                    name="monto" 
-                    value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
-                    placeholder="Ej. 77963.78"
-                    className="form-control"
-                    style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
-                  />
+                  <div>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Banco Receptor</label>
+                    <select 
+                      name="bancoReceptor"
+                      value={bancoReceptor}
+                      onChange={(e) => setBancoReceptor(e.target.value)}
+                      className="form-control"
+                      style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                    >
+                      <option value="">Seleccione Banco Receptor</option>
+                      {Object.entries(BANCOS_SAT).map(([code, name]) => (
+                        <option key={code} value={code}>{code} - {name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Cuenta CLABE Beneficiario</label>
+                    <input 
+                      type="text" 
+                      name="cuentaBeneficiario" 
+                      value={cuentaBeneficiario}
+                      onChange={(e) => setCuentaBeneficiario(e.target.value)}
+                      placeholder="18 dígitos"
+                      className="form-control"
+                      maxLength={18}
+                      style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
+                    />
+                  </div>
                 </div>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.2rem', marginBottom: '1.2rem' }}>
-                <div>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Banco Emisor</label>
-                  <select 
-                    name="bancoEmisor"
-                    value={bancoEmisor}
-                    onChange={(e) => setBancoEmisor(e.target.value)}
-                    className="form-control"
-                    style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
-                  >
-                    <option value="">Seleccione Banco Emisor</option>
-                    {Object.entries(BANCOS_SAT).map(([code, name]) => (
-                      <option key={code} value={code}>{code} - {name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Banco Receptor</label>
-                  <select 
-                    name="bancoReceptor"
-                    value={bancoReceptor}
-                    onChange={(e) => setBancoReceptor(e.target.value)}
-                    className="form-control"
-                    style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
-                  >
-                    <option value="">Seleccione Banco Receptor</option>
-                    {Object.entries(BANCOS_SAT).map(([code, name]) => (
-                      <option key={code} value={code}>{code} - {name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem' }}>Cuenta CLABE Beneficiario</label>
-                  <input 
-                    type="text" 
-                    name="cuentaBeneficiario" 
-                    value={cuentaBeneficiario}
-                    onChange={(e) => setCuentaBeneficiario(e.target.value)}
-                    placeholder="18 dígitos"
-                    className="form-control"
-                    maxLength={18}
-                    style={{ width: '100%', padding: '0.7rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '6px', color: '#fff' }}
-                  />
-                </div>
-              </div>
-            </div>
+            )}
 
             <div style={{ borderTop: '1px solid #334155', padding: '1.5rem 0' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginBottom: '1rem', color: '#fff', fontSize: '1rem' }}>
