@@ -38,6 +38,7 @@ model Usuario {
   pagosFlujoCreados PagoFlujo[] @relation("UsuarioPagoFlujo")
   pagosFacturaAsignada PagoFlujo[] @relation("FacturaAsignadaPor")
   pagosClienteEditado  PagoFlujo[] @relation("ClienteEditadoPor")
+  operacionesCreadas   Operacion[] @relation("UsuarioOperaciones")
 
   createdAt DateTime @default(now())
 }
@@ -458,4 +459,34 @@ model PagoFlujo {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Operacion {
+  id                  String   @id @default(uuid())
+  tipoMovimiento      String   // E.g., "Ingreso", "Egreso", "Dispersión"
+  estatus             String   @default("Pendiente") // Pendiente, Confirmado CEP, Error CEP, etc.
+  
+  // CEP Lookup parameters
+  fechaOperacion      String?  // DD-MM-YYYY
+  claveRastreo        String?
+  bancoEmisor         String?
+  bancoReceptor       String?
+  cuentaBeneficiario  String?
+  monto               Float?
+  
+  // Official CEP files downloaded from Banxico
+  cepPdfBase64        String?  @db.Text
+  cepXmlBase64        String?  @db.Text
+  
+  // Dispersion details
+  requiereDispersion  Boolean  @default(false)
+  excelBase64         String?  @db.Text
+  excelNombre         String?
+  dispersionDetalles  Json?    // Array of parsed rows: { nombre, cuenta, monto }
+
+  creadorId           String?
+  creador             Usuario? @relation("UsuarioOperaciones", fields: [creadorId], references: [id])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
