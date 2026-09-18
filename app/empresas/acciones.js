@@ -142,21 +142,28 @@ export async function subirCSD(empresaId, cerBase64, keyBase64, passwordCsd) {
     fs.writeFileSync(cerPathStr, cerBuffer)
     fs.writeFileSync(keyPathStr, keyBuffer)
     
+    // Extraer fecha de vigencia del CSD
+    let csdVigencia = null;
+    try {
+      const crypto = require('crypto');
+      const cert = new crypto.X509Certificate(cerBuffer);
+      csdVigencia = new Date(cert.validTo);
+    } catch (certErr) {
+      console.error("Error parseando certificado CSD:", certErr);
+    }
+
     const empr = await prisma.empresa.findUnique({ where: { id: empresaId } });
 
-    // Sincronizar CSD con Facturapi obligatoriamente
+    // Intentar sincronizar CSD con Facturapi si existe la User Key y facturapiId
     if (empr && empr.facturapiId && process.env.FACTURAPI_USER_KEY) {
-        const FacturapiClient = require('facturapi').default;
-        const facturapiAdmin = new FacturapiClient(process.env.FACTURAPI_USER_KEY);
         try {
+            const FacturapiClient = require('facturapi').default || require('facturapi');
+            const facturapiAdmin = new FacturapiClient(process.env.FACTURAPI_USER_KEY);
             await facturapiAdmin.organizations.uploadCertificate(empr.facturapiId, cerBuffer, keyBuffer, passwordCsd);
             console.log("CSD Sincronizado exitosamente con Facturapi Tenant: " + empr.facturapiId);
         } catch(fErr) {
-            console.error("Error devuelto por Facturapi al cargar CSD:", fErr);
-            throw new Error("Facturapi rechazó el Certificado: " + (fErr.message || JSON.stringify(fErr)));
+            console.error("Aviso: Facturapi no pudo sincronizar CSD via admin API:", fErr.message);
         }
-    } else {
-        throw new Error("No se pudo sincronizar con Facturapi: Falta ID de la organización o User Key.");
     }
 
     await prisma.empresa.update({
@@ -168,7 +175,7 @@ export async function subirCSD(empresaId, cerBase64, keyBase64, passwordCsd) {
       }
     })
 
-    return { success: true }
+    return { success: true, csdVigencia }
   } catch(error) {
     console.error("Error CSD: ", error)
     return { success: false, error: error.message }

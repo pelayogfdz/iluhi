@@ -6,7 +6,7 @@ redirects = []
 [build]
 publish = "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\.next"
 publishOrigin = "ui"
-commandOrigin = "ui"
+commandOrigin = "config"
 command = "npm run build"
 functions = "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere\\netlify\\functions"
 
@@ -30,7 +30,7 @@ functions = "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-io
 included_files = ["node_modules/.prisma/**/*", "node_modules/@prisma/**/*"]
 
 [[plugins]]
-origin = "default"
+origin = "config"
 package = "@netlify/plugin-nextjs"
 pinned_version = "5"
 

@@ -23,12 +23,36 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/empresas/[id]/exportar-expediente",
+      "regex": "^/api/empresas/([^/]+?)/exportar\\-expediente(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/empresas/(?<nxtPid>[^/]+?)/exportar\\-expediente(?:/)?$"
+    },
+    {
       "page": "/api/facturas/[id]/download",
       "regex": "^/api/facturas/([^/]+?)/download(?:/)?$",
       "routeKeys": {
         "nxtPid": "nxtPid"
       },
       "namedRegex": "^/api/facturas/(?<nxtPid>[^/]+?)/download(?:/)?$"
+    },
+    {
+      "page": "/api/facturas/[id]/download-custom",
+      "regex": "^/api/facturas/([^/]+?)/download\\-custom(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/facturas/(?<nxtPid>[^/]+?)/download\\-custom(?:/)?$"
+    },
+    {
+      "page": "/api/facturas/[id]/download-pago",
+      "regex": "^/api/facturas/([^/]+?)/download\\-pago(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/facturas/(?<nxtPid>[^/]+?)/download\\-pago(?:/)?$"
     },
     {
       "page": "/clientes/editar/[id]",
@@ -45,6 +69,30 @@
         "nxtPid": "nxtPid"
       },
       "namedRegex": "^/empresas/editar/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/empresas/editar/[id]/expediente",
+      "regex": "^/empresas/editar/([^/]+?)/expediente(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/empresas/editar/(?<nxtPid>[^/]+?)/expediente(?:/)?$"
+    },
+    {
+      "page": "/productos/editar/[id]",
+      "regex": "^/productos/editar/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/productos/editar/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/usuarios/editar/[id]",
+      "regex": "^/usuarios/editar/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/usuarios/editar/(?<nxtPid>[^/]+?)(?:/)?$"
     }
   ],
   "staticRoutes": [
@@ -79,6 +127,42 @@
       "namedRegex": "^/api/diag(?:/)?$"
     },
     {
+      "page": "/api/encuestas-tracker",
+      "regex": "^/api/encuestas\\-tracker(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/encuestas\\-tracker(?:/)?$"
+    },
+    {
+      "page": "/api/parse-csf",
+      "regex": "^/api/parse\\-csf(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/parse\\-csf(?:/)?$"
+    },
+    {
+      "page": "/api/pdf-test",
+      "regex": "^/api/pdf\\-test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/pdf\\-test(?:/)?$"
+    },
+    {
+      "page": "/api/sat/productos",
+      "regex": "^/api/sat/productos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sat/productos(?:/)?$"
+    },
+    {
+      "page": "/api/sat/unidades",
+      "regex": "^/api/sat/unidades(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sat/unidades(?:/)?$"
+    },
+    {
+      "page": "/api/sat-sync",
+      "regex": "^/api/sat\\-sync(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/sat\\-sync(?:/)?$"
+    },
+    {
       "page": "/clientes",
       "regex": "^/clientes(?:/)?$",
       "routeKeys": {},
@@ -89,6 +173,24 @@
       "regex": "^/clientes/nuevo(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/clientes/nuevo(?:/)?$"
+    },
+    {
+      "page": "/cotizaciones",
+      "regex": "^/cotizaciones(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cotizaciones(?:/)?$"
+    },
+    {
+      "page": "/cotizaciones/nuevo",
+      "regex": "^/cotizaciones/nuevo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cotizaciones/nuevo(?:/)?$"
+    },
+    {
+      "page": "/descargas-sat",
+      "regex": "^/descargas\\-sat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/descargas\\-sat(?:/)?$"
     },
     {
       "page": "/empresas",
@@ -109,10 +211,22 @@
       "namedRegex": "^/facturas(?:/)?$"
     },
     {
+      "page": "/facturas/complementos",
+      "regex": "^/facturas/complementos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/facturas/complementos(?:/)?$"
+    },
+    {
       "page": "/facturas/nuevo",
       "regex": "^/facturas/nuevo(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/facturas/nuevo(?:/)?$"
+    },
+    {
+      "page": "/flujo-trabajo",
+      "regex": "^/flujo\\-trabajo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/flujo\\-trabajo(?:/)?$"
     },
     {
       "page": "/login",

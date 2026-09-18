@@ -304,9 +304,13 @@
     "htmlLimitedBots": "[\\w-]+-Google|Google-[\\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight",
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.mjs",
-    "eslint": {
-      "ignoreDuringBuilds": true
-    },
+    "serverExternalPackages": [
+      "@prisma/client",
+      "pdfmake",
+      "jszip",
+      "pdf-parse",
+      "pdf2json"
+    ],
     "turbopack": {
       "root": "C:\\Users\\barca2\\.gemini\\antigravity\\playground\\luminescent-ionosphere"
     },
