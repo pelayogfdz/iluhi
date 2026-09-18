@@ -89,7 +89,7 @@ export default function FielUploader({ empresa }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>
             Archivo .CER de la FIEL (e.firma) {empresa.fielCerBase64 && <span style={{ color: '#10b981' }}>(cargado)</span>}

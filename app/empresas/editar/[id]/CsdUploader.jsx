@@ -95,27 +95,27 @@ export default function CsdUploader({ empresa }) {
         </div>
       )}
        
-       <form onSubmit={handleSubmit} className="form-grid-2" style={{ alignItems: "end" }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
           
           <div className="form-group">
-             <label>Archivo .CER</label>
+             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Archivo .CER del CSD</label>
              <input type="file" id="cerFile" name="cerFile" accept=".cer" required className="form-control" style={{ padding: '0.5rem' }}/>
           </div>
 
           <div className="form-group">
-             <label>Archivo .KEY</label>
+             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Archivo .KEY del CSD</label>
              <input type="file" id="keyFile" name="keyFile" accept=".key" required className="form-control" style={{ padding: '0.5rem' }}/>
           </div>
 
           <div className="form-group">
-             <label>Contraseña del Sello Privado</label>
+             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Contraseña del CSD (Sello Privado)</label>
              <input type="password" id="passwordCsd" name="passwordCsd" required className="form-control" placeholder="*************"/>
           </div>
 
-          <button type="submit" disabled={cargando} className="btn" style={{ height: '42px' }}>
-             {cargando ? 'Inyectando...' : 'Subir y Sellar Configuración'}
+          <button type="submit" disabled={cargando} className="btn" style={{ width: '100%', background: '#0054a6', marginTop: '0.5rem' }}>
+             {cargando ? 'Inyectando...' : '🛡️ Subir y Guardar CSD'}
           </button>
-       </form>
+      </form>
 
        {msg && (
           <div style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '8px', color: '#fff', backgroundColor: msg.type === 'error' ? 'rgba(255,0,0,0.3)' : 'rgba(0,255,0,0.3)'}}>
