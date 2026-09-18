@@ -272,7 +272,9 @@ model Factura {
   cliente   Cliente @relation(fields: [clienteId], references: [id])
 
   emailTasks EmailTask[]
-  pagosFlujo PagoFlujo[] @relation("FacturaPagoFlujo")
+  pagosFlujo  PagoFlujo[] @relation("FacturaPagoFlujo")
+  operacionId String?
+  operacion   Operacion? @relation(fields: [operacionId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -486,6 +488,8 @@ model Operacion {
 
   creadorId           String?
   creador             Usuario? @relation("UsuarioOperaciones", fields: [creadorId], references: [id])
+  
+  facturas            Factura[]
   
   ultimoIntentoCEP    DateTime?
 

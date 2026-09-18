@@ -23,6 +23,21 @@ export async function testSmtp(host, port, user, pass) {
     }
 }
 
+export async function testFacturapiTenantKey(apiKey) {
+  if (!apiKey || !apiKey.trim()) {
+    return { success: false, error: 'Se requiere una API Key de Facturapi para probar la conexión.' };
+  }
+  try {
+    const FacturapiClient = require('facturapi');
+    const client = new (FacturapiClient.default || FacturapiClient)(apiKey.trim());
+    await client.invoices.list({ limit: 1 });
+    return { success: true, message: '¡Conexión con Facturapi exitosa y validada!' };
+  } catch (err) {
+    const msg = err.response?.data?.message || err.message || 'Error al conectar con Facturapi';
+    return { success: false, error: msg };
+  }
+}
+
 export async function actualizarEmpresa(id, data) {
   try {
     // Prueba SMTP Express si viene configuración
@@ -36,8 +51,8 @@ export async function actualizarEmpresa(id, data) {
     await prisma.empresa.update({
       where: { id },
       data: {
-        rfc: data.rfc,
-        razonSocial: data.razonSocial,
+        rfc: data.rfc ? data.rfc.trim() : data.rfc,
+        razonSocial: data.razonSocial ? data.razonSocial.trim() : data.razonSocial,
         regimen: data.regimen,
         codigoPostal: data.codigoPostal,
         calle: data.calle,
@@ -48,6 +63,9 @@ export async function actualizarEmpresa(id, data) {
         ciudad: data.ciudad,
         estado: data.estado,
         correo: data.correo,
+        facturapiId: data.facturapiId !== undefined ? (data.facturapiId?.trim() || null) : undefined,
+        facturapiLiveKey: data.facturapiLiveKey !== undefined ? (data.facturapiLiveKey?.trim() || null) : undefined,
+        facturapiTestKey: data.facturapiTestKey !== undefined ? (data.facturapiTestKey?.trim() || null) : undefined,
         telefono: data.telefono || null,
         paginaWeb: data.paginaWeb || null,
         redSocialFacebook: data.redSocialFacebook || null,

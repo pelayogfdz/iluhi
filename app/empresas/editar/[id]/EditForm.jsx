@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { actualizarEmpresa, testSmtp } from '../../acciones'
+import { actualizarEmpresa, testSmtp, testFacturapiTenantKey } from '../../acciones'
 
 export default function EditForm({ empresa }) {
   const router = useRouter()
@@ -11,6 +11,7 @@ export default function EditForm({ empresa }) {
   const [msg, setMsg] = useState(null)
   const [showPass, setShowPass] = useState(false)
   const [probarStatus, setProbarStatus] = useState(null)
+  const [probarFacturapiStatus, setProbarFacturapiStatus] = useState(null)
   
   const [formData, setFormData] = useState({
     rfc: empresa.rfc || '',
@@ -31,6 +32,9 @@ export default function EditForm({ empresa }) {
     municipio: empresa.municipio || '',
     ciudad: empresa.ciudad || '',
     estado: empresa.estado || '',
+    facturapiId: empresa.facturapiId || '',
+    facturapiLiveKey: empresa.facturapiLiveKey || '',
+    facturapiTestKey: empresa.facturapiTestKey || '',
     telefono: empresa.telefono || '',
     paginaWeb: empresa.paginaWeb || '',
     redSocialFacebook: empresa.redSocialFacebook || '',
@@ -62,7 +66,20 @@ export default function EditForm({ empresa }) {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
-
+  const handlePruebaFacturapi = async () => {
+    const keyToTest = formData.facturapiLiveKey || formData.facturapiTestKey;
+    if (!keyToTest) {
+      setProbarFacturapiStatus({ type: 'error', text: '❌ Ingrese una Live Key o Test Key de Facturapi para probar.' });
+      return;
+    }
+    setProbarFacturapiStatus({ type: 'loading', text: 'Probando conexión con Facturapi...' });
+    const result = await testFacturapiTenantKey(keyToTest);
+    if (result.success) {
+      setProbarFacturapiStatus({ type: 'success', text: '✅ ' + result.message });
+    } else {
+      setProbarFacturapiStatus({ type: 'error', text: '❌ Falló: ' + result.error });
+    }
+  }
 
   const handlePruebaSmtp = async () => {
     setProbarStatus({ type: 'loading', text: 'Probando conexión...' })
@@ -316,6 +333,91 @@ export default function EditForm({ empresa }) {
             {probarStatus && (
                <div style={{ fontSize: '0.9rem', padding: '0.5rem', borderRadius: '4px', background: probarStatus.type === 'error' ? 'rgba(255,0,0,0.2)' : probarStatus.type === 'success' ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,255,0.1)' }}>
                  {probarStatus.text}
+               </div>
+            )}
+          </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '2rem 0' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+          <span style={{ fontSize: '2rem' }}>⚡</span>
+          <div>
+            <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '1.3rem' }}>Conexión PAC / Facturapi Multi-Tenant</h3>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+               Configura las llaves de API de Facturapi para timbrado y emisión fiscal oficial (CFDI) de esta empresa.
+            </p>
+          </div>
+          {empresa.facturapiLiveKey && (
+            <div style={{
+              marginLeft: 'auto',
+              padding: '6px 16px',
+              borderRadius: '20px',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              background: 'rgba(16,185,129,0.2)',
+              color: '#10b981',
+              border: '1px solid #10b981',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              ✅ API KEY VIGENTE
+            </div>
+          )}
+        </div>
+
+        <div className="form-grid-2">
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label>API Key de Producción (Live Secret Key) *</label>
+            <input 
+              type="text" 
+              name="facturapiLiveKey" 
+              value={formData.facturapiLiveKey} 
+              onChange={handleChange} 
+              className="form-control" 
+              placeholder="sk_live_..." 
+            />
+            <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.25rem' }}>
+              Clave de API secreta en modo Producción (Live Key) de la organización en Facturapi.
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label>API Key de Pruebas (Test Secret Key)</label>
+            <input 
+              type="text" 
+              name="facturapiTestKey" 
+              value={formData.facturapiTestKey} 
+              onChange={handleChange} 
+              className="form-control" 
+              placeholder="sk_test_..." 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>ID de Organización en Facturapi (Opcional)</label>
+            <input 
+              type="text" 
+              name="facturapiId" 
+              value={formData.facturapiId} 
+              onChange={handleChange} 
+              className="form-control" 
+              placeholder="Ej. 69e666..." 
+            />
+          </div>
+
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button 
+              type="button" 
+              onClick={handlePruebaFacturapi} 
+              className="btn" 
+              style={{ background: '#059669', border: '1px solid rgba(255,255,255,0.2)', width: 'fit-content' }}
+            >
+              ⚡ Probar Conexión con Facturapi
+            </button>
+            {probarFacturapiStatus && (
+               <div style={{ fontSize: '0.9rem', padding: '0.5rem', borderRadius: '4px', background: probarFacturapiStatus.type === 'error' ? 'rgba(255,0,0,0.2)' : probarFacturapiStatus.type === 'success' ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,255,0.1)' }}>
+                 {probarFacturapiStatus.text}
                </div>
             )}
           </div>

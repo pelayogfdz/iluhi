@@ -171,32 +171,35 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     let fallbackStatus = 'Borrador';
 
     // 3. Ejecutar Disparo al PAC (Multi-Tenant Facturapi engine)
-    // Si no hay CSD cargado, Facturapi rechazará el timbrado Live. Hacemos fallback automático a Test Mode.
-    const activeTenantKey = empresa.facturapiLiveKey 
-      ? empresa.facturapiLiveKey 
-      : (empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
-    
-    if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
-      try {
-        const tenantFacturapi = new facturapi.constructor(activeTenantKey); // Use the constructor from the imported instance
-        receipt = await tenantFacturapi.invoices.create(facturaPayload);
-        fallbackStatus = 'Timbrada';
-      } catch (pacError) {
-        const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
-        if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
-          const detailedMsg = "No se pudo timbrar en producción porque no se han configurado correctamente los Sellos Digitales (CSD) en Facturapi. " + 
-            "Por favor, ingrese al panel de control de Facturapi, cargue sus archivos .CER y .KEY vigentes del CSD (no e.firma) y configure su contraseña. Detalle técnico: " + errorMsg;
-          console.error("Fallo de CSD en PAC: ", detailedMsg);
-          return { success: false, error: detailedMsg };
-        } else {
-          console.error("Fallo de API del PAC: ", errorMsg);
-          return { success: false, error: 'Error del SAT/PAC: ' + errorMsg };
-        }
+    const activeTenantKey = empresa.facturapiLiveKey || empresa.facturapiTestKey || (process.env.FACTURAPI_LIVE_KEY && !process.env.FACTURAPI_LIVE_KEY.includes('PENDING') ? process.env.FACTURAPI_LIVE_KEY : null);
+
+    if (!activeTenantKey || activeTenantKey.includes('PENDING_KEY')) {
+      return {
+        success: false,
+        error: `La empresa "${(empresa.razonSocial || empresa.rfc).trim()}" no tiene configurada su API Key de Facturapi (Live Key). Por favor ingresa a Empresas > Modificar Empresa > Conexión PAC / Facturapi y configura la clave de API (sk_live_...) de esta empresa.`
+      };
+    }
+
+    try {
+      const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+      receipt = await tenantFacturapi.invoices.create(facturaPayload);
+      fallbackStatus = 'Timbrada';
+    } catch (pacError) {
+      const errorMsg = pacError.response?.data?.message || pacError.message || "Error desconocido";
+      if (pacError.message && (pacError.message.includes('terminar de configurar') || pacError.message.includes('pending steps'))) {
+        const detailedMsg = "No se pudo timbrar en producción porque no se han configurado correctamente los Sellos Digitales (CSD) en Facturapi. " + 
+          "Por favor, ingrese al panel de control de Facturapi, cargue sus archivos .CER y .KEY vigentes del CSD (no e.firma) y configure su contraseña. Detalle técnico: " + errorMsg;
+        console.error("Fallo de CSD en PAC: ", detailedMsg);
+        return { success: false, error: detailedMsg };
+      } else if (errorMsg.toLowerCase().includes('api key') || pacError.status === 401) {
+        return {
+          success: false,
+          error: `Error de autenticación con Facturapi para "${(empresa.razonSocial || empresa.rfc).trim()}": La API key configurada (${activeTenantKey.slice(0, 10)}...) no es válida o fue revocada en Facturapi. Por favor verifícala en Empresas > Modificar Empresa.`
+        };
+      } else {
+        console.error("Fallo de API del PAC: ", errorMsg);
+        return { success: false, error: 'Error del SAT/PAC: ' + errorMsg };
       }
-    } else {
-      console.log("[SIMULACION PAC] No hay llave válida de Facturapi activa. Omitiendo la red...");
-      receipt = { id: 'mock_uuid_' + Math.floor(Math.random() * 1000000), status: 'valid', created_at: new Date() };
-      fallbackStatus = 'Borrador (Falta LLave)';
     }
 
     // 4. Salvar el Comprobante Logístico a Supabase
