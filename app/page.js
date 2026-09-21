@@ -59,6 +59,14 @@ export default function Dashboard() {
           <p style={{ marginTop: '0.5rem' }}>Métricas de facturación, timbres utilizados y más.</p>
         </Link>
 
+        <Link href="/arrendadora" target="_blank" className="glass-panel card" style={{ border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.08)' }}>
+          <h3 style={{ color: '#38bdf8' }}>
+            🚗 Landing Arrendadora 
+            <span style={{ fontSize: '1.5rem' }}>↗</span>
+          </h3>
+          <p style={{ marginTop: '0.5rem' }}>Portal de captación, catálogo de flotillas, cotizador y precalificación en tiempo real.</p>
+        </Link>
+
       </div>
 
       <div className="glass-panel" style={{ marginTop: '3rem', border: '1px solid rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.05)' }}>

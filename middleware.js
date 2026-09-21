@@ -9,7 +9,7 @@ export async function middleware(request) {
 
   const sessionCookie = request.cookies.get('session')?.value
 
-  if (!sessionCookie && !request.nextUrl.pathname.startsWith('/login')) {
+  if (!sessionCookie && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/arrendadora')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

@@ -635,8 +635,36 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
     let receipt;
     let fallbackStatus = 'Nota de Crédito (Simulada)';
 
+    let satUuid = fac.uuid;
+    const isSatUuid = satUuid && satUuid.length === 36 && satUuid.includes('-');
+
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
-      const payload = {
+        const tenantFacturapi = new facturapi.constructor(activeTenantKey);
+
+        // Si el uuid guardado era un Facturapi ID (24 chars), recuperar el UUID fiscal del SAT
+        if (!isSatUuid) {
+          try {
+            const fInv = await tenantFacturapi.invoices.retrieve(fac.uuid);
+            if (fInv && fInv.uuid) {
+              satUuid = fInv.uuid;
+              await prisma.factura.update({
+                where: { id: fac.id },
+                data: { uuid: fInv.uuid }
+              });
+            }
+          } catch (e) {
+            console.error("Error al consultar UUID en Facturapi:", e.message);
+          }
+        }
+
+        if (!satUuid || satUuid.length !== 36) {
+          return { 
+            success: false, 
+            error: `La factura original no cuenta con un Folio Fiscal (UUID) del SAT válido (${satUuid || 'vacío'}). Asegúrese de que la factura esté timbrada ante el SAT.` 
+          };
+        }
+        
+        const payload = {
         type: "E", // Egreso
         customer: fac.clienteId ? {
           legal_name: fac.cliente.razonSocial,
@@ -671,13 +699,12 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
         related_documents: [
           {
             relationship: "01", // Nota de crédito de los documentos relacionados
-            documents: [fac.uuid]
+            documents: [satUuid]
           }
         ]
       };
 
       try {
-        const tenantFacturapi = new facturapi.constructor(activeTenantKey);
         receipt = await tenantFacturapi.invoices.create(payload);
         fallbackStatus = 'Nota de Crédito Generada';
       } catch (pacError) {

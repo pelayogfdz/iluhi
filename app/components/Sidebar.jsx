@@ -101,6 +101,7 @@ export default function Sidebar({ user, doLogout }) {
           {user.permisoUsuarios && <Link href="/usuarios" className="nav-link" onClick={closeMenu}>🔑 Usuarios</Link>}
           {user.permisoReportes && <Link href="/reportes" className="nav-link" onClick={closeMenu}>📊 Reportes</Link>}
           {user.permisoEmpresas && <Link href="/descargas-sat" className="nav-link" onClick={closeMenu}>📥 Descargas SAT</Link>}
+          <Link href="/arrendadora" target="_blank" className="nav-link" onClick={closeMenu} style={{ color: '#38bdf8' }}>🚗 Landing Arrendadora ↗</Link>
         </nav>
         
         <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '13px' }}>
