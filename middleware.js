@@ -2,38 +2,51 @@ import { NextResponse } from 'next/server'
 import { decrypt } from './lib/auth'
 
 export async function middleware(request) {
-  // Excluir protección para el propio script de cron o webhooks si existieran
-  if (request.nextUrl.pathname.startsWith('/api/') || request.nextUrl.pathname.match(/\.(.*)$/)) {
+  const { pathname } = request.nextUrl
+
+  // Excluir APIs, archivos estáticos o favicon
+  if (pathname.startsWith('/api/') || pathname.match(/\.(.*)$/)) {
     return NextResponse.next()
   }
 
+  // Rutas públicas que no requieren autenticación
+  const isPublicRoute = 
+    pathname === '/' || 
+    pathname.startsWith('/arrendadora') || 
+    pathname.startsWith('/login') || 
+    pathname.startsWith('/registro')
+
   const sessionCookie = request.cookies.get('session')?.value
 
-  if (!sessionCookie && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/arrendadora')) {
+  // Si es ruta pública y no es /login, permitir acceso inmediato
+  if (isPublicRoute && !pathname.startsWith('/login')) {
+    return NextResponse.next()
+  }
+
+  // Si no está autenticado y trata de entrar a un panel administrativo/facturación protegido
+  if (!sessionCookie) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (sessionCookie && request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // Si ya está autenticado e intenta ir al login, mandar al dashboard de facturación
+  if (pathname.startsWith('/login')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  if (sessionCookie) {
-     const parsed = await decrypt(sessionCookie);
-     if (!parsed) {
-       const res = NextResponse.redirect(new URL('/login', request.url))
-       res.cookies.delete('session')
-       return res;
-     }
-
-     // Lógica visual de bloqueo cruzado de módulos basada en los permisos del Payload
-     const p = request.nextUrl.pathname
-     if (p.startsWith('/empresas') && !parsed.permisoEmpresas) return NextResponse.redirect(new URL('/', request.url))
-     if (p.startsWith('/clientes') && !parsed.permisoClientes) return NextResponse.redirect(new URL('/', request.url))
-     if (p.startsWith('/productos') && !parsed.permisoProductos) return NextResponse.redirect(new URL('/', request.url))
-     if (p.startsWith('/facturas') && !parsed.permisoFacturas) return NextResponse.redirect(new URL('/', request.url))
-     if (p.startsWith('/reportes') && !parsed.permisoReportes) return NextResponse.redirect(new URL('/', request.url))
-     if (p.startsWith('/usuarios') && !parsed.permisoUsuarios) return NextResponse.redirect(new URL('/', request.url))
+  const parsed = await decrypt(sessionCookie);
+  if (!parsed) {
+    const res = NextResponse.redirect(new URL('/login', request.url))
+    res.cookies.delete('session')
+    return res;
   }
+
+    // Permisos internos para el SaaS de facturación
+    if (pathname.startsWith('/empresas') && !parsed.permisoEmpresas) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname.startsWith('/clientes') && !parsed.permisoClientes) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname.startsWith('/productos') && !parsed.permisoProductos) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname.startsWith('/facturas') && !parsed.permisoFacturas) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname.startsWith('/reportes') && !parsed.permisoReportes) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (pathname.startsWith('/usuarios') && !parsed.permisoUsuarios) return NextResponse.redirect(new URL('/dashboard', request.url))
 
   return NextResponse.next()
 }

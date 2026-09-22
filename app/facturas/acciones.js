@@ -722,12 +722,41 @@ export async function emitirNotaCredito(facturaId, monto, formaPago, usoCfdi, co
        receipt = { id: 'mock_egreso_' + Math.floor(Math.random() * 1000) };
     }
 
+    if (receipt) {
+      try {
+        await prisma.factura.create({
+          data: {
+            uuid: receipt.uuid || receipt.id,
+            serie: receipt.series || 'NC',
+            folio: receipt.folio_number ? parseInt(receipt.folio_number, 10) : null,
+            fechaEmision: new Date(receipt.created_at || Date.now()),
+            moneda: 'MXN',
+            tipoComprobante: 'E',
+            formaPago: formaPago,
+            metodoPago: 'PUE',
+            subTotal: parseFloat(monto),
+            total: parseFloat(monto),
+            estatus: 'Timbrada',
+            empresa: { connect: { id: fac.empresaId } },
+            cliente: fac.clienteId ? { connect: { id: fac.clienteId } } : undefined,
+            notasServicio: `Nota de Crédito aplicada a Factura ${fac.serie || ''}${fac.folio || ''} (${satUuid})`
+          }
+        });
+      } catch (dbErr) {
+        console.error("Error guardando registro de Nota de Crédito:", dbErr.message);
+      }
+    }
+
     await prisma.factura.update({
       where: { id: facturaId },
       data: { estatus: fallbackStatus } 
     });
 
-    return { success: true, egresoId: receipt.id };
+    return { 
+      success: true, 
+      egresoId: receipt?.id, 
+      egresoUuid: receipt?.uuid || receipt?.id 
+    };
   } catch(error) {
     const errorMsg = error.response?.data?.message || error.message || "Error desconocido";
     console.error("Error al emitir Nota de Crédito: ", errorMsg);

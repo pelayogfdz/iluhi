@@ -1,9 +1,13 @@
 import './globals.css'
-import Link from 'next/link'
+import { cookies, headers } from 'next/headers'
+import { decrypt } from '../lib/auth'
+import CronPinger from './components/CronPinger'
+import Sidebar from './components/Sidebar'
+import LogoAlert from './components/LogoAlert'
 
 export const metadata = {
-  title: 'FACTURACIÓN SEIT',
-  description: 'SaaS - Sistema de Facturación Electrónica',
+  title: 'AXIS POINT | Arrendamiento Puro y Financiero de Flotillas y Equipo',
+  description: 'Soluciones corporativas de arrendamiento vehicular, maquinaria y flotillas comerciales en México. Deducibilidad fiscal y liquidez operativa.',
 }
 
 export const viewport = {
@@ -12,12 +16,6 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false
 }
-
-import { cookies } from 'next/headers'
-import { decrypt } from '../lib/auth'
-import CronPinger from './components/CronPinger'
-import Sidebar from './components/Sidebar'
-import LogoAlert from './components/LogoAlert'
 
 export default async function RootLayout({ children }) {
   const cookieStore = await cookies()
@@ -35,11 +33,12 @@ export default async function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="icon" href="/axispoint-logo.jpg" />
       </head>
       <body>
         <CronPinger />
         {!user ? (
-          <main style={{ width: '100%', height: '100%' }}>{children}</main>
+          <main style={{ width: '100%', minHeight: '100vh', margin: 0, padding: 0 }}>{children}</main>
         ) : (
           <div className="layout-wrapper">
             <Sidebar user={user} doLogout={doLogout} />
@@ -53,4 +52,3 @@ export default async function RootLayout({ children }) {
     </html>
   )
 }
-// Forzar recarga Next.js Cache

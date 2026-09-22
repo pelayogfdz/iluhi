@@ -89,17 +89,29 @@ export async function GET(request, { params }) {
     let contentType;
     let fileName = `Pago_${pagoId}`;
     
+    let facturapiIdToDownload = pagoId;
+    if (pagoId && pagoId.length === 36 && pagoId.includes('-')) {
+      try {
+        const listRes = await tenantFacturapi.invoices.list({ q: pagoId, limit: 1 });
+        if (listRes.data && listRes.data.length > 0) {
+          facturapiIdToDownload = listRes.data[0].id;
+        }
+      } catch (qErr) {
+        console.log("Aviso: no se pudo resolver UUID REP en Facturapi:", qErr.message);
+      }
+    }
+
     try {
       if (format === 'pdf') {
-        stream = await tenantFacturapi.invoices.downloadPdf(pagoId);
+        stream = await tenantFacturapi.invoices.downloadPdf(facturapiIdToDownload);
         contentType = 'application/pdf';
         fileName += '.pdf';
       } else if (format === 'xml') {
-        stream = await tenantFacturapi.invoices.downloadXml(pagoId);
+        stream = await tenantFacturapi.invoices.downloadXml(facturapiIdToDownload);
         contentType = 'application/xml';
         fileName += '.xml';
       } else if (format === 'zip') {
-        stream = await tenantFacturapi.invoices.downloadZip(pagoId);
+        stream = await tenantFacturapi.invoices.downloadZip(facturapiIdToDownload);
         contentType = 'application/zip';
         fileName += '.zip';
       }

@@ -141,6 +141,9 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
      const res = await emitirNotaCredito(id, monto, formaPago, usoCfdi, concepto);
      if(!res.success) throw new Error(res.error);
      alert("Nota de Crédito timbrada exitosamente.");
+     if (res.egresoUuid || res.egresoId) {
+       window.open(`/api/facturas/${res.egresoUuid || res.egresoId}/download?type=pdf`, '_blank');
+     }
      router.refresh();
   }
 
@@ -271,15 +274,22 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                 </td>
                 <td>
                   <div style={{fontSize: '0.85rem', opacity: 0.7}}>{new Date(fac.createdAt).toLocaleTimeString()} {fac.id.substring(0,8)}...</div>
-                  <div style={{fontWeight: 'bold', color: 'var(--primary)', fontSize: '1rem'}}>
-                    {fac.serie || ''}{fac.folio || 'Sin Folio'}
+                  <div style={{display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap'}}>
+                    <span style={{fontWeight: 'bold', color: fac.tipoComprobante === 'E' ? '#c084fc' : 'var(--primary)', fontSize: '1rem'}}>
+                      {fac.serie || ''}{fac.folio || 'Sin Folio'}
+                    </span>
+                    {fac.tipoComprobante === 'E' && (
+                      <span style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>
+                        Nota de Crédito
+                      </span>
+                    )}
                   </div>
                   <div style={{fontFamily: 'monospace', fontSize: '0.8rem', opacity: 0.5}}>{fac.uuid || 'En Proceso...'}</div>
                 </td>
                 <td>{fac.empresa.razonSocial}</td>
                 <td>
-                  <div style={{fontSize: '0.9rem', fontWeight: 'bold'}}>{fac.cliente.razonSocial}</div>
-                  <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>{fac.cliente.rfc}</div>
+                  <div style={{fontSize: '0.9rem', fontWeight: 'bold'}}>{fac.cliente?.razonSocial || 'Cliente General'}</div>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>{fac.cliente?.rfc || ''}</div>
                 </td>
                 <td>
                   <span style={{background: 'rgba(255,255,255,0.1)', padding:'2px 6px', borderRadius:'4px', fontSize:'0.8rem'}}>
@@ -287,8 +297,14 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                   </span>
                 </td>
                 <td>
-                  <BotonComplemento factura={fac} onComplement={handleComplement} />
-                  <BotonNotaCredito factura={fac} onEmit={handleNotaCredito} />
+                  {fac.tipoComprobante !== 'E' ? (
+                    <>
+                      <BotonComplemento factura={fac} onComplement={handleComplement} />
+                      <BotonNotaCredito factura={fac} onEmit={handleNotaCredito} />
+                    </>
+                  ) : (
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>CFDI Egreso</span>
+                  )}
                 </td>
                 <td>{formatDateDDMMYYYY(fac.fechaEmision)}</td>
                 <td>${fac.total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
