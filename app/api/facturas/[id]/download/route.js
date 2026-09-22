@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import facturapi from '../../../../../lib/facturapi'
 import prisma from '../../../../../lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request, { params }) {
   const { id } = await params
   const { searchParams } = new URL(request.url)
@@ -34,14 +36,14 @@ export async function GET(request, { params }) {
       }
     }
 
-    // 2. Si hay llave de Facturapi, intentar descargar de Facturapi
+    // 2. Si hay llave de Facturapi para la empresa, intentar descargar directo
     if (targetKey && !targetKey.includes('PENDING_KEY') && targetDocIdentifier && !targetDocIdentifier.startsWith('sim_uuid')) {
       try {
-        const tenantFacturapi = new facturapi.constructor(targetKey);
+        const Facturapi = facturapi.constructor;
+        const tenantFacturapi = new Facturapi(targetKey);
         let facturapiIdToDownload = targetDocIdentifier;
 
-        // Facturapi downloadPdf/downloadXml requiere el ID interno de 24 caracteres.
-        // Si recibimos un UUID del SAT (36 chars), lo resolvemos primero con Facturapi
+        // Si es UUID de 36 caracteres, resolver primero al ID interno de 24 caracteres de Facturapi
         if (targetDocIdentifier.length === 36 && targetDocIdentifier.includes('-')) {
           try {
             const listRes = await tenantFacturapi.invoices.list({ q: targetDocIdentifier, limit: 1 });
@@ -72,17 +74,66 @@ export async function GET(request, { params }) {
         }
 
         if (stream) {
-          const { Readable } = require('stream');
-          const webStream = Readable.toWeb(stream);
-          return new Response(webStream, {
+          const chunks = [];
+          for await (const chunk of stream) {
+            chunks.push(chunk);
+          }
+          const buffer = Buffer.concat(chunks);
+          return new Response(buffer, {
             headers: {
               'Content-Type': contentType,
-              'Content-Disposition': `inline; filename="${fileName}"`
+              'Content-Disposition': `inline; filename="${fileName}"`,
+              'Content-Length': buffer.length.toString(),
+              'Cache-Control': 'no-store, max-age=0'
             }
           });
         }
       } catch (fErr) {
-        console.log(`Facturapi download error for ${targetDocIdentifier}, falling back to local storage:`, fErr.message);
+        console.log(`Facturapi download error for ${targetDocIdentifier}, buscando alternativas:`, fErr.message);
+      }
+    }
+
+    // 2.1 Fallback: Si no se encontró en la empresa asignada, buscar en otras empresas con llave configurada
+    const empresasConLlave = await prisma.empresa.findMany({
+      where: {
+        facturapiLiveKey: { not: null }
+      }
+    });
+
+    for (const emp of empresasConLlave) {
+      if (emp.facturapiLiveKey === targetKey) continue;
+      try {
+        const Facturapi = facturapi.constructor;
+        const tenantFacturapi = new Facturapi(emp.facturapiLiveKey);
+        let fid = id;
+        if (id.length === 36) {
+          const lRes = await tenantFacturapi.invoices.list({ q: id, limit: 1 });
+          if (lRes.data && lRes.data.length > 0) {
+            fid = lRes.data[0].id;
+          } else {
+            continue;
+          }
+        }
+        let stream;
+        if (format === 'pdf') stream = await tenantFacturapi.invoices.downloadPdf(fid);
+        else if (format === 'xml') stream = await tenantFacturapi.invoices.downloadXml(fid);
+        else if (format === 'zip') stream = await tenantFacturapi.invoices.downloadZip(fid);
+
+        if (stream) {
+          const chunks = [];
+          for await (const chunk of stream) chunks.push(chunk);
+          const buffer = Buffer.concat(chunks);
+          return new Response(buffer, {
+            headers: {
+              'Content-Type': format === 'pdf' ? 'application/pdf' : format === 'xml' ? 'application/xml' : 'application/zip',
+              'Content-Disposition': `inline; filename="Documento_${id}.${format}"`,
+              'Content-Length': buffer.length.toString(),
+              'Cache-Control': 'no-store, max-age=0'
+            }
+          });
+        }
+      } catch (e) {
+        // Continuar buscando
       }
     }
 
@@ -95,7 +146,8 @@ export async function GET(request, { params }) {
         return new Response(pdfContent, {
           headers: {
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `inline; filename="${fileName}.pdf"`
+            'Content-Disposition': `inline; filename="${fileName}.pdf"`,
+            'Content-Length': pdfContent.length.toString()
           }
         });
       }
@@ -105,7 +157,8 @@ export async function GET(request, { params }) {
         return new Response(xmlContent, {
           headers: {
             'Content-Type': 'application/xml',
-            'Content-Disposition': `attachment; filename="${fileName}.xml"`
+            'Content-Disposition': `attachment; filename="${fileName}.xml"`,
+            'Content-Length': xmlContent.length.toString()
           }
         });
       }
