@@ -21,6 +21,7 @@ export default function EditForm({ empresa }) {
     apoderado: empresa.apoderado || '',
     objetoSocial: empresa.objetoSocial || '',
     actividadEconomica: empresa.actividadEconomica || '',
+    coeficienteUtilidadFiscal: empresa.coeficienteUtilidadFiscal !== null && empresa.coeficienteUtilidadFiscal !== undefined ? empresa.coeficienteUtilidadFiscal : '',
     razonSocial: empresa.razonSocial || '',
     regimen: empresa.regimen || '',
     codigoPostal: empresa.codigoPostal || '',
@@ -192,6 +193,22 @@ export default function EditForm({ empresa }) {
                   <option value="629">629 - De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales</option>
                   <option value="630">630 - Enajenación de acciones en bolsa de valores</option>
             </select>
+          </div>
+
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>📊 Coeficiente de Utilidad Fiscal (ej. 0.0523 o 5.23%)</span>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>(Utilizado para pagos provisionales de ISR)</span>
+            </label>
+            <input 
+              type="number" 
+              step="0.0001" 
+              name="coeficienteUtilidadFiscal" 
+              value={formData.coeficienteUtilidadFiscal} 
+              onChange={handleChange} 
+              placeholder="0.0000" 
+              className="form-control" 
+            />
           </div>
         </div>
 

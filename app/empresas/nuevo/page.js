@@ -26,6 +26,8 @@ async function createEmpresa(formData) {
   const apoderado = formData.get('apoderado') || null
   const objetoSocial = formData.get('objetoSocial') || null
   const actividadEconomica = formData.get('actividadEconomica') || null
+  const coefRaw = formData.get('coeficienteUtilidadFiscal')
+  const coeficienteUtilidadFiscal = coefRaw !== null && coefRaw !== '' ? parseFloat(coefRaw) : null
 
   const telefono = formData.get('telefono') || null
   const paginaWeb = formData.get('paginaWeb') || null
@@ -114,6 +116,7 @@ async function createEmpresa(formData) {
       apoderado,
       objetoSocial,
       actividadEconomica,
+      coeficienteUtilidadFiscal,
       telefono,
       paginaWeb,
       redSocialFacebook,
@@ -216,6 +219,21 @@ export default function NuevaEmpresaPage() {
                   <option value="629">629 - De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales</option>
                   <option value="630">630 - Enajenación de acciones en bolsa de valores</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="coeficienteUtilidadFiscal" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>📊 Coeficiente de Utilidad Fiscal (ej. 0.0523 o 5.23%)</span>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>(Para pagos provisionales ISR)</span>
+            </label>
+            <input 
+              type="number" 
+              step="0.0001" 
+              id="coeficienteUtilidadFiscal" 
+              name="coeficienteUtilidadFiscal" 
+              className="form-control" 
+              placeholder="0.0000" 
+            />
           </div>
 
           <div className="form-group">

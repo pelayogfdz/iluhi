@@ -95,8 +95,9 @@ model Empresa {
   opinionCumplimiento     String? // POSITIVA, NEGATIVA, EN_TRAMITE
   ultimaValidacionOpinion DateTime?
   // Planeación y Extras
-  objetoSocial            String?
-  actividadEconomica      String?
+  objetoSocial              String?
+  actividadEconomica        String?
+  coeficienteUtilidadFiscal Float?
 
   // Credenciales Institucionales
   imssCerBase64             String?
