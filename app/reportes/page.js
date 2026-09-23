@@ -11,7 +11,14 @@ export default async function ReportesPage() {
   // Cargar catálogos base para los filtros (Empresas a las que el usuario tiene acceso)
   const empresasRaw = await prisma.empresa.findMany({ 
     where: rpEmpresas, 
-    select: { id: true, razonSocial: true },
+    select: { 
+      id: true, 
+      razonSocial: true, 
+      rfc: true,
+      coeficienteUtilidadFiscal: true,
+      montoMaximoAnual: true,
+      montoMaximoMensual: true
+    },
     orderBy: { razonSocial: 'asc' }
   });
   

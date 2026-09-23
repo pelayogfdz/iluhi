@@ -265,6 +265,130 @@ export default function ReportesClient({ empresas, clientes }) {
         </div>
       </div>
 
+      {/* ======================================================== */}
+      {/* SECCIÓN: ESTIMACIÓN DE IMPUESTOS Y COEFICIENTE FISCAL    */}
+      {/* ======================================================== */}
+      {filtros.empresaId && (
+        (() => {
+          const emp = empresas.find(e => e.id === filtros.empresaId);
+          const coef = emp?.coeficienteUtilidadFiscal || 0;
+          const subTotalVigente = kpis.totalSubTotalTimbradas || (kpis.totalMontoTimbradas > 0 ? (kpis.totalMontoTimbradas / 1.16) : (kpis.totalMonto / 1.16));
+          const utilidadEstimada = subTotalVigente * coef;
+          const isrEstimado = utilidadEstimada * 0.30; // 30% ISR Personas Morales
+          const ivaEstimado = kpis.totalImpuestosTimbradas || (subTotalVigente * 0.16);
+          const totalImpuestos = isrEstimado + ivaEstimado;
+
+          return (
+            <div className="glass-panel" style={{ 
+              marginBottom: '2rem', 
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.75))',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '16px',
+              padding: '1.5rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '1.6rem' }}>🏛️</span>
+                  <div>
+                    <h4 style={{ margin: 0, color: '#60a5fa', fontSize: '1.15rem' }}>
+                      Proyección Fiscal Informativa — {emp?.razonSocial || 'Empresa Seleccionada'}
+                    </h4>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>RFC: {emp?.rfc || 'N/D'}</span>
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: '0.78rem',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '20px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  color: '#93c5fd',
+                  fontWeight: 600
+                }}>
+                  📊 Proyección Estimada Informativa
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                
+                {/* Coeficiente de Utilidad */}
+                <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '1.1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>📈 Coeficiente de Utilidad (CU)</span>
+                  </div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: coef > 0 ? '#38bdf8' : '#94a3b8', marginBottom: '0.2rem' }}>
+                    {coef > 0 ? `${(coef * 100).toFixed(2)}%` : 'No asignado'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    {coef > 0 ? `Valor nominal: ${coef.toFixed(4)}` : 'Configúralo en Empresas > Modificar'}
+                  </div>
+                </div>
+
+                {/* Utilidad Fiscal Estimada */}
+                <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '1.1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem', fontWeight: 600 }}>
+                    💵 Utilidad Fiscal Estimada
+                  </div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#f8fafc', marginBottom: '0.2rem' }}>
+                    ${utilidadEstimada.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    Subtotal gravable (${subTotalVigente.toLocaleString('es-MX', { maximumFractionDigits: 0 })}) × CU
+                  </div>
+                </div>
+
+                {/* ISR Estimado */}
+                <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '1.1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>📑 ISR Provisional Estimado</span>
+                    <span style={{ fontSize: '0.7rem', color: '#38bdf8' }}>(30%)</span>
+                  </div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#f59e0b', marginBottom: '0.2rem' }}>
+                    ${isrEstimado.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    Pago provisional proyectado (ISR)
+                  </div>
+                </div>
+
+                {/* Total Impuestos Estimados */}
+                <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '1.1rem', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>💰 Total Impuestos Estimados</span>
+                  </div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#10b981', marginBottom: '0.2rem' }}>
+                    ${totalImpuestos.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    ISR Estimado + IVA Trasladado (${ivaEstimado.toLocaleString('es-MX', { maximumFractionDigits: 0 })})
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Disclaimer */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px dashed rgba(255, 255, 255, 0.15)',
+                borderRadius: '8px',
+                padding: '0.6rem 1rem',
+                fontSize: '0.78rem',
+                color: '#94a3b8',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span>⚠️</span>
+                <span>
+                  <strong>Nota aclaratoria:</strong> Esta es una <em>estimación matemática de carácter informativo</em> calculada sobre los comprobantes vigentes del periodo y el Coeficiente de Utilidad configurado. No sustituye la conciliación de deducciones autorizadas, retenciones, pérdidas de ejercicios anteriores ni acreditamiento de IVA para pagos definitivos.
+                </span>
+              </div>
+            </div>
+          );
+        })()
+      )}
+
       {/* Gráfica */}
       {facturas.length > 0 && (
         <div className="glass-panel" style={{ marginBottom: '2rem', height: '350px' }}>

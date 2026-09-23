@@ -95,12 +95,18 @@ export async function obtenerReporteFacturas(filtros = {}) {
       where: whereClause,
       by: ['estatus', 'metodoPago'],
       _count: { _all: true },
-      _sum: { total: true }
+      _sum: { total: true, subTotal: true, totalImpuestosTrasladados: true }
     });
 
-    const [detailedRaw, groupedAggregates] = await Promise.all([
+    const empresaPromise = filtros.empresaId ? prisma.empresa.findUnique({
+      where: { id: filtros.empresaId },
+      select: { id: true, razonSocial: true, rfc: true, coeficienteUtilidadFiscal: true, montoMaximoAnual: true, montoMaximoMensual: true }
+    }) : Promise.resolve(null);
+
+    const [detailedRaw, groupedAggregates, empresaSeleccionada] = await Promise.all([
       detailedPromise,
-      groupedPromise
+      groupedPromise,
+      empresaPromise
     ]);
 
     // Map the detailed records for the UI table
@@ -120,6 +126,11 @@ export async function obtenerReporteFacturas(filtros = {}) {
 
     // Calculate KPIs and chart data from grouped results in memory (instantaneous!)
     let totalMonto = 0;
+    let totalSubTotal = 0;
+    let totalImpuestosTrasladados = 0;
+    let totalMontoTimbradas = 0;
+    let totalSubTotalTimbradas = 0;
+    let totalImpuestosTimbradas = 0;
     let totalFacturas = 0;
     let totalPPD = 0;
     let totalPUE = 0;
@@ -128,12 +139,22 @@ export async function obtenerReporteFacturas(filtros = {}) {
 
     groupedAggregates.forEach(group => {
       const total = group._sum.total || 0;
+      const subTotal = group._sum.subTotal || 0;
+      const imp = group._sum.totalImpuestosTrasladados || 0;
       const count = group._count._all || 0;
       const estatus = group.estatus || 'Desconocido';
       const metodo = group.metodoPago || 'N/A';
 
       totalMonto += total;
+      totalSubTotal += subTotal;
+      totalImpuestosTrasladados += imp;
       totalFacturas += count;
+
+      if (estatus !== 'Cancelada') {
+        totalMontoTimbradas += total;
+        totalSubTotalTimbradas += subTotal;
+        totalImpuestosTimbradas += imp;
+      }
 
       if (metodo === 'PPD') totalPPD += count;
       if (metodo === 'PUE') totalPUE += count;
@@ -149,6 +170,11 @@ export async function obtenerReporteFacturas(filtros = {}) {
 
     const kpis = {
       totalMonto,
+      totalSubTotal,
+      totalImpuestosTrasladados,
+      totalMontoTimbradas,
+      totalSubTotalTimbradas,
+      totalImpuestosTimbradas,
       totalFacturas,
       totalPPD,
       totalPUE
@@ -159,6 +185,7 @@ export async function obtenerReporteFacturas(filtros = {}) {
       facturas: facturasTable, // Maintain parameter name compatibility
       kpis,
       chartData,
+      empresaSeleccionada,
       totalCount: totalFacturas
     };
   } catch (error) {
