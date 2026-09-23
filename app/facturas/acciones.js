@@ -23,6 +23,42 @@ export async function prepararYTimbrarFactura(formDataRaw) {
     if (!empresa) return { success: false, error: 'Empresa emisora no encontrada.' }
     if (!cliente) return { success: false, error: 'Cliente receptor no encontrado.' }
 
+    // 1.2 Validación de Límites de Facturación Anual
+    if (empresa.montoMaximoAnual && empresa.montoMaximoAnual > 0) {
+      let totalNuevaFactura = 0;
+      items.forEach(i => {
+        const lineSub = parseFloat(i.precio || 0) * parseInt(i.cantidad || 1);
+        const tasa = parseFloat(i.tasaOCuota || 0.16);
+        const tax = (i.impuesto === '002' || !i.impuesto) ? (lineSub * tasa) : 0;
+        totalNuevaFactura += lineSub + tax;
+      });
+
+      const now = new Date();
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const sumAnual = await prisma.factura.aggregate({
+        where: {
+          empresaId,
+          estatus: { not: 'Cancelada' },
+          fechaEmision: { gte: startOfYear }
+        },
+        _sum: { total: true }
+      });
+      const facturadoAnualActual = sumAnual._sum.total || 0;
+      const nuevoTotalAnual = facturadoAnualActual + totalNuevaFactura;
+
+      if (nuevoTotalAnual > empresa.montoMaximoAnual) {
+        if (!empresa.desbloqueoFacturacionExcedida) {
+          const maxStr = empresa.montoMaximoAnual.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const actStr = facturadoAnualActual.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const nuevaStr = totalNuevaFactura.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          return {
+            success: false,
+            error: `⛔ LÍMITE ANUAL ALCANZADO: La empresa "${(empresa.razonSocial || empresa.rfc).trim()}" superará su monto máximo anual permitido ($${maxStr} MXN). Total acumulado actual: $${actStr} MXN + Nueva factura: $${nuevaStr} MXN. Para continuar, un administrador debe autorizar el desbloqueo manual en Empresas > Modificar Empresa.`
+          };
+        }
+      }
+    }
+
     // 1.5 Auto-Guardado de Productos Al Vuelo
     // Si la descripciÃ³n del concepto fue alterada en el formulario y no existe en el catÃ¡logo, lo creamos.
     for (const i of items) {

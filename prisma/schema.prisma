@@ -97,7 +97,11 @@ model Empresa {
   // Planeación y Extras
   objetoSocial              String?
   actividadEconomica        String?
-  coeficienteUtilidadFiscal Float?
+  coeficienteUtilidadFiscal     Float?
+  montoMaximoAnual              Float?
+  montoMaximoMensual            Float?
+  desbloqueoFacturacionExcedida Boolean   @default(false)
+  desbloqueoFecha               DateTime?
 
   // Credenciales Institucionales
   imssCerBase64             String?

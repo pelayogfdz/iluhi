@@ -28,6 +28,10 @@ async function createEmpresa(formData) {
   const actividadEconomica = formData.get('actividadEconomica') || null
   const coefRaw = formData.get('coeficienteUtilidadFiscal')
   const coeficienteUtilidadFiscal = coefRaw !== null && coefRaw !== '' ? parseFloat(coefRaw) : null
+  const anualRaw = formData.get('montoMaximoAnual')
+  const montoMaximoAnual = anualRaw !== null && anualRaw !== '' ? parseFloat(anualRaw) : null
+  const mensualRaw = formData.get('montoMaximoMensual')
+  const montoMaximoMensual = mensualRaw !== null && mensualRaw !== '' ? parseFloat(mensualRaw) : null
 
   const telefono = formData.get('telefono') || null
   const paginaWeb = formData.get('paginaWeb') || null
@@ -117,6 +121,8 @@ async function createEmpresa(formData) {
       objetoSocial,
       actividadEconomica,
       coeficienteUtilidadFiscal,
+      montoMaximoAnual,
+      montoMaximoMensual,
       telefono,
       paginaWeb,
       redSocialFacebook,
@@ -234,6 +240,37 @@ export default function NuevaEmpresaPage() {
               className="form-control" 
               placeholder="0.0000" 
             />
+          </div>
+
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label htmlFor="montoMaximoMensual" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>📅 Límite Mensual ($ MXN)</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>±20%</span>
+              </label>
+              <input 
+                type="number" 
+                step="0.01" 
+                id="montoMaximoMensual" 
+                name="montoMaximoMensual" 
+                className="form-control" 
+                placeholder="0.00" 
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="montoMaximoAnual" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>🗓️ Límite Anual ($ MXN)</span>
+                <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 600 }}>Estricto</span>
+              </label>
+              <input 
+                type="number" 
+                step="0.01" 
+                id="montoMaximoAnual" 
+                name="montoMaximoAnual" 
+                className="form-control" 
+                placeholder="0.00" 
+              />
+            </div>
           </div>
 
           <div className="form-group">

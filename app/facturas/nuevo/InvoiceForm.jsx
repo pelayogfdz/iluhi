@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { prepararYTimbrarFactura, generarVistaPreviaPDFBase64 } from '../acciones'
 import { guardarCotizacion } from '../../cotizaciones/acciones'
+import { obtenerConsumoFacturacion } from '../../empresas/acciones'
 import ProductSelector from '../../components/ProductSelector'
 import SearchableSelect from '../../components/SearchableSelect'
 
@@ -11,6 +12,8 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
   const [resultado, setResultado] = useState(null)
+  const [consumoInfo, setConsumoInfo] = useState(null)
+  const [cargandoConsumo, setCargandoConsumo] = useState(false)
   
   // Estado del Formulario Principal
   const [empresaId, setEmpresaId] = useState('')
@@ -40,6 +43,27 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
   
   // Filtrado reactivo de productos de la empresa
   const productosFiltrados = catalogoProductos.filter(p => p.empresaId === empresaId)
+
+  // Carga reactiva de límites y consumo de facturación de la empresa emisora
+  useEffect(() => {
+    if (!empresaId) {
+      setConsumoInfo(null);
+      return;
+    }
+    let isMounted = true;
+    setCargandoConsumo(true);
+    obtenerConsumoFacturacion(empresaId)
+      .then(res => {
+        if (isMounted && res.success) {
+          setConsumoInfo(res.data);
+        }
+      })
+      .catch(err => console.error("Error al obtener consumo de facturación:", err))
+      .finally(() => {
+        if (isMounted) setCargandoConsumo(false);
+      });
+    return () => { isMounted = false; };
+  }, [empresaId]);
 
   const handleAgregarConcepto = () => {
     if (!tempProductoId) return;
@@ -210,6 +234,14 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
       return;
     }
 
+    if (bloqueadoAnual) {
+      setResultado({
+        msg: `⛔ Emisión Bloqueada: La empresa "${empresaSeleccionada?.razonSocial || ''}" superará su límite máximo anual ($${montoMaxAnual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN). Requiere autorización de desbloqueo manual en Empresas > Modificar Empresa.`,
+        type: "error"
+      });
+      return;
+    }
+
     setCargando(true)
     setResultado({ msg: "Conectando con el motor SAT...", type: "info" })
 
@@ -257,6 +289,20 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
 
   const totalFinal = totalSub + totalIVA;
 
+  // Métricas y validación reactiva de límites fiscales
+  const montoMaxAnual = consumoInfo?.montoMaximoAnual || 0;
+  const facturadoAnual = consumoInfo?.facturadoAnual || 0;
+  const proyectadoAnual = facturadoAnual + totalFinal;
+  const excedidoAnual = montoMaxAnual > 0 && proyectadoAnual > montoMaxAnual;
+  const desbloqueadoAnual = !!consumoInfo?.desbloqueado;
+  const bloqueadoAnual = excedidoAnual && !desbloqueadoAnual;
+
+  const montoMaxMensual = consumoInfo?.montoMaximoMensual || 0;
+  const facturadoMensual = consumoInfo?.facturadoMensual || 0;
+  const proyectadoMensual = facturadoMensual + totalFinal;
+  const maxToleranciaMensual = montoMaxMensual * 1.2;
+  const excedidoMensual = montoMaxMensual > 0 && proyectadoMensual > maxToleranciaMensual;
+
   const empresaSeleccionada = empresas?.find(e => e.id === empresaId);
   const clienteSeleccionado = clientesFiltrados?.find(c => c.id === clienteId);
 
@@ -280,6 +326,83 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
                 required={true}
               />
             </div>
+
+            {/* Banners Reactivos de Control de Límites */}
+            {cargandoConsumo && (
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0.5rem 0' }}>
+                ⏳ Consultando límites de facturación...
+              </div>
+            )}
+
+            {bloqueadoAnual && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid #ef4444',
+                borderRadius: '8px',
+                padding: '0.9rem 1rem',
+                color: '#fca5a5',
+                marginBottom: '1rem',
+                display: 'flex',
+                gap: '0.75rem',
+                alignItems: 'flex-start'
+              }}>
+                <span style={{ fontSize: '1.4rem' }}>⛔</span>
+                <div>
+                  <strong style={{ color: '#ffffff', fontSize: '0.92rem' }}>Emisión Bloqueada: Límite Anual Alcanzado</strong>
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', lineHeight: '1.4' }}>
+                    Esta factura (por ${totalFinal.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) superará el monto máximo anual de facturación (${montoMaxAnual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN).
+                    <br/>
+                    Total acumulado actual: <strong>${facturadoAnual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>.
+                    <br/>
+                    Para autorizar la emisión, un administrador debe realizar el <strong>Desbloqueo Manual</strong> en <em>Empresas &gt; Modificar Empresa</em>.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {excedidoAnual && desbloqueadoAnual && (
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid #f59e0b',
+                borderRadius: '8px',
+                padding: '0.9rem 1rem',
+                color: '#fef3c7',
+                marginBottom: '1rem',
+                display: 'flex',
+                gap: '0.75rem',
+                alignItems: 'flex-start'
+              }}>
+                <span style={{ fontSize: '1.4rem' }}>⚠️</span>
+                <div>
+                  <strong style={{ color: '#fbbf24', fontSize: '0.92rem' }}>Aviso Preventivo: Límite Anual Recomendado Excedido</strong>
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.82rem', lineHeight: '1.4' }}>
+                    Esta empresa superará su límite anual recomendado de <strong>${montoMaxAnual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong> (Facturado acumulado: <strong>${facturadoAnual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>).
+                    <br/>
+                    La facturación continúa permitida debido al <strong>Desbloqueo Manual Activo</strong> en la configuración de la empresa.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {excedidoMensual && !excedidoAnual && (
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.12)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                color: '#bfdbfe',
+                marginBottom: '1rem',
+                display: 'flex',
+                gap: '0.75rem',
+                alignItems: 'center',
+                fontSize: '0.82rem'
+              }}>
+                <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+                <div>
+                  <strong>Aviso de Margen Mensual:</strong> La facturación acumulada del mes (${proyectadoMensual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) supera el rango objetivo mensual (${montoMaxMensual.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN ± 20%).
+                </div>
+              </div>
+            )}
 
             {empresaId && cotizacionesFiltradas.length > 0 && (
                <div className="form-group" style={{ marginBottom: '1rem', background: 'rgba(0,255,136,0.05)', padding: '1rem', borderRadius: '8px', border: '1px dashed var(--accent)' }}>
@@ -532,8 +655,21 @@ export default function InvoiceForm({ empresas, clientes, catalogoProductos, cot
             >
               👁️ Mostrar Previa (PDF)
             </button>
-            <button type="submit" className="btn" disabled={cargando} style={{ padding: '1rem', fontSize: '1.2rem', flex: 2 }}>
-              {cargando ? 'Ensamblando Arquitectura SAT...' : '▶ DISPARAR TIMBRADO PAC'}
+            <button 
+              type="submit" 
+              className="btn" 
+              disabled={cargando || bloqueadoAnual} 
+              style={{ 
+                padding: '1rem', 
+                fontSize: '1.2rem', 
+                flex: 2,
+                opacity: bloqueadoAnual ? 0.5 : 1,
+                cursor: bloqueadoAnual ? 'not-allowed' : 'pointer',
+                background: bloqueadoAnual ? '#475569' : undefined
+              }}
+              title={bloqueadoAnual ? 'Emisión bloqueada: Límite anual excedido. Requiere desbloqueo en Empresas.' : undefined}
+            >
+              {cargando ? 'Ensamblando Arquitectura SAT...' : bloqueadoAnual ? '⛔ FACTURACIÓN BLOQUEADA' : '▶ DISPARAR TIMBRADO PAC'}
             </button>
           </div>
         </div>

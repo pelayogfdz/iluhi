@@ -6,6 +6,7 @@ import FielUploader from './FielUploader'
 import ImssUploader from './ImssUploader'
 import SociosPanel from './SociosPanel'
 import Facturapi from 'facturapi'
+import { obtenerConsumoFacturacion } from '../../acciones'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,10 @@ export default async function EditarEmpresaPage({ params }) {
   if (!empresa) {
     redirect('/empresas')
   }
+
+  // Obtener métricas y consumo de facturación
+  const consumoRes = await obtenerConsumoFacturacion(id);
+  const consumoInicial = consumoRes.success ? consumoRes.data : null;
 
   // Fetch Facturapi organization to get certificate expiration dates & logo
   let facturapiOrg = null;
@@ -40,6 +45,7 @@ export default async function EditarEmpresaPage({ params }) {
     ...empresa,
     fielVigencia: fielExpiresAt ? new Date(fielExpiresAt).toISOString() : (empresa.fielVigencia ? empresa.fielVigencia.toISOString() : null),
     csdVigencia: csdExpiresAt ? new Date(csdExpiresAt).toISOString() : null,
+    desbloqueoFecha: empresa.desbloqueoFecha ? empresa.desbloqueoFecha.toISOString() : null,
     createdAt: empresa.createdAt.toISOString(),
     updatedAt: empresa.updatedAt.toISOString(),
     logoUrl
@@ -64,7 +70,7 @@ export default async function EditarEmpresaPage({ params }) {
         </div>
       </div>
       
-      <EditForm empresa={empresaData} />
+      <EditForm empresa={empresaData} consumoInicial={consumoInicial} />
       
       <h3 style={{ marginTop: '3rem', marginBottom: '1.5rem', color: 'var(--primary)' }}>Credenciales, Certificados y Facturapi</h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>

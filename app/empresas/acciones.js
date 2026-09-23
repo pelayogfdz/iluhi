@@ -62,6 +62,10 @@ export async function actualizarEmpresa(id, data) {
         objetoSocial: data.objetoSocial || null,
         actividadEconomica: data.actividadEconomica || null,
         coeficienteUtilidadFiscal: data.coeficienteUtilidadFiscal !== undefined && data.coeficienteUtilidadFiscal !== '' && data.coeficienteUtilidadFiscal !== null ? parseFloat(data.coeficienteUtilidadFiscal) : null,
+        montoMaximoAnual: data.montoMaximoAnual !== undefined && data.montoMaximoAnual !== '' && data.montoMaximoAnual !== null ? parseFloat(data.montoMaximoAnual) : null,
+        montoMaximoMensual: data.montoMaximoMensual !== undefined && data.montoMaximoMensual !== '' && data.montoMaximoMensual !== null ? parseFloat(data.montoMaximoMensual) : null,
+        desbloqueoFacturacionExcedida: data.desbloqueoFacturacionExcedida !== undefined ? !!data.desbloqueoFacturacionExcedida : undefined,
+        desbloqueoFecha: data.desbloqueoFacturacionExcedida ? new Date() : undefined,
         calle: data.calle,
         numExterior: data.numExterior,
         numInterior: data.numInterior,
@@ -107,6 +111,110 @@ export async function actualizarEmpresa(id, data) {
   } catch (error) {
     console.error("Error al actualizar empresa: ", error);
     return { success: false, error: error.message };
+  }
+}
+
+export async function toggleDesbloqueoFacturacion(empresaId, estado) {
+  try {
+    const updated = await prisma.empresa.update({
+      where: { id: empresaId },
+      data: {
+        desbloqueoFacturacionExcedida: !!estado,
+        desbloqueoFecha: estado ? new Date() : null
+      }
+    });
+    return { 
+      success: true, 
+      desbloqueado: updated.desbloqueoFacturacionExcedida, 
+      desbloqueoFecha: updated.desbloqueoFecha ? updated.desbloqueoFecha.toISOString() : null 
+    };
+  } catch (error) {
+    console.error("Error al alternar desbloqueo de facturación:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function obtenerConsumoFacturacion(empresaId) {
+  try {
+    const empresa = await prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: {
+        id: true,
+        rfc: true,
+        razonSocial: true,
+        montoMaximoAnual: true,
+        montoMaximoMensual: true,
+        desbloqueoFacturacionExcedida: true,
+        desbloqueoFecha: true
+      }
+    });
+
+    if (!empresa) return { success: false, error: 'Empresa no encontrada' };
+
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [sumAnual, sumMensual] = await Promise.all([
+      prisma.factura.aggregate({
+        where: {
+          empresaId,
+          estatus: { not: 'Cancelada' },
+          fechaEmision: { gte: startOfYear }
+        },
+        _sum: { total: true },
+        _count: { id: true }
+      }),
+      prisma.factura.aggregate({
+        where: {
+          empresaId,
+          estatus: { not: 'Cancelada' },
+          fechaEmision: { gte: startOfMonth }
+        },
+        _sum: { total: true },
+        _count: { id: true }
+      })
+    ]);
+
+    const facturadoAnual = sumAnual._sum.total || 0;
+    const facturadoMensual = sumMensual._sum.total || 0;
+    const conteoAnual = sumAnual._count.id || 0;
+    const conteoMensual = sumMensual._count.id || 0;
+
+    const montoMaxAnual = empresa.montoMaximoAnual || 0;
+    const montoMaxMensual = empresa.montoMaximoMensual || 0;
+
+    const porcentajeAnual = montoMaxAnual > 0 ? (facturadoAnual / montoMaxAnual) * 100 : 0;
+    const porcentajeMensual = montoMaxMensual > 0 ? (facturadoMensual / montoMaxMensual) * 100 : 0;
+
+    const excedidoAnual = montoMaxAnual > 0 && facturadoAnual >= montoMaxAnual;
+    const minMensualTolerancia = montoMaxMensual * 0.8;
+    const maxMensualTolerancia = montoMaxMensual * 1.2;
+    const fueraRangoMensual = montoMaxMensual > 0 && (facturadoMensual > maxMensualTolerancia);
+
+    return {
+      success: true,
+      empresa,
+      data: {
+        facturadoAnual,
+        facturadoMensual,
+        conteoAnual,
+        conteoMensual,
+        montoMaximoAnual: montoMaxAnual,
+        montoMaximoMensual: montoMaxMensual,
+        porcentajeAnual,
+        porcentajeMensual,
+        excedidoAnual,
+        desbloqueado: !!empresa.desbloqueoFacturacionExcedida,
+        desbloqueoFecha: empresa.desbloqueoFecha ? empresa.desbloqueoFecha.toISOString() : null,
+        minMensualTolerancia,
+        maxMensualTolerancia,
+        fueraRangoMensual
+      }
+    };
+  } catch (err) {
+    console.error("Error en obtenerConsumoFacturacion:", err);
+    return { success: false, error: err.message };
   }
 }
 

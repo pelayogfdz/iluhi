@@ -3,15 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { actualizarEmpresa, testSmtp, testFacturapiTenantKey } from '../../acciones'
+import { actualizarEmpresa, testSmtp, testFacturapiTenantKey, toggleDesbloqueoFacturacion } from '../../acciones'
 
-export default function EditForm({ empresa }) {
+export default function EditForm({ empresa, consumoInicial }) {
   const router = useRouter()
   const [cargando, setCargando] = useState(false)
   const [msg, setMsg] = useState(null)
   const [showPass, setShowPass] = useState(false)
   const [probarStatus, setProbarStatus] = useState(null)
   const [probarFacturapiStatus, setProbarFacturapiStatus] = useState(null)
+  const [consumo, setConsumo] = useState(consumoInicial || null)
+  const [desbloqueando, setDesbloqueando] = useState(false)
   
   const [formData, setFormData] = useState({
     rfc: empresa.rfc || '',
@@ -22,6 +24,9 @@ export default function EditForm({ empresa }) {
     objetoSocial: empresa.objetoSocial || '',
     actividadEconomica: empresa.actividadEconomica || '',
     coeficienteUtilidadFiscal: empresa.coeficienteUtilidadFiscal !== null && empresa.coeficienteUtilidadFiscal !== undefined ? empresa.coeficienteUtilidadFiscal : '',
+    montoMaximoAnual: empresa.montoMaximoAnual !== null && empresa.montoMaximoAnual !== undefined ? empresa.montoMaximoAnual : '',
+    montoMaximoMensual: empresa.montoMaximoMensual !== null && empresa.montoMaximoMensual !== undefined ? empresa.montoMaximoMensual : '',
+    desbloqueoFacturacionExcedida: !!empresa.desbloqueoFacturacionExcedida,
     razonSocial: empresa.razonSocial || '',
     regimen: empresa.regimen || '',
     codigoPostal: empresa.codigoPostal || '',
@@ -89,6 +94,35 @@ export default function EditForm({ empresa }) {
       setProbarStatus({ type: 'success', text: '✅ ¡Conexión exitosa!' })
     } else {
       setProbarStatus({ type: 'error', text: '❌ Falló: ' + result.error })
+    }
+  }
+
+  const handleToggleDesbloqueo = async () => {
+    const nuevoEstado = !formData.desbloqueoFacturacionExcedida;
+    setDesbloqueando(true);
+    setMsg(null);
+    try {
+      const res = await toggleDesbloqueoFacturacion(empresa.id, nuevoEstado);
+      if (res.success) {
+        setFormData(prev => ({ ...prev, desbloqueoFacturacionExcedida: nuevoEstado }));
+        setConsumo(prev => prev ? { 
+          ...prev, 
+          desbloqueado: nuevoEstado,
+          excedidoAnual: prev.excedidoAnual 
+        } : prev);
+        setMsg({
+          type: 'success',
+          text: nuevoEstado
+            ? '🔓 Facturación anual desbloqueada. Los usuarios podrán seguir facturando pero verán una advertencia de límite anual excedido.'
+            : '🔒 Desbloqueo revocado. Si la empresa alcanza su límite anual, el sistema bloqueará la emisión de nuevas facturas.'
+        });
+      } else {
+        setMsg({ type: 'error', text: 'Error al cambiar desbloqueo: ' + res.error });
+      }
+    } catch (err) {
+      setMsg({ type: 'error', text: 'Error inesperado: ' + err.message });
+    } finally {
+      setDesbloqueando(false);
     }
   }
 
@@ -209,6 +243,208 @@ export default function EditForm({ empresa }) {
               placeholder="0.0000" 
               className="form-control" 
             />
+          </div>
+        </div>
+
+        <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '1.5rem 0' }} />
+
+        {/* ======================================================== */}
+        {/* SECCIÓN: CONTROL Y LÍMITES DE FACTURACIÓN ANUAL Y MENSUAL */}
+        {/* ======================================================== */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1.2rem' }}>
+            <div>
+              <h3 style={{ color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>💰 Límites y Control de Facturación</span>
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
+                El límite anual es estricto e impide nuevas emisiones; el mensual opera con margen de ±20%.
+              </p>
+            </div>
+            {formData.montoMaximoAnual > 0 && (
+              <button
+                type="button"
+                onClick={handleToggleDesbloqueo}
+                disabled={desbloqueando}
+                className="btn"
+                style={{
+                  background: formData.desbloqueoFacturacionExcedida 
+                    ? 'linear-gradient(135deg, #ea580c, #c2410c)' 
+                    : 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  padding: '0.5rem 1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  cursor: desbloqueando ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {desbloqueando ? (
+                  <span>⏳ Procesando...</span>
+                ) : formData.desbloqueoFacturacionExcedida ? (
+                  <><span>🔒</span> Volver a Bloquear Límite Anual</>
+                ) : (
+                  <><span>🔓</span> Desbloquear Facturación Excedida</>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Panel de Métricas de Consumo en Tiempo Real */}
+          {consumo && (
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+              gap: '1rem', 
+              marginBottom: '1.2rem' 
+            }}>
+              {/* Tarjeta Mes Actual */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${consumo.fueraRangoMensual ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}`,
+                borderRadius: '12px',
+                padding: '1rem',
+                position: 'relative'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8' }}>📅 Mes Actual ({new Date().toLocaleString('es-MX', { month: 'long', year: 'numeric' })})</span>
+                  {formData.montoMaximoMensual > 0 && (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '12px',
+                      background: consumo.fueraRangoMensual ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                      color: consumo.fueraRangoMensual ? '#fbbf24' : '#34d399',
+                      fontWeight: 600
+                    }}>
+                      {consumo.fueraRangoMensual ? '⚠️ Rango +20% Superado' : '✅ En Rango'}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.25rem' }}>
+                  ${(consumo.facturadoMensual || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.8rem', color: '#64748b' }}>MXN</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                  {formData.montoMaximoMensual > 0 ? (
+                    <>Monto base mensual: <strong>${parseFloat(formData.montoMaximoMensual).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong><br/>
+                    <span style={{ color: '#64748b' }}>Margen ±20%: ${consumo.minMensualTolerancia?.toLocaleString('es-MX', { maximumFractionDigits: 0 })} – ${consumo.maxMensualTolerancia?.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span></>
+                  ) : (
+                    <em>Sin monto mensual configurado</em>
+                  )}
+                </div>
+              </div>
+
+              {/* Tarjeta Año Actual */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${consumo.excedidoAnual ? (formData.desbloqueoFacturacionExcedida ? '#f59e0b' : '#ef4444') : 'rgba(255, 255, 255, 0.1)'}`,
+                borderRadius: '12px',
+                padding: '1rem',
+                position: 'relative'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#94a3b8' }}>🗓️ Año {new Date().getFullYear()}</span>
+                  {formData.montoMaximoAnual > 0 && (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '12px',
+                      background: consumo.excedidoAnual 
+                        ? (formData.desbloqueoFacturacionExcedida ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)') 
+                        : 'rgba(16, 185, 129, 0.2)',
+                      color: consumo.excedidoAnual 
+                        ? (formData.desbloqueoFacturacionExcedida ? '#fbbf24' : '#f87171') 
+                        : '#34d399',
+                      fontWeight: 600
+                    }}>
+                      {consumo.excedidoAnual 
+                        ? (formData.desbloqueoFacturacionExcedida ? '🔓 Excedido (Desbloqueado)' : '⛔ Excedido (Bloqueado)') 
+                        : `${consumo.porcentajeAnual?.toFixed(1)}% Consumido`}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.25rem' }}>
+                  ${(consumo.facturadoAnual || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{ fontSize: '0.8rem', color: '#64748b' }}>MXN</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                  {formData.montoMaximoAnual > 0 ? (
+                    <>Máximo Anual: <strong>${parseFloat(formData.montoMaximoAnual).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong> ({consumo.conteoAnual || 0} facturas emitidas)</>
+                  ) : (
+                    <em>Sin monto anual configurado</em>
+                  )}
+                </div>
+                {/* Barra de Progreso */}
+                {formData.montoMaximoAnual > 0 && (
+                  <div style={{ width: '100%', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '4px', marginTop: '0.75rem', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${Math.min(consumo.porcentajeAnual || 0, 100)}%`,
+                      height: '100%',
+                      background: (consumo.porcentajeAnual || 0) >= 100 ? '#ef4444' : (consumo.porcentajeAnual || 0) >= 80 ? '#f59e0b' : '#10b981',
+                      borderRadius: '4px',
+                      transition: 'width 0.4s ease'
+                    }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Banner de Estado de Desbloqueo */}
+          {formData.desbloqueoFacturacionExcedida && (
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '8px',
+              padding: '0.75rem 1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              fontSize: '0.85rem',
+              color: '#fef3c7'
+            }}>
+              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+              <div>
+                <strong>Desbloqueo Manual Activo:</strong> Esta empresa cuenta con autorización para seguir facturando aun superando el límite anual. Los usuarios recibirán un aviso preventivo informativo al emitir nuevas facturas.
+              </div>
+            </div>
+          )}
+
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>📅 Monto Máximo Mensual ($ MXN)</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Tolerancia ±20%</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name="montoMaximoMensual"
+                value={formData.montoMaximoMensual}
+                onChange={handleChange}
+                placeholder="0.00"
+                className="form-control"
+              />
+            </div>
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>🗓️ Monto Máximo Anual ($ MXN)</span>
+                <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 600 }}>Límite Estricto</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name="montoMaximoAnual"
+                value={formData.montoMaximoAnual}
+                onChange={handleChange}
+                placeholder="0.00"
+                className="form-control"
+              />
+            </div>
           </div>
         </div>
 
