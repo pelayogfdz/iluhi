@@ -426,11 +426,11 @@ function extractTaxesFromXml(xmlText) {
   return taxes;
 }
 
-export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago, moneda = 'MXN', tipoCambio = 1, numOperacion = '') {
+export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, fechaPago, moneda = 'MXN', tipoCambio = 1, numOperacion = '', sustituyeCompUuid = '') {
   try {
     const fac = await prisma.factura.findUnique({ 
-        where: { id: facturaId },
-        include: { empresa: true, cliente: true }
+        where: { id: facturaId }, 
+        include: { empresa: true, cliente: true } 
     });
     if (!fac || !fac.uuid) return { success: false, error: 'Factura no timbrada o inexistente.' };
     
@@ -439,6 +439,11 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
     const activeTenantKey = fac.empresa.facturapiLiveKey
       ? fac.empresa.facturapiLiveKey 
       : (fac.empresa.facturapiTestKey || process.env.FACTURAPI_LIVE_KEY);
+
+    const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
+    const activeComplements = existingComplements.filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado');
+    const previousPaymentsSum = activeComplements.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0);
+    const computedLastBalance = Math.max(0, fac.total - previousPaymentsSum);
 
     if (activeTenantKey && !activeTenantKey.includes('PENDING_KEY')) {
       const tenantFacturapi = new facturapi.constructor(activeTenantKey);
@@ -536,14 +541,10 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         }
       }
 
-      const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
-      const previousPaymentsSum = existingComplements.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0);
-      const computedLastBalance = fac.total - previousPaymentsSum;
-
       const relatedDocPayload = {
         uuid: realSatUuid,
         amount: montoAbonadoFloat,
-        installment: existingComplements.length + 1,
+        installment: activeComplements.length + 1,
         last_balance: originalInvoice ? (originalInvoice.amount_due || originalInvoice.total || montoAbonadoFloat) : computedLastBalance
       };
       
@@ -593,6 +594,15 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         ]
       };
 
+      if (sustituyeCompUuid && sustituyeCompUuid.trim() !== '') {
+        payload.related_documents = [
+          {
+            relationship: "04",
+            documents: [sustituyeCompUuid.trim()]
+          }
+        ];
+      }
+
       let newReceipt = null;
       try {
         const tenantFacturapi = new facturapi.constructor(activeTenantKey);
@@ -615,7 +625,10 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
           serie: newReceipt.series || '',
           folio: newReceipt.folio_number ? parseInt(newReceipt.folio_number, 10) : null,
           amount: parseFloat(montoAbonado),
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          status: newReceipt.status || 'valid',
+          estatus: newReceipt.status === 'canceled' ? 'Cancelado' : 'Timbrado',
+          sustituyeUuid: sustituyeCompUuid ? sustituyeCompUuid.trim() : undefined
         });
       }
 
@@ -627,9 +640,8 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
         }
       })
     } else {
-       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'} Moneda: ${moneda}`);
+       console.log(`[SIMULACION] Emitiendo complemento REP a factura ${fac.uuid} por $${montoAbonado} en fecha ${fechaPago || 'actual'} Moneda: ${moneda} Sustituye: ${sustituyeCompUuid}`);
        
-       const existingComplements = Array.isArray(fac.complementosPago) ? [...fac.complementosPago] : [];
        existingComplements.push({
          id: `sim_comp_${Date.now()}`,
          uuid: `sim_uuid_${Date.now()}`,
@@ -637,7 +649,10 @@ export async function emitirComplementoPago(facturaId, montoAbonado, formaPago, 
          folio: Math.floor(Math.random() * 1000) + 1,
          amount: parseFloat(montoAbonado),
          date: new Date().toISOString(),
-         simulated: true
+         status: 'valid',
+         estatus: 'Timbrado',
+         simulated: true,
+         sustituyeUuid: sustituyeCompUuid ? sustituyeCompUuid.trim() : undefined
        });
 
        await prisma.factura.update({
@@ -841,8 +856,21 @@ export async function cancelarComplementoPago(facturaId, receiptId, motivo = '02
        console.log(`[SIMULACION] Cancelando complemento ${receiptId} con motivo ${motivo}`);
     }
 
-    const updatedComplements = fac.complementosPago.filter(c => c.id !== receiptId && c.receipt_id !== receiptId);
-    const newStatus = updatedComplements.length === 0 ? 'Timbrada' : 'Timbrada - Complementado Local';
+    const updatedComplements = (fac.complementosPago || []).map(c => {
+      if (c.id === receiptId || c.receipt_id === receiptId || c.uuid === receiptId) {
+        return {
+          ...c,
+          status: 'canceled',
+          estatus: 'Cancelado',
+          fechaCancelacion: new Date().toISOString(),
+          motivoCancelacion: motivo
+        };
+      }
+      return c;
+    });
+
+    const activeComplements = updatedComplements.filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado');
+    const newStatus = activeComplements.length === 0 ? 'Timbrada' : 'Timbrada - Complementado Local';
 
     await prisma.factura.update({
       where: { id: facturaId },

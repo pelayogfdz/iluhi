@@ -6,8 +6,11 @@ export default function BotonComplemento({ factura, onComplement }) {
   const [open, setOpen] = useState(false)
 
   const complements = Array.isArray(factura.complementosPago) ? factura.complementosPago : []
-  const previousPayments = complements.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0)
+  const activeComplements = complements.filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado')
+  const previousPayments = activeComplements.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0)
   const remainingBalance = Math.max(0, factura.total - previousPayments)
+
+  const canceledComplements = complements.filter(c => (c.status === 'canceled' || c.estatus === 'Cancelado') && (c.uuid || c.id))
 
   const [monto, setMonto] = useState(remainingBalance)
   const [formaPago, setFormaPago] = useState('03') // 03 Transferencia by default
@@ -15,6 +18,7 @@ export default function BotonComplemento({ factura, onComplement }) {
   const [moneda, setMoneda] = useState('MXN')
   const [tipoCambio, setTipoCambio] = useState(1)
   const [numOperacion, setNumOperacion] = useState('')
+  const [sustituyeCompUuid, setSustituyeCompUuid] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Solo mostrar para PPD y q tenga ID (esta timbrada), si es PUE no lleva complemento.
@@ -30,7 +34,7 @@ export default function BotonComplemento({ factura, onComplement }) {
     }
     setLoading(true)
     try {
-      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago, moneda, parseFloat(tipoCambio), numOperacion)
+      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago, moneda, parseFloat(tipoCambio), numOperacion, sustituyeCompUuid)
       setOpen(false)
     } catch (err) {
       alert(err.message)
@@ -129,6 +133,30 @@ export default function BotonComplemento({ factura, onComplement }) {
                />
                <small style={{ color: 'var(--text-secondary)' }}>Dejar vacío para usar la fecha y hora actual.</small>
              </div>
+
+             {canceledComplements.length > 0 && (
+               <div style={{ marginBottom: '1rem', background: 'rgba(168,85,247,0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
+                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#c084fc', fontWeight: 'bold' }}>
+                   🔄 Sustituir REP previo cancelado (Relación 04 - Opcional)
+                 </label>
+                 <select 
+                   className="input" 
+                   value={sustituyeCompUuid} 
+                   onChange={(e) => setSustituyeCompUuid(e.target.value)}
+                   style={{ fontSize: '0.85rem' }}
+                 >
+                   <option value="">-- Ninguno (Emisión ordinaria) --</option>
+                   {canceledComplements.map(c => (
+                     <option key={c.id || c.uuid} value={c.uuid || c.id}>
+                       {c.serie || ''}{c.folio || ''} - {c.uuid ? `${c.uuid.substring(0, 13)}...` : c.id} (${parseFloat(c.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })})
+                     </option>
+                   ))}
+                 </select>
+                 <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px', fontSize: '0.75rem' }}>
+                   Asocia este nuevo REP al comprobante cancelado con la relación tipo 04 ante el SAT.
+                 </small>
+               </div>
+             )}
 
              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                <button className="btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }} onClick={() => setOpen(false)}>Cancelar</button>

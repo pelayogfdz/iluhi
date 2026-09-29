@@ -130,8 +130,8 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
      router.refresh();
   }
 
-  const handleComplement = async (id, monto, formaPago, fechaPago, moneda, tipoCambio, numOperacion) => {
-     const res = await emitirComplementoPago(id, monto, formaPago, fechaPago, moneda, tipoCambio, numOperacion);
+  const handleComplement = async (id, monto, formaPago, fechaPago, moneda, tipoCambio, numOperacion, sustituyeCompUuid) => {
+     const res = await emitirComplementoPago(id, monto, formaPago, fechaPago, moneda, tipoCambio, numOperacion, sustituyeCompUuid);
      if(!res.success) throw new Error(res.error);
      alert("Complemento REP timbrado exitosamente.");
      router.refresh();
@@ -316,16 +316,19 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                        color: fac.estatus.includes('Cancelada') ? '#f43f5e' : fac.estatus.includes('Timbrada') ? 'lightgreen' : 'var(--warning-color, yellow)',
                        textAlign: 'center', display: 'inline-block'
                     }}>{fac.estatus}</span>
-                    {fac.metodoPago === 'PPD' && !fac.estatus.includes('Cancelada') && (
-                      <span style={{
-                        padding: '2px 6px', borderRadius: '4px', fontSize: '11px',
-                        background: (Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0) ? 'rgba(14, 116, 144, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-                        color: (Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0) ? '#38bdf8' : '#eab308',
-                        textAlign: 'center', display: 'inline-block'
-                      }}>
-                        {(Array.isArray(fac.complementosPago) && fac.complementosPago.length > 0) ? 'Con Pago REP' : '⏳ Espera de Pago'}
-                      </span>
-                    )}
+                    {fac.metodoPago === 'PPD' && !fac.estatus.includes('Cancelada') && (() => {
+                      const activeComps = (Array.isArray(fac.complementosPago) ? fac.complementosPago : []).filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado');
+                      return (
+                        <span style={{
+                          padding: '2px 6px', borderRadius: '4px', fontSize: '11px',
+                          background: activeComps.length > 0 ? 'rgba(14, 116, 144, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                          color: activeComps.length > 0 ? '#38bdf8' : '#eab308',
+                          textAlign: 'center', display: 'inline-block'
+                        }}>
+                          {activeComps.length > 0 ? 'Con Pago REP' : '⏳ Espera de Pago'}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </td>
                 <td>
@@ -358,18 +361,54 @@ export default function FacturasClient({ facturasInitial, empresas, clientes = [
                     </div>
                     {fac.complementosPago.map(comp => {
                       const compFolio = comp.serie || comp.folio ? `${comp.serie || ''}${comp.folio || ''}` : 'Sin Folio';
+                      const isCanceled = comp.status === 'canceled' || comp.estatus === 'Cancelado';
                       return (
-                        <div key={comp.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '4px', background: 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '6px' }}>
-                          <span style={{ fontWeight: 'bold', color: 'var(--primary)', minWidth: '70px', fontSize: '0.85rem' }}>
+                        <div key={comp.id || comp.uuid} style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '1rem', 
+                          marginBottom: '6px', 
+                          background: isCanceled ? 'rgba(225,29,72,0.08)' : 'rgba(0,0,0,0.3)', 
+                          padding: '6px 12px', 
+                          borderRadius: '6px',
+                          borderLeft: isCanceled ? '3px solid #f43f5e' : '3px solid #0ea5e9'
+                        }}>
+                          <span style={{ fontWeight: 'bold', color: isCanceled ? '#f43f5e' : 'var(--primary)', minWidth: '70px', fontSize: '0.85rem' }}>
                             {compFolio}
                           </span>
-                          <span style={{ fontFamily: 'monospace', color: '#ccc', width: '280px', fontSize: '0.85rem' }}>{comp.uuid || comp.id}</span>
-                          <span style={{ width: '100px', fontSize: '0.85rem' }}>${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          <span style={{ width: '120px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{formatDateDDMMYYYY(comp.date)}</span>
+                          <span style={{ fontFamily: 'monospace', color: isCanceled ? '#94a3b8' : '#ccc', width: '280px', fontSize: '0.85rem', textDecoration: isCanceled ? 'line-through' : 'none' }}>
+                            {comp.uuid || comp.id}
+                          </span>
+                          <span style={{ width: '100px', fontSize: '0.85rem', fontWeight: 'bold', color: isCanceled ? '#94a3b8' : 'lightgreen' }}>
+                            ${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          <span style={{ width: '110px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                            {formatDateDDMMYYYY(comp.date)}
+                          </span>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {isCanceled ? (
+                              <span style={{ background: 'rgba(244,63,94,0.2)', color: '#f43f5e', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                ❌ Cancelado
+                              </span>
+                            ) : (
+                              <span style={{ background: 'rgba(34,197,94,0.2)', color: '#22c55e', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                ✓ Vigente
+                              </span>
+                            )}
+                            {comp.sustituyeUuid && (
+                              <span style={{ background: 'rgba(168,85,247,0.15)', color: '#c084fc', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem' }} title={`Sustituye a UUID: ${comp.sustituyeUuid}`}>
+                                🔄 Sustituye: {comp.sustituyeUuid.substring(0, 8)}...
+                              </span>
+                            )}
+                          </div>
+
                           <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                             <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#0ea5e9'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'pdf')}>📥 PDF REP</button>
                             <button className="btn" style={{padding: '2px 8px', fontSize: '0.7rem', background: '#eab308'}} onClick={() => openDownloadComplement(fac.uuid, comp.id, 'xml')}>📥 XML REP</button>
-                            <BotonCancelarComplemento facturaId={fac.id} complemento={comp} onCancel={handleCancelComplement} />
+                            {!isCanceled && (
+                              <BotonCancelarComplemento facturaId={fac.id} complemento={comp} onCancel={handleCancelComplement} />
+                            )}
                           </div>
                         </div>
                       );

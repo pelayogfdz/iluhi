@@ -24,6 +24,7 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
   const [moneda, setMoneda] = useState('MXN')
   const [tipoCambio, setTipoCambio] = useState(1)
   const [numOperacion, setNumOperacion] = useState('')
+  const [sustituyeCompUuid, setSustituyeCompUuid] = useState('')
   const [loading, setLoading] = useState(false)
 
   // 1. Filtrar las facturas PPD
@@ -73,7 +74,8 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
   // Abre el modal para emitir un complemento
   const openEmitModal = (factura) => {
     const comps = Array.isArray(factura.complementosPago) ? factura.complementosPago : []
-    const paid = comps.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0)
+    const activeComps = comps.filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado')
+    const paid = activeComps.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0)
     const bal = Math.max(0, factura.total - paid)
 
     setSelectedFactura(factura)
@@ -83,6 +85,7 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
     setMoneda('MXN')
     setTipoCambio(1)
     setNumOperacion('')
+    setSustituyeCompUuid('')
     setModalOpen(true)
   }
 
@@ -100,7 +103,8 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
         fechaPago,
         moneda,
         parseFloat(tipoCambio),
-        numOperacion
+        numOperacion,
+        sustituyeCompUuid
       )
       if (!res.success) throw new Error(res.error)
       alert("Complemento de Pago (REP) emitido y timbrado exitosamente.")
@@ -230,7 +234,8 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
               ) : (
                 filteredFacturas.map(fac => {
                   const comps = Array.isArray(fac.complementosPago) ? fac.complementosPago : []
-                  const paid = comps.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0)
+                  const activeComps = comps.filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado')
+                  const paid = activeComps.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0)
                   const balance = Math.max(0, fac.total - paid)
                   const isFullyPaid = balance <= 0.01
 
@@ -287,6 +292,7 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
                 <th>Factura Origen</th>
                 <th>Cliente Receptor</th>
                 <th>ID / UUID Complemento</th>
+                <th>Estatus</th>
                 <th>Fecha de Pago</th>
                 <th>Monto Abonado</th>
                 <th>Descargas</th>
@@ -296,47 +302,72 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
             <tbody>
               {complementsHistory.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <td colSpan="8" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     No hay complementos de pago registrados en el historial aún.
                   </td>
                 </tr>
               ) : (
-                complementsHistory.map(comp => (
-                  <tr key={comp.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '1rem 0' }}>
-                      <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{comp.facturaFolio}</div>
-                      <small style={{ opacity: 0.5 }}>{comp.empresa.razonSocial}</small>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 'bold' }}>{comp.cliente.razonSocial}</div>
-                      <small style={{ color: 'var(--text-secondary)' }}>{comp.cliente.rfc}</small>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 'bold', color: 'var(--primary)', fontSize: '1rem' }}>
-                        {comp.serie || comp.folio ? `${comp.serie || ''}${comp.folio || ''}` : 'Sin Folio'}
-                      </div>
-                      <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', opacity: 0.5 }}>{comp.uuid || 'En Proceso (Test)'}</div>
-                      <small style={{ opacity: 0.5 }}>ID: {comp.id}</small>
-                    </td>
-                    <td>{formatDateDDMMYYYY(comp.date)}</td>
-                    <td style={{ fontWeight: 'bold', color: 'lightgreen' }}>
-                      ${comp.amount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button className="btn btn-secondary" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => openDownload(comp.facturaUuid, comp.id, 'pdf')}>PDF</button>
-                        <button className="btn btn-secondary" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => openDownload(comp.facturaUuid, comp.id, 'xml')}>XML</button>
-                      </div>
-                    </td>
-                    <td>
-                      <BotonCancelarComplemento 
-                        facturaId={comp.facturaId} 
-                        receiptId={comp.id} 
-                        onCancel={handleCancelComplement} 
-                      />
-                    </td>
-                  </tr>
-                ))
+                complementsHistory.map(comp => {
+                  const isCanceled = comp.status === 'canceled' || comp.estatus === 'Cancelado';
+                  return (
+                    <tr key={comp.id || comp.uuid} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: isCanceled ? 'rgba(225,29,72,0.05)' : 'transparent' }}>
+                      <td style={{ padding: '1rem 0' }}>
+                        <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{comp.facturaFolio}</div>
+                        <small style={{ opacity: 0.5 }}>{comp.empresa?.razonSocial}</small>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 'bold' }}>{comp.cliente?.razonSocial}</div>
+                        <small style={{ color: 'var(--text-secondary)' }}>{comp.cliente?.rfc}</small>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 'bold', color: isCanceled ? '#f43f5e' : 'var(--primary)', fontSize: '1rem' }}>
+                          {comp.serie || comp.folio ? `${comp.serie || ''}${comp.folio || ''}` : 'Sin Folio'}
+                        </div>
+                        <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', opacity: 0.6, textDecoration: isCanceled ? 'line-through' : 'none' }}>{comp.uuid || 'En Proceso (Test)'}</div>
+                        <small style={{ opacity: 0.5 }}>ID: {comp.id}</small>
+                        {comp.sustituyeUuid && (
+                          <div>
+                            <span style={{ background: 'rgba(168,85,247,0.15)', color: '#c084fc', padding: '2px 6px', borderRadius: '4px', fontSize: '0.72rem', display: 'inline-block', marginTop: '2px' }} title={`Sustituye a UUID: ${comp.sustituyeUuid}`}>
+                              🔄 Sustituye: {comp.sustituyeUuid.substring(0, 8)}...
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        {isCanceled ? (
+                          <span style={{ background: 'rgba(244,63,94,0.2)', color: '#f43f5e', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            ❌ Cancelado
+                          </span>
+                        ) : (
+                          <span style={{ background: 'rgba(34,197,94,0.2)', color: '#22c55e', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            ✓ Vigente
+                          </span>
+                        )}
+                      </td>
+                      <td>{formatDateDDMMYYYY(comp.date)}</td>
+                      <td style={{ fontWeight: 'bold', color: isCanceled ? '#94a3b8' : 'lightgreen' }}>
+                        ${parseFloat(comp.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button className="btn btn-secondary" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => openDownload(comp.facturaUuid, comp.id, 'pdf')}>PDF</button>
+                          <button className="btn btn-secondary" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => openDownload(comp.facturaUuid, comp.id, 'xml')}>XML</button>
+                        </div>
+                      </td>
+                      <td>
+                        {!isCanceled ? (
+                          <BotonCancelarComplemento 
+                            facturaId={comp.facturaId} 
+                            receiptId={comp.id} 
+                            onCancel={handleCancelComplement} 
+                          />
+                        ) : (
+                          <span style={{ color: '#f43f5e', fontSize: '0.8rem', fontStyle: 'italic' }}>Cancelado</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -426,6 +457,34 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
               />
               <small style={{ color: 'var(--text-secondary)' }}>Vacio para usar la fecha y hora del servidor.</small>
             </div>
+
+            {selectedFactura && (() => {
+              const canceledComps = (Array.isArray(selectedFactura.complementosPago) ? selectedFactura.complementosPago : []).filter(c => (c.status === 'canceled' || c.estatus === 'Cancelado') && (c.uuid || c.id));
+              if (canceledComps.length === 0) return null;
+              return (
+                <div style={{ marginBottom: '1rem', background: 'rgba(168,85,247,0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#c084fc', fontWeight: 'bold' }}>
+                    🔄 Sustituir REP previo cancelado (Relación 04 - Opcional)
+                  </label>
+                  <select 
+                    className="input" 
+                    value={sustituyeCompUuid} 
+                    onChange={(e) => setSustituyeCompUuid(e.target.value)}
+                    style={{ fontSize: '0.85rem' }}
+                  >
+                    <option value="">-- Ninguno (Emisión ordinaria) --</option>
+                    {canceledComps.map(c => (
+                      <option key={c.id || c.uuid} value={c.uuid || c.id}>
+                        {c.serie || ''}{c.folio || ''} - {c.uuid ? `${c.uuid.substring(0, 13)}...` : c.id} (${parseFloat(c.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })})
+                      </option>
+                    ))}
+                  </select>
+                  <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px', fontSize: '0.75rem' }}>
+                    Asocia este nuevo REP al comprobante cancelado con la relación tipo 04 ante el SAT.
+                  </small>
+                </div>
+              );
+            })()}
 
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
               <button 
