@@ -12,7 +12,7 @@ export default function BotonComplemento({ factura, onComplement }) {
 
   const canceledComplements = complements.filter(c => (c.status === 'canceled' || c.estatus === 'Cancelado') && (c.uuid || c.id))
 
-  const [monto, setMonto] = useState(remainingBalance)
+  const [monto, setMonto] = useState(remainingBalance <= 0.009 ? parseFloat(factura.total.toFixed(2)) : parseFloat(remainingBalance.toFixed(2)))
   const [formaPago, setFormaPago] = useState('03') // 03 Transferencia by default
   const [fechaPago, setFechaPago] = useState('')
   const [moneda, setMoneda] = useState('MXN')
@@ -27,6 +27,21 @@ export default function BotonComplemento({ factura, onComplement }) {
     return <span style={{ opacity: 0.5, fontSize: '0.8rem' }}>N/A</span>;
   }
 
+  const handleOpen = () => {
+    const active = (Array.isArray(factura.complementosPago) ? factura.complementosPago : []).filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado')
+    const paid = active.reduce((sum, comp) => sum + parseFloat(comp.amount || 0), 0)
+    const bal = Math.max(0, factura.total - paid)
+    const initialMonto = bal <= 0.009 ? parseFloat(factura.total.toFixed(2)) : parseFloat(bal.toFixed(2))
+    setMonto(initialMonto)
+    
+    // Auto-preseleccionar el primer complemento cancelado si existe y no hay nada escrito
+    const canc = (Array.isArray(factura.complementosPago) ? factura.complementosPago : []).filter(c => (c.status === 'canceled' || c.estatus === 'Cancelado') && (c.uuid || c.id))
+    if (canc.length > 0 && !sustituyeCompUuid) {
+      setSustituyeCompUuid(canc[0].uuid || canc[0].id)
+    }
+    setOpen(true)
+  }
+
   const handlePayClick = async () => {
     if (!monto || monto <= 0) {
       alert("Debe proveer un monto válido superior a $0");
@@ -34,7 +49,7 @@ export default function BotonComplemento({ factura, onComplement }) {
     }
     setLoading(true)
     try {
-      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago, moneda, parseFloat(tipoCambio), numOperacion, sustituyeCompUuid)
+      await onComplement(factura.id, parseFloat(monto), formaPago, fechaPago, moneda, parseFloat(tipoCambio), numOperacion, sustituyeCompUuid.trim())
       setOpen(false)
     } catch (err) {
       alert(err.message)
@@ -48,7 +63,7 @@ export default function BotonComplemento({ factura, onComplement }) {
       <button 
         className="btn" 
         style={{ padding: '4px 8px', fontSize: '0.8rem', background: '#0e7490' }}
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
       >
         💳 Emitir Pago
       </button>
@@ -59,7 +74,7 @@ export default function BotonComplemento({ factura, onComplement }) {
            background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center',
            zIndex: 9999
          }}>
-           <div className="glass-panel card" style={{ width: '400px', background: '#111' }}>
+           <div className="glass-panel card" style={{ width: '460px', background: '#111', maxHeight: '90vh', overflowY: 'auto' }}>
              <h3 style={{ marginBottom: '1rem', color: '#0e7490' }}>Emitir Complemento PPD</h3>
              <p style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
                 Se generará un Recibo REP adjunto a la factura <strong>{factura.uuid.split('-')[0]}...</strong>
@@ -103,7 +118,7 @@ export default function BotonComplemento({ factura, onComplement }) {
                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '4px' }}>Tipo de Cambio</label>
                    <input 
                      type="number" 
-                     step="0.0001"
+                     step="0.0001" 
                      className="input" 
                      value={tipoCambio} 
                      onChange={(e) => setTipoCambio(e.target.value)} 
@@ -134,29 +149,48 @@ export default function BotonComplemento({ factura, onComplement }) {
                <small style={{ color: 'var(--text-secondary)' }}>Dejar vacío para usar la fecha y hora actual.</small>
              </div>
 
-             {canceledComplements.length > 0 && (
-               <div style={{ marginBottom: '1rem', background: 'rgba(168,85,247,0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
-                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#c084fc', fontWeight: 'bold' }}>
-                   🔄 Sustituir REP previo cancelado (Relación 04 - Opcional)
+             <div style={{ marginBottom: '1.25rem', background: 'rgba(168,85,247,0.1)', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
+               <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#c084fc', fontWeight: 'bold' }}>
+                 🔄 Sustituir REP previo cancelado (Relación SAT 04 - Opcional)
+               </label>
+               
+               {canceledComplements.length > 0 && (
+                 <div style={{ marginBottom: '6px' }}>
+                   <label style={{ display: 'block', fontSize: '0.75rem', color: '#ccc', marginBottom: '2px' }}>Seleccionar complemento cancelado:</label>
+                   <select 
+                     className="input" 
+                     value={sustituyeCompUuid} 
+                     onChange={(e) => setSustituyeCompUuid(e.target.value)}
+                     style={{ fontSize: '0.85rem' }}
+                   >
+                     <option value="">-- Ninguno / Escribir manual abajo --</option>
+                     {canceledComplements.map(c => (
+                       <option key={c.id || c.uuid} value={c.uuid || c.id}>
+                         {c.serie || ''}{c.folio || ''} - {c.uuid ? `${c.uuid.substring(0, 13)}...` : c.id} (${parseFloat(c.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })})
+                       </option>
+                     ))}
+                   </select>
+                 </div>
+               )}
+
+               <div>
+                 <label style={{ display: 'block', fontSize: '0.75rem', color: '#ccc', marginBottom: '2px' }}>
+                   UUID Fiscal a sustituir (Folio Fiscal SAT):
                  </label>
-                 <select 
+                 <input 
+                   type="text" 
                    className="input" 
+                   placeholder="Ej. F4A02E23-A8F9-4464-9D8D-F893FD881C6B" 
                    value={sustituyeCompUuid} 
                    onChange={(e) => setSustituyeCompUuid(e.target.value)}
-                   style={{ fontSize: '0.85rem' }}
-                 >
-                   <option value="">-- Ninguno (Emisión ordinaria) --</option>
-                   {canceledComplements.map(c => (
-                     <option key={c.id || c.uuid} value={c.uuid || c.id}>
-                       {c.serie || ''}{c.folio || ''} - {c.uuid ? `${c.uuid.substring(0, 13)}...` : c.id} (${parseFloat(c.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })})
-                     </option>
-                   ))}
-                 </select>
-                 <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px', fontSize: '0.75rem' }}>
-                   Asocia este nuevo REP al comprobante cancelado con la relación tipo 04 ante el SAT.
-                 </small>
+                   style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}
+                 />
                </div>
-             )}
+
+               <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px', fontSize: '0.75rem' }}>
+                 Si se indica un UUID, este nuevo pago se timbrará con relación <strong>Tipo 04 (Sustitución de los CFDI previos)</strong> ante el SAT.
+               </small>
+             </div>
 
              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                <button className="btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }} onClick={() => setOpen(false)}>Cancelar</button>

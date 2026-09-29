@@ -77,15 +77,18 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
     const activeComps = comps.filter(c => c.status !== 'canceled' && c.estatus !== 'Cancelado')
     const paid = activeComps.reduce((sum, c) => sum + parseFloat(c.amount || 0), 0)
     const bal = Math.max(0, factura.total - paid)
+    const initialMonto = bal <= 0.009 ? parseFloat(factura.total.toFixed(2)) : parseFloat(bal.toFixed(2))
 
     setSelectedFactura(factura)
-    setMonto(bal.toFixed(2))
+    setMonto(initialMonto.toFixed(2))
     setFormaPago('03')
     setFechaPago('')
     setMoneda('MXN')
     setTipoCambio(1)
     setNumOperacion('')
-    setSustituyeCompUuid('')
+    
+    const canc = comps.filter(c => (c.status === 'canceled' || c.estatus === 'Cancelado') && (c.uuid || c.id))
+    setSustituyeCompUuid(canc.length > 0 ? (canc[0].uuid || canc[0].id) : '')
     setModalOpen(true)
   }
 
@@ -460,27 +463,47 @@ export default function ComplementosClient({ ppdFacturas, empresas, clientes }) 
 
             {selectedFactura && (() => {
               const canceledComps = (Array.isArray(selectedFactura.complementosPago) ? selectedFactura.complementosPago : []).filter(c => (c.status === 'canceled' || c.estatus === 'Cancelado') && (c.uuid || c.id));
-              if (canceledComps.length === 0) return null;
               return (
-                <div style={{ marginBottom: '1rem', background: 'rgba(168,85,247,0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
+                <div style={{ marginBottom: '1.25rem', background: 'rgba(168,85,247,0.1)', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(168,85,247,0.3)' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: '#c084fc', fontWeight: 'bold' }}>
-                    🔄 Sustituir REP previo cancelado (Relación 04 - Opcional)
+                    🔄 Sustituir REP previo cancelado (Relación SAT 04 - Opcional)
                   </label>
-                  <select 
-                    className="input" 
-                    value={sustituyeCompUuid} 
-                    onChange={(e) => setSustituyeCompUuid(e.target.value)}
-                    style={{ fontSize: '0.85rem' }}
-                  >
-                    <option value="">-- Ninguno (Emisión ordinaria) --</option>
-                    {canceledComps.map(c => (
-                      <option key={c.id || c.uuid} value={c.uuid || c.id}>
-                        {c.serie || ''}{c.folio || ''} - {c.uuid ? `${c.uuid.substring(0, 13)}...` : c.id} (${parseFloat(c.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })})
-                      </option>
-                    ))}
-                  </select>
+                  
+                  {canceledComps.length > 0 && (
+                    <div style={{ marginBottom: '6px' }}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: '#ccc', marginBottom: '2px' }}>Seleccionar complemento cancelado:</label>
+                      <select 
+                        className="input" 
+                        value={sustituyeCompUuid} 
+                        onChange={(e) => setSustituyeCompUuid(e.target.value)}
+                        style={{ fontSize: '0.85rem' }}
+                      >
+                        <option value="">-- Ninguno / Escribir manual abajo --</option>
+                        {canceledComps.map(c => (
+                          <option key={c.id || c.uuid} value={c.uuid || c.id}>
+                            {c.serie || ''}{c.folio || ''} - {c.uuid ? `${c.uuid.substring(0, 13)}...` : c.id} (${parseFloat(c.amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#ccc', marginBottom: '2px' }}>
+                      UUID Fiscal a sustituir (Folio Fiscal SAT):
+                    </label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      placeholder="Ej. F4A02E23-A8F9-4464-9D8D-F893FD881C6B" 
+                      value={sustituyeCompUuid} 
+                      onChange={(e) => setSustituyeCompUuid(e.target.value)}
+                      style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+
                   <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px', fontSize: '0.75rem' }}>
-                    Asocia este nuevo REP al comprobante cancelado con la relación tipo 04 ante el SAT.
+                    Si se indica un UUID, este nuevo pago se timbrará con relación <strong>Tipo 04 (Sustitución de los CFDI previos)</strong> ante el SAT.
                   </small>
                 </div>
               );
