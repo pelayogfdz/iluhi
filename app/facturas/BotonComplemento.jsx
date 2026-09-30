@@ -75,7 +75,12 @@ export default function BotonComplemento({ factura, onComplement }) {
            zIndex: 9999
          }}>
            <div className="glass-panel card" style={{ width: '460px', background: '#111', maxHeight: '90vh', overflowY: 'auto' }}>
-             <h3 style={{ marginBottom: '1rem', color: '#0e7490' }}>Emitir Complemento PPD</h3>
+             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+               <h3 style={{ margin: 0, color: '#0e7490' }}>Emitir Complemento PPD</h3>
+               <span style={{ fontSize: '0.7rem', color: '#c084fc', background: 'rgba(168,85,247,0.2)', padding: '3px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                 Relación SAT 04
+               </span>
+             </div>
              <p style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
                 Se generará un Recibo REP adjunto a la factura <strong>{factura.uuid.split('-')[0]}...</strong>
              </p>
