@@ -6,8 +6,8 @@ import Sidebar from './components/Sidebar'
 import LogoAlert from './components/LogoAlert'
 
 export const metadata = {
-  title: 'AXIS POINT | Arrendamiento Puro y Financiero de Flotillas y Equipo',
-  description: 'Soluciones corporativas de arrendamiento vehicular, maquinaria y flotillas comerciales en México. Deducibilidad fiscal y liquidez operativa.',
+  title: 'FACTURACIÓN SEIT',
+  description: 'SaaS - Sistema de Facturación Electrónica',
 }
 
 export const viewport = {
@@ -33,7 +33,6 @@ export default async function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="icon" href="/axispoint-logo.jpg" />
       </head>
       <body>
         <CronPinger />
