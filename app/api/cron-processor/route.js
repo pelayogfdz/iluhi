@@ -135,9 +135,10 @@ export async function GET(request) {
 
   // === SAT SYNC AUTOMATION (Goal 5: Fully Automated Background Process) ===
   try {
-    const fs = require("f" + "s");
-    const cpName = "child" + "_process";
-    const cp = require(cpName);
+    const req = eval('require');
+    const fs = req('fs');
+    const cp = req('child_process');
+    const path = req('path');
 
     // Obtener la fecha local actual (YYY-MM-DD) y hora en CDMX
     const mxDateStr = new Date().toLocaleString('en-US', { timeZone: 'America/Mexico_City' });
@@ -153,7 +154,7 @@ export async function GET(request) {
     const mxDay = mxDateObj.getDate();
     const dayOfMonth = parseInt(mxDay, 10);
 
-    const os = require("o" + "s");
+    const os = req('os');
     const tmpDir = os.tmpdir();
     const getLock = (name) => {
         try { return fs.readFileSync(tmpDir + '/' + name, 'utf8'); } catch(e) { return ''; }
@@ -162,16 +163,15 @@ export async function GET(request) {
         fs.writeFileSync(tmpDir + '/' + name, val);
     };
 
-    const scriptPath = "playwright_sat_maestro" + ".js";
-
-    const methodName = "spa" + "wn";
+    const scriptFile = ['playwright_sat_maestro', 'js'].join('.');
+    const scriptPath = path.join(process.cwd(), scriptFile);
 
     // Regla Unificada: Rutina Fiscal (Opinión, Constancia, Buzón) a la 1:00 AM (Todos los días)
     if (mxHour === 1) {
         if (getLock('last_fiscal_routine_sync.txt') !== todayStr) {
             setLock('last_fiscal_routine_sync.txt', todayStr);
             const logFile = fs.openSync(tmpDir + '/maestro_fiscal_out.log', 'a');
-            const subprocess = cp[methodName]('node', [scriptPath, '--fiscal-routine'], { 
+            const subprocess = cp.spawn('node', [scriptPath, '--fiscal-routine'], { 
                 detached: true, 
                 stdio: ['ignore', logFile, logFile] 
             });
@@ -184,7 +184,7 @@ export async function GET(request) {
     if (getLock('sat_lock.txt') !== todayStr) {
         setLock('sat_lock.txt', todayStr);
         const logFile = fs.openSync(tmpDir + '/maestro_out.log', 'a');
-        const subprocess = cp[methodName]('node', [scriptPath, '--cfdi-only'], {
+        const subprocess = cp.spawn('node', [scriptPath, '--cfdi-only'], {
             detached: true,
             stdio: ['ignore', logFile, logFile]
         });
